@@ -3,13 +3,13 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    val kotlinVersion = "1.5.31"
+    val kotlinVersion = "1.6.10"
     kotlin("jvm") version kotlinVersion
     kotlin("kapt") version kotlinVersion
-    id("org.jetbrains.compose") version "1.0.0-beta1"
+    id("org.jetbrains.compose") version "1.1.0-alpha05"
 }
 
-group = "com.myapp"
+group = "com.github.jan222ik"
 version = "1.0.0"
 
 repositories {
@@ -73,10 +73,10 @@ tasks.withType<KotlinCompile>() {
 
 compose.desktop {
     application {
-        mainClass = "com.myapp.AppKt"
+        mainClass = "com.github.jan222ik.AppKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "myapp"
+            packageName = "asid-standalone"
             packageVersion = "1.0.0"
 
             val iconsRoot = project.file("src/main/resources/drawables")
