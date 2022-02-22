@@ -8,7 +8,6 @@ import com.arkivanov.decompose.replaceCurrent
 import com.arkivanov.decompose.router
 import com.arkivanov.decompose.statekeeper.Parcelable
 import com.github.jan222ik.di.AppComponent
-import com.github.jan222ik.di.DaggerAppComponent
 import com.github.jan222ik.ui.feature.main.MainScreenComponent
 import com.github.jan222ik.ui.feature.splash.SplashScreenComponent
 
