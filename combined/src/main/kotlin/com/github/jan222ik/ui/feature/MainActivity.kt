@@ -1,11 +1,13 @@
 package com.github.jan222ik.ui.feature
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberWindowState
 import com.arkivanov.decompose.extensions.compose.jetbrains.rememberRootComponent
@@ -61,13 +63,29 @@ class MainActivity : Activity() {
                 icon = painterResource("drawables/launcher_icons/system.png"),
                 state = windowState,
                 undecorated = true,
-                resizable = false,
+                resizable = true,
                 onPreviewKeyEvent = { keyEventHandler.handleKeyEvent(it, windowState) }
             ) {
-                AppTheme {
-                    // Igniting navigation
-                    rememberRootComponent(factory = ::NavHostComponent)
-                        .render()
+                CompositionLocalProvider(
+                    LocalWindowState provides windowState,
+                    LocalWindowActions provides WindowActionsImpl(
+                        minimize = {
+                            windowState.isMinimized = true
+                        },
+                        maximize = {
+                            windowState.placement = if (windowState.placement != WindowPlacement.Maximized)
+                                WindowPlacement.Maximized else WindowPlacement.Floating
+                        },
+                        close = {},
+                        exitApplication = this@setContent::exitApplication
+                    ),
+                    LocalWindowScope provides this
+                ) {
+                    AppTheme {
+                        // Igniting navigation
+                        rememberRootComponent(factory = ::NavHostComponent)
+                            .render()
+                    }
                 }
             }
 
