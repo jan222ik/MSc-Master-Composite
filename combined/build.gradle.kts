@@ -18,9 +18,12 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     implementation(compose.desktop.currentOs)
+    implementation(compose.materialIconsExtended)
 
     // Module dependencies
     implementation(project(":data"))
+    implementation(project(":forked-libs"))
+
 
     // Dagger
     val daggerVersion: String by rootProject.extra
@@ -37,6 +40,9 @@ dependencies {
     val decomposeVersion = "0.2.5"
     implementation("com.arkivanov.decompose:decompose-jvm:$decomposeVersion")
     implementation("com.arkivanov.decompose:extensions-compose-jetbrains-jvm:$decomposeVersion")
+
+    // Arrow
+    implementation("io.arrow-kt:arrow-core:1.0.1")
 
 
     /**
