@@ -15,7 +15,7 @@ class SplashViewModel @Inject constructor(
 ) : ViewModel() {
 
     companion object {
-        const val SPLASH_DELAY = 2000L // 2 seconds of splash delay
+        const val SPLASH_DELAY = 500L // 2 seconds of splash delay
     }
 
     private val _isSplashFinished = MutableStateFlow(false)
