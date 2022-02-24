@@ -5,13 +5,15 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowState
+import mu.KLogging
 
 class KeyEventHandler(
     applicableSize: DpSize,
     val setWindowPosition: (Alignment) -> Unit,
     val setWindowSize: (DpSize) -> Unit
 ) {
-    companion object {
+
+    companion object : KLogging() {
         const val WindowsKeyCode = 524
         const val ArrowLeft = 37
         const val ArrowUp = 38
@@ -26,7 +28,7 @@ class KeyEventHandler(
 
     fun handleKeyEvent(event: KeyEvent, windowState: WindowState): Boolean {
         var consume = false
-        println("it = ${event}")
+        logger.debug("KeyEvent: $event")
         val nativeKeyCode = event.key.nativeKeyCode
         if (event.type == KeyEventType.KeyDown) {
             down.add(nativeKeyCode)
@@ -41,19 +43,19 @@ class KeyEventHandler(
         var consume = false
         if (down.contains(WindowsKeyCode)) {
             if (nativeKeyCode == ArrowLeft) {
-                println("Arrow Left")
+                logger.debug("Arrow Left")
                 setWindowSize(applicableSizeHalfWidth)
                 setWindowPosition(Alignment.TopStart)
             }
             if (nativeKeyCode == ArrowRight) {
-                println("Arrow Right")
+                logger.debug("Arrow Right")
                 setWindowSize(applicableSizeHalfWidth)
                 setWindowPosition(Alignment.TopEnd)
             }
             val wsSize = windowState.size
             val wsPos = windowState.position
             if (nativeKeyCode == ArrowUp) {
-                println("Arrow Up")
+                logger.debug("Arrow Up")
                 if (wsSize == applicableSizeHalfWidth) {
                     setWindowPosition(if (wsPos.x == 0.dp) Alignment.TopStart else Alignment.TopEnd)
                     setWindowSize(applicableSizeQuarter)
@@ -67,7 +69,7 @@ class KeyEventHandler(
                 }
             }
             if (nativeKeyCode == ArrowDown) {
-                println("Arrow Down")
+                logger.debug("Arrow Down")
                 if (wsSize == applicableSizeHalfWidth) {
                     setWindowPosition(if (wsPos.x == 0.dp) Alignment.BottomStart else Alignment.BottomEnd)
                     setWindowSize(applicableSizeQuarter)

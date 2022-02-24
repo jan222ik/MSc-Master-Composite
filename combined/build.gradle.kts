@@ -30,9 +30,6 @@ dependencies {
     api("com.google.dagger:dagger:$daggerVersion")
     kapt("com.google.dagger:dagger-compiler:$daggerVersion")
 
-    // Arbor : Like Timber, just different.
-    api("com.ToxicBakery.logging:arbor-jvm:1.34.109")
-
     // Cyclone : https://github.com/theapache64/cyclone
     implementation("com.theapache64:cyclone:1.0.0-alpha01")
 
@@ -43,6 +40,10 @@ dependencies {
 
     // Arrow
     implementation("io.arrow-kt:arrow-core:1.0.1")
+
+    // Logging
+    implementation("io.github.microutils:kotlin-logging-jvm:2.0.11")
+    implementation("ch.qos.logback:logback-classic:1.2.6")
 
 
     /**

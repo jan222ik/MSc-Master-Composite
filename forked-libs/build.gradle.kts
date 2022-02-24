@@ -25,8 +25,6 @@ dependencies {
     api("com.google.dagger:dagger:$daggerVersion")
     kapt("com.google.dagger:dagger-compiler:$daggerVersion")
 
-    // Arbor : Like Timber, just different.
-    api("com.ToxicBakery.logging:arbor-jvm:1.34.109")
 
     // Cyclone : https://github.com/theapache64/cyclone
     implementation("com.theapache64:cyclone:1.0.0-alpha01")
