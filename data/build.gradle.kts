@@ -3,7 +3,7 @@ plugins {
     kotlin("kapt")
 }
 
-group = "com.myapp"
+group = "com.github.jan222ik"
 version = "1.0.0"
 
 repositories {

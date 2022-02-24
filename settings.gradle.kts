@@ -5,5 +5,7 @@ pluginManagement {
     }
 
 }
-rootProject.name = "compose-desktop-template"
+rootProject.name = "MSc-Master-Composite"
 include("data")
+include("combined")
+include("forked-libs")
