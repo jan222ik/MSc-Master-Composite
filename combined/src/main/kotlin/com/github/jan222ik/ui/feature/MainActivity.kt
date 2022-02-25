@@ -12,6 +12,7 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberWindowState
 import com.arkivanov.decompose.extensions.compose.jetbrains.rememberRootComponent
 import com.github.jan222ik.App
+import com.github.jan222ik.ui.feature.main.keyevent.KeyEventHandler
 import com.github.jan222ik.ui.navigation.NavHostComponent
 import com.github.jan222ik.ui.value.AppTheme
 import com.theapache64.cyclone.core.Activity
@@ -51,10 +52,19 @@ class MainActivity : Activity() {
             val keyEventHandler = KeyEventHandler(
                 applicableSize = applicableSize,
                 setWindowSize = {
-                    windowState.size = it
+                    if (windowState.size != it) {
+                        windowState.size = it
+                    }
                 },
                 setWindowPosition = {
-                    windowState.position = WindowPosition(alignment = it)
+                    if (windowState.position != it) {
+                        windowState.position = WindowPosition(alignment = it)
+                    }
+                },
+                setPlacement = {
+                    if (windowState.placement != it) {
+                        windowState.placement = it
+                    }
                 }
             )
             Window(
@@ -66,6 +76,9 @@ class MainActivity : Activity() {
                 resizable = true,
                 onPreviewKeyEvent = { keyEventHandler.handleKeyEvent(it, windowState) }
             ) {
+                if (Thread.currentThread().name == "AWT-EventQueue-0") {
+                    Thread.currentThread().name = "AWT-EQ-0"
+                }
                 CompositionLocalProvider(
                     LocalWindowState provides windowState,
                     LocalWindowActions provides WindowActionsImpl(
@@ -79,7 +92,8 @@ class MainActivity : Activity() {
                         close = {},
                         exitApplication = this@setContent::exitApplication
                     ),
-                    LocalWindowScope provides this
+                    LocalWindowScope provides this,
+                    LocalShortcutActionHandler provides keyEventHandler
                 ) {
                     AppTheme {
                         // Igniting navigation

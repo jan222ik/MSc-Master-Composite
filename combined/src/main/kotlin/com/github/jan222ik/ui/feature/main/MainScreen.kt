@@ -11,26 +11,35 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.footer.FooterComponent
+import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.MenuToolBarComponent
 import com.github.jan222ik.ui.value.R
-import org.jetbrains.compose.splitpane.*
+import mu.KLogging
+import mu.KotlinLogging
+import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
+import org.jetbrains.compose.splitpane.HorizontalSplitPane
+import org.jetbrains.compose.splitpane.VerticalSplitPane
+import org.jetbrains.compose.splitpane.rememberSplitPaneState
 import java.awt.Cursor
 
 @OptIn(ExperimentalComposeUiApi::class)
 private fun Modifier.cursorForHorizontalResize(): Modifier =
     pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
 
-@OptIn(ExperimentalSplitPaneApi::class)
+@OptIn(ExperimentalSplitPaneApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel,
 ) {
+    val logger = remember { KotlinLogging.logger("com.github.jan222ik.ui.feature.main.MainScreen") }
     val welcomeText by viewModel.welcomeText.collectAsState()
     MainScreenScaffold(
         menuToolBar = {
@@ -50,7 +59,6 @@ fun MainScreen(
         content = {
             val splitterState = rememberSplitPaneState()
             val hSplitterState = rememberSplitPaneState()
-
 
 
             var fileTreeExpanded by remember(splitterState) { mutableStateOf(splitterState.positionPercentage < 0.2f) }
@@ -107,6 +115,22 @@ fun MainScreen(
                                     ) {
                                         Text(text = R.string.ACTION_MAIN_CLICK_ME)
                                     }
+                                    val shortcutActionsHandler = LocalShortcutActionHandler.current
+                                    var textValue by remember { mutableStateOf("") }
+                                    shortcutActionsHandler.register(
+                                        ShortcutAction.of(
+                                            key = Key.K,
+                                            ShortcutAction.KeyModifier.CTRL
+                                        ) {
+                                            logger.debug { "CTRL + K" }
+                                            textValue = "CTRL + K"
+                                            true
+                                        }
+                                    )
+                                    TextField(
+                                        value = textValue,
+                                        onValueChange = { textValue = it }
+                                    )
                                 }
                             }
                         }
