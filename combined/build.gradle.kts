@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm")
     kotlin("kapt")
     id("org.jetbrains.compose")
+    id("de.comahe.i18n4k")
 }
 
 group = "com.github.jan222ik"
@@ -13,6 +14,7 @@ version = "1.0.0"
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
@@ -45,6 +47,10 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:2.0.11")
     implementation("ch.qos.logback:logback-classic:1.2.6")
 
+    // i18n
+    implementation("de.comahe.i18n4k:i18n4k-core:0.3.0")
+    implementation("de.comahe.i18n4k:i18n4k-core-jvm:0.3.0")
+
 
     /**
      * Testing Dependencies
@@ -70,6 +76,11 @@ dependencies {
 
     // JUnit : JUnit is a unit testing framework for Java, created by Erich Gamma and Kent Beck.
     testImplementation(kotlin("test-junit5"))
+}
+
+i18n4k {
+    sourceCodeLocales = listOf("en", "de")
+    inputDirectory = "src/main/resources/i18n"
 }
 
 

@@ -7,7 +7,8 @@ plugins {
     kotlin("jvm") version kotlinVersion
     kotlin("kapt") version kotlinVersion
     id("org.jetbrains.compose") version "1.1.0-alpha05"
-    id("org.jetbrains.dokka") version "1.6.10"
+    id("org.jetbrains.dokka") version kotlinVersion
+    id("de.comahe.i18n4k") version "0.3.0"
 }
 
 subprojects {
@@ -27,6 +28,7 @@ version = "1.0.0"
 repositories {
     jcenter()
     mavenCentral()
+    mavenLocal()
     google()
     maven { url = uri("https://jitpack.io") }
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
@@ -42,6 +44,10 @@ dependencies {
 
     // Dokka: Kotlin Documentation Plugin
     dokkaHtmlPlugin("org.jetbrains.dokka:kotlin-as-java-plugin:1.6.10")
+
+    // i18n
+    //implementation("de.comahe.i18n4k:i18n4k-core:0.3.0")
+    implementation("de.comahe.i18n4k:i18n4k-core-jvm:0.3.0")
 }
 
 tasks.withType<KotlinCompile>() {

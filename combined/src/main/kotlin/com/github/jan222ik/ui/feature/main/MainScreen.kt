@@ -17,12 +17,14 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.github.jan222ik.ui.feature.LocalI18N
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.footer.FooterComponent
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.MenuToolBarComponent
+import com.github.jan222ik.ui.feature.stringResource
 import com.github.jan222ik.ui.value.R
-import mu.KLogging
+import de.comahe.i18n4k.Locale
 import mu.KotlinLogging
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
@@ -113,24 +115,33 @@ fun MainScreen(
                                             viewModel.onClickMeClicked()
                                         }
                                     ) {
-                                        Text(text = R.string.ACTION_MAIN_CLICK_ME)
+                                        Text(text = "Click me")
                                     }
                                     val shortcutActionsHandler = LocalShortcutActionHandler.current
                                     var textValue by remember { mutableStateOf("") }
                                     shortcutActionsHandler.register(
-                                        ShortcutAction.of(
+                                        action = ShortcutAction.of(
                                             key = Key.K,
-                                            ShortcutAction.KeyModifier.CTRL
-                                        ) {
-                                            logger.debug { "CTRL + K" }
-                                            textValue = "CTRL + K"
-                                            true
-                                        }
+                                            modifierSum = ShortcutAction.KeyModifier.CTRL,
+                                            action = {
+                                                logger.debug { "CTRL + K" }
+                                                textValue = "CTRL + K"
+                                                true
+                                            }
+                                        )
                                     )
                                     TextField(
                                         value = textValue,
                                         onValueChange = { textValue = it }
                                     )
+                                    val (localeState, switchLocale) = LocalI18N.current
+                                    Button(onClick = {
+                                        val lang = "de".takeIf { localeState.language == "en" } ?: "en"
+                                        switchLocale(Locale(lang))
+                                    }) {
+                                        Text("Switch")
+                                    }
+                                    Text(text = stringResource(key = textValue) { "${R.string.mainWindow.title}: ${R.string.mainWindow.language} $textValue" })
                                 }
                             }
                         }

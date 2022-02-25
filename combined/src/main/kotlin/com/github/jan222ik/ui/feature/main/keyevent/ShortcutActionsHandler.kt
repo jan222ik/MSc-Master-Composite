@@ -22,6 +22,12 @@ data class ShortcutAction(
             vararg modifiers: Int = intArrayOf(KeyModifier.NO_MODIFIERS),
             action: () -> Boolean
         ) = ShortcutAction(key, modifiers.sum(), action)
+
+        fun of(
+            key: Key,
+            modifierSum: Int = KeyModifier.NO_MODIFIERS,
+            action: () -> Boolean
+        ) = ShortcutAction(key, modifierSum, action)
     }
 
     object KeyModifier {
