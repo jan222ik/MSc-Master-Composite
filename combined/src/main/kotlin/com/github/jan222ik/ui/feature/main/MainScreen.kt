@@ -22,6 +22,8 @@ import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.footer.FooterComponent
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.MenuToolBarComponent
+import com.github.jan222ik.ui.feature.main.tree.FileTree
+import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.ui.feature.stringResource
 import com.github.jan222ik.ui.value.R
 import de.comahe.i18n4k.Locale
@@ -71,8 +73,20 @@ fun MainScreen(
             ) {
                 first(20.dp) {
                     Box(Modifier.background(Color.Magenta).fillMaxSize()) {
-                        Text("File Tree")
+                        Column {
+                            Text("File Tree")
+                            LaunchedEffect(Unit) {
+                                FileTree.setRoot("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite")
+                            }
+                            FileTree.root?.let {
+                                ProjectTreeHandler(
+                                    root = it,
+                                    showRoot = true
+                                ).render()
+                            }
+                        }
                         Button(
+                            modifier = Modifier.align(Alignment.TopEnd),
                             onClick = {
                                 fileTreeExpanded = if (fileTreeExpanded) {
                                     splitterState.setToMin()
