@@ -17,10 +17,14 @@ repositories {
     mavenLocal()
 }
 
+
 dependencies {
     implementation(kotlin("stdlib"))
     implementation(compose.desktop.currentOs)
     implementation(compose.materialIconsExtended)
+    implementation(compose.ui)
+    implementation(compose.uiTooling)
+    implementation(compose.foundation)
 
     // Module dependencies
     implementation(project(":data"))
