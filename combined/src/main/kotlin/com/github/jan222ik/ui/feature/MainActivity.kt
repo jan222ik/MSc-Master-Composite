@@ -81,6 +81,11 @@ class MainActivity : Activity() {
                 locale = nextLocale
                 (i18n4k as I18n4kConfigDefault).locale = locale
             }
+            var isDarkMode by remember { mutableStateOf(true) }
+            fun switchTheme(toDarkMode: Boolean) {
+                logger.debug { "Switched Theme form $isDarkMode to $toDarkMode (true=dark)" }
+                isDarkMode = toDarkMode
+            }
             Window(
                 onCloseRequest = ::exitApplication,
                 title = "${App.appArgs.appName} (${App.appArgs.version})",
@@ -109,8 +114,11 @@ class MainActivity : Activity() {
                     LocalWindowScope provides this,
                     LocalShortcutActionHandler provides keyEventHandler,
                     LocalI18N provides (locale to ::switchLocale),
+                    LocalThemeSwitcher provides (isDarkMode to ::switchTheme)
                 ) {
-                    AppTheme {
+                    AppTheme(
+                        isDark = isDarkMode
+                    ) {
                         // Igniting navigation
                         rememberRootComponent(factory = ::NavHostComponent)
                             .render()

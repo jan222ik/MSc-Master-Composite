@@ -70,9 +70,14 @@ val LocalWindowActions = compositionLocalOf<WindowActions> { error("No value for
 val LocalShortcutActionHandler = compositionLocalOf<ShortcutActionsHandler> { error("No value for LocalShortcutActionHandler in composition tree!") }
 
 /**
- * LocalShortcutActionHandler is a [ProvidableCompositionLocal] that provides a [Pair] with the locale for the current window [Locale] and a setter to change it.
+ * LocalI18N is a [ProvidableCompositionLocal] that provides a [Pair] with the locale for the current window [Locale] and a setter to change it.
  */
 val LocalI18N = compositionLocalOf<Pair<Locale, (Locale) -> Unit>> { error("No value for LocalI18N in composition tree!") }
+
+/**
+ * LocalThemeSwitcher is a [ProvidableCompositionLocal] that provides a [Pair] with the theme.isDarkMode for the current window [Boolean] and a setter to change it.
+ */
+val LocalThemeSwitcher = compositionLocalOf<Pair<Boolean, (Boolean) -> Unit>> { error("No value for LocalThemeSwitcher in composition tree!") }
 
 @Composable
 fun stringResource(key: Any? = null, string: () -> String) : String {
