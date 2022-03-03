@@ -80,10 +80,12 @@ fun MainScreen(
                                 FileTree.setRoot("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite")
                             }
                             FileTree.root?.let {
-                                ProjectTreeHandler(
-                                    root = it,
-                                    showRoot = true
-                                ).render()
+                                val projectTreeHandler = remember() {
+                                    ProjectTreeHandler(
+                                        showRoot = true,
+                                    )
+                                }
+                                projectTreeHandler.render(root = it)
                             }
                         }
                         Button(
