@@ -1,5 +1,6 @@
 package com.github.jan222ik.ui.feature.main
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -38,7 +39,7 @@ import java.awt.Cursor
 private fun Modifier.cursorForHorizontalResize(): Modifier =
     pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
 
-@OptIn(ExperimentalSplitPaneApi::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalSplitPaneApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel,
@@ -71,7 +72,7 @@ fun MainScreen(
                 //modifier = Modifier.fillMaxSize(),
                 splitPaneState = splitterState
             ) {
-                first(20.dp) {
+                first(400.dp) {
                     Box(Modifier.background(Color.Magenta).fillMaxSize()) {
                         Column {
                             Text("File Tree")
@@ -79,10 +80,12 @@ fun MainScreen(
                                 FileTree.setRoot("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite")
                             }
                             FileTree.root?.let {
-                                ProjectTreeHandler(
-                                    root = it,
-                                    showRoot = true
-                                ).render()
+                                val projectTreeHandler = remember() {
+                                    ProjectTreeHandler(
+                                        showRoot = true,
+                                    )
+                                }
+                                projectTreeHandler.render(root = it)
                             }
                         }
                         Button(
