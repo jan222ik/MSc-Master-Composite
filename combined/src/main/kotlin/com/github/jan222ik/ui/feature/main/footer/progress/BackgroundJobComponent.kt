@@ -79,55 +79,57 @@ class BackgroundJobComponent @Inject constructor(
             Card(Modifier.size(600.dp, 800.dp)) {
                 val scrollState = rememberLazyListState()
                 val scrollAdapter = rememberScrollbarAdapter(scrollState)
-                Row {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        state = scrollState
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        stickyHeader {
-                            Surface {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        modifier = Modifier.align(Alignment.CenterStart),
-                                        text = "Background Jobs",
-                                        style = MaterialTheme.typography.h3
-                                    )
-                                    Icon(
-                                        modifier = Modifier
-                                            .align(Alignment.TopEnd)
-                                            .clickable(onClick = onDismissRequest),
-                                        imageVector = Icons.Filled.Close,
-                                        contentDescription = "Close popup"
-                                    )
-                                }
-                            }
-                        }
-                        items(items = jobHandler.jobs) { item ->
-                            Column(Modifier.padding(5.dp)) {
-                                Text(text = item.name)
-                                Text(text = item.messageState.value ?: "No message")
-                                Text(text = item.progressTicksState.value.toString())
-                                if (item.progressTicksState.value != IProgressMonitor.UNKNOWN_PROGRESS_ADVANCE) {
-                                    val animProg =
-                                        animateFloatAsState(targetValue = item.progressTicksState.percentageFloat())
-                                    LinearProgressIndicator(progress = animProg.value)
-                                } else {
-                                    LinearProgressIndicator()
+                        Text(
+                            modifier = Modifier.align(Alignment.CenterStart),
+                            text = "Background Jobs",
+                            style = MaterialTheme.typography.h4
+                        )
+                        Icon(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .clickable(onClick = onDismissRequest),
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Close popup"
+                        )
+                    }
+                    Box {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            state = scrollState
+                        ) {
+                            items(items = jobHandler.jobs) { item ->
+                                Column(Modifier.padding(5.dp)) {
+                                    Text(text = item.name)
+                                    Text(text = item.messageState.value ?: "No message")
+                                    Text(text = item.progressTicksState.value.toString())
+                                    if (item.progressTicksState.value != IProgressMonitor.UNKNOWN_PROGRESS_ADVANCE) {
+                                        val animProg =
+                                            animateFloatAsState(targetValue = item.progressTicksState.percentageFloat())
+                                        LinearProgressIndicator(progress = animProg.value)
+                                    } else {
+                                        LinearProgressIndicator()
+                                    }
                                 }
                             }
                         }
                         if (jobHandler.jobs.isEmpty()) {
-                            item {
-                                Text("No Jobs running!")
-                            }
+                            Text(
+                                modifier = Modifier.align(Alignment.Center),
+                                text = "No Jobs running!",
+                                style = MaterialTheme.typography.h5
+                            )
                         }
+                        VerticalScrollbar(
+                            modifier = Modifier.align(Alignment.TopEnd),
+                            adapter = scrollAdapter
+                        )
                     }
-                    VerticalScrollbar(adapter = scrollAdapter)
-
                 }
             }
         })
