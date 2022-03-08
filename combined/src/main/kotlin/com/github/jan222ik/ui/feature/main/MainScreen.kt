@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.github.jan222ik.ui.feature.LocalI18N
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.footer.FooterComponent
+import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.MenuToolBarComponent
 import com.github.jan222ik.ui.feature.main.tree.FileTree
@@ -43,6 +44,7 @@ private fun Modifier.cursorForHorizontalResize(): Modifier =
 @Composable
 fun MainScreen(
     viewModel: MainViewModel,
+    jobHandler: JobHandler
 ) {
     val logger = remember { KotlinLogging.logger("com.github.jan222ik.ui.feature.main.MainScreen") }
     val welcomeText by viewModel.welcomeText.collectAsState()
@@ -51,11 +53,13 @@ fun MainScreen(
             MenuToolBarComponent(
                 modifier = Modifier
                     .height(MainScreenScaffoldConstants.menuToolBarHeight)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
+                jobHandler = jobHandler
             )
         },
         footer = {
-            FooterComponent(
+            val component = remember(jobHandler) { FooterComponent(jobHandler) }
+            component.render(
                 modifier = Modifier
                     .height(MainScreenScaffoldConstants.footerHeight)
                     .fillMaxWidth()

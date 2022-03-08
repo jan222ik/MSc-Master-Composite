@@ -8,8 +8,11 @@ import com.arkivanov.decompose.replaceCurrent
 import com.arkivanov.decompose.router
 import com.arkivanov.decompose.statekeeper.Parcelable
 import com.github.jan222ik.di.AppComponent
+import com.github.jan222ik.di.module.JobHandlerModule
 import com.github.jan222ik.ui.feature.main.MainScreenComponent
 import com.github.jan222ik.ui.feature.splash.SplashScreenComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 
 /**
  * All navigation decisions are made from here
@@ -26,8 +29,9 @@ class NavHostComponent(
         object Main : Config()
     }
 
-    private val appComponent: AppComponent = com.github.jan222ik.di.DaggerAppComponent
-        .create()
+    private val appComponent: AppComponent = com.github.jan222ik.di.DaggerAppComponent.builder()
+        .jobHandlerModule(JobHandlerModule(CoroutineScope(SupervisorJob())))
+        .build()
 
     /**
      * Router configuration
