@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.github.jan222ik.ui.feature.LocalI18N
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
+import com.github.jan222ik.ui.feature.main.diagram.DiagramAreaComponent
 import com.github.jan222ik.ui.feature.main.footer.FooterComponent
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
@@ -46,8 +47,6 @@ fun MainScreen(
     viewModel: MainViewModel,
     jobHandler: JobHandler
 ) {
-    val logger = remember { KotlinLogging.logger("com.github.jan222ik.ui.feature.main.MainScreen") }
-    val welcomeText by viewModel.welcomeText.collectAsState()
     MainScreenScaffold(
         menuToolBar = {
             MenuToolBarComponent(
@@ -67,9 +66,6 @@ fun MainScreen(
         },
         content = {
             val splitterState = rememberSplitPaneState()
-            val hSplitterState = rememberSplitPaneState()
-
-
             var fileTreeExpanded by remember(splitterState) { mutableStateOf(splitterState.positionPercentage < 0.2f) }
 
             HorizontalSplitPane(
@@ -110,63 +106,7 @@ fun MainScreen(
                     }
                 }
                 second(50.dp) {
-                    VerticalSplitPane(splitPaneState = hSplitterState) {
-                        first(10.dp) {
-                            Box(Modifier.background(Color.Blue).fillMaxSize())
-                        }
-                        second(20.dp) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = welcomeText,
-                                        style = MaterialTheme.typography.h3
-                                    )
-
-                                    Spacer(
-                                        modifier = Modifier.height(10.dp)
-                                    )
-
-                                    Button(
-                                        onClick = {
-                                            viewModel.onClickMeClicked()
-                                        }
-                                    ) {
-                                        Text(text = "Click me")
-                                    }
-                                    val shortcutActionsHandler = LocalShortcutActionHandler.current
-                                    var textValue by remember { mutableStateOf("") }
-                                    shortcutActionsHandler.register(
-                                        action = ShortcutAction.of(
-                                            key = Key.K,
-                                            modifierSum = ShortcutAction.KeyModifier.CTRL,
-                                            action = {
-                                                logger.debug { "CTRL + K" }
-                                                textValue = "CTRL + K"
-                                                true
-                                            }
-                                        )
-                                    )
-                                    TextField(
-                                        value = textValue,
-                                        onValueChange = { textValue = it }
-                                    )
-                                    val (localeState, switchLocale) = LocalI18N.current
-                                    Button(onClick = {
-                                        val lang = "de".takeIf { localeState.language == "en" } ?: "en"
-                                        switchLocale(Locale(lang))
-                                    }) {
-                                        Text("Switch")
-                                    }
-                                    Text(text = stringResource(key = textValue) { "${R.string.mainWindow.title}: ${R.string.mainWindow.language} $textValue" })
-                                }
-                            }
-                        }
-                    }
+                    DiagramAreaComponent().render()
                 }
                 splitter {
                     visiblePart {
