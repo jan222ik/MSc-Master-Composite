@@ -6,7 +6,7 @@ import com.github.jan222ik.model.validation.transformations.ITransformation
 import com.github.jan222ik.model.validation.transformations.Transformer
 
 
-class ValidatedTextState<out R>(
+class ValidatedTextState<R>(
     private val initial: String,
     private val transformation: ITransformation<String, R>,
     private val onValidValue: ((R, Boolean) -> Unit)? = null
@@ -16,6 +16,9 @@ class ValidatedTextState<out R>(
         private set
 
     var errors by mutableStateOf<List<IValidationError>>(emptyList())
+        private set
+
+    var transformResult by mutableStateOf<R?>(null)
         private set
 
     init {
@@ -38,6 +41,7 @@ class ValidatedTextState<out R>(
                 errors = emptyList()
                 if (notifyValid) {
                     onValidValue?.invoke(it, nextTfv.text == initial)
+                    transformResult = it
                 }
             }
     }
@@ -47,8 +51,8 @@ class ValidatedTextState<out R>(
 fun <T : Any> rememberTextState(
     text: String,
     transformation: Transformer<String, T>,
-    vararg keys: Any? = emptyArray(),
     onValidValue: ((T, Boolean) -> Unit)? = null,
+    keys: Array<Any?> = emptyArray(),
 ): ValidatedTextState<T> {
     return remember(text, transformation, onValidValue, *keys) {
         ValidatedTextState(

@@ -53,6 +53,16 @@ class ProjectTreeHandler(
         }
     )
 
+    private val clearSelection = ShortcutAction.of(
+        key = Key.Escape,
+        action = {
+            if (focus?.hasFocus == true) {
+                treeSelection = emptyList()
+                /*consume = */ true
+            } else /*consume = */ false
+        }
+    )
+
 
     @Composable
     fun render(
@@ -68,9 +78,15 @@ class ProjectTreeHandler(
 
 
         DisposableEffect(shortcutActionsHandler) {
-            shortcutActionsHandler.register(action = selectAllAction)
+            shortcutActionsHandler.apply {
+                register(action = selectAllAction)
+                register(action = clearSelection)
+            }
             onDispose {
-                shortcutActionsHandler.deregister(action = selectAllAction)
+                shortcutActionsHandler.apply {
+                    deregister(action = selectAllAction)
+                    deregister(action = clearSelection)
+                }
             }
         }
         val focusRequester = remember { FocusRequester() }
@@ -79,7 +95,6 @@ class ProjectTreeHandler(
                 .fillMaxSize()
                 .focusRequester(focusRequester)
                 .onFocusChanged {
-                    println("Focus State = $it")
                     focus = it
                 }.apply {
                     if (focus?.hasFocus == true) {

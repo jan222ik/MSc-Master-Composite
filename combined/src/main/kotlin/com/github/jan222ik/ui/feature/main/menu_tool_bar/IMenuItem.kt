@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 interface IMenuItem {
     val icon: ImageVector?
     val displayName: String
-    val command: ICommand
+    val command: ICommand?
 
-    fun isActive(): Boolean = command.isActive()
+    fun isActive(): Boolean? = command?.isActive()
 }

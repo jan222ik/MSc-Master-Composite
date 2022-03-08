@@ -19,6 +19,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.github.jan222ik.ui.feature.LocalI18N
+import com.github.jan222ik.ui.feature.LocalProjectSwitcher
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.footer.FooterComponent
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
@@ -80,11 +81,16 @@ fun MainScreen(
                     Box(Modifier.background(Color.Magenta).fillMaxSize()) {
                         Column {
                             Text("File Tree")
-                            LaunchedEffect(Unit) {
-                                FileTree.setRoot("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite")
+                            val project = LocalProjectSwitcher.current.first
+                            LaunchedEffect(project) {
+                                if (project == null) {
+                                    FileTree.setRoot("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite")
+                                } else {
+                                    FileTree.setRoot(project.root.absolutePath)
+                                }
                             }
                             FileTree.root?.let {
-                                val projectTreeHandler = remember() {
+                                val projectTreeHandler = remember(it) {
                                     ProjectTreeHandler(
                                         showRoot = true,
                                     )

@@ -7,7 +7,7 @@ import arrow.core.getOrElse
 import arrow.core.zip
 import com.github.jan222ik.model.validation.FailStrategy
 import com.github.jan222ik.model.validation.IValidationError
-import com.github.jan222ik.model.validation.Rules.runValidations
+import com.github.jan222ik.model.validation.valudations.Rules.runValidations
 import com.github.jan222ik.model.validation.ValidationItem
 
 @Stable

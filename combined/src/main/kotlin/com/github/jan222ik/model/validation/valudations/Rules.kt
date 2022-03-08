@@ -1,7 +1,11 @@
-package com.github.jan222ik.model.validation
+package com.github.jan222ik.model.validation.valudations
 
 import arrow.core.*
 import arrow.core.computations.either
+import com.github.jan222ik.model.validation.FailStrategy
+import com.github.jan222ik.model.validation.IValidationError
+import com.github.jan222ik.model.validation.ValidationErrors
+import com.github.jan222ik.model.validation.ValidationItem
 
 
 object Rules {
