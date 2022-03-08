@@ -4,15 +4,14 @@ package com.github.jan222ik
 import com.github.jan222ik.model.AppArgs
 import com.github.jan222ik.ui.feature.MainActivity
 import com.theapache64.cyclone.core.Application
-import com.toxicbakery.logging.Arbor
-import com.toxicbakery.logging.Seedling
+import mu.KLogging
 
 
 class App(
     appArgs: AppArgs,
 ) : Application() {
 
-    companion object {
+    companion object : KLogging() {
         lateinit var appArgs: AppArgs
     }
 
@@ -22,9 +21,8 @@ class App(
 
     override fun onCreate() {
         super.onCreate()
-        Arbor.sow(Seedling())
 
-        Arbor.d("Starting app...")
+        logger.debug { "Starting app..." }
 
         val splashIntent = MainActivity.getStartIntent()
         startActivity(splashIntent)

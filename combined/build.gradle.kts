@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm")
     kotlin("kapt")
     id("org.jetbrains.compose")
+    id("de.comahe.i18n4k")
 }
 
 group = "com.github.jan222ik"
@@ -13,12 +14,17 @@ version = "1.0.0"
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
+
 
 dependencies {
     implementation(kotlin("stdlib"))
     implementation(compose.desktop.currentOs)
     implementation(compose.materialIconsExtended)
+    implementation(compose.ui)
+    implementation(compose.uiTooling)
+    implementation(compose.foundation)
 
     // Module dependencies
     implementation(project(":data"))
@@ -30,9 +36,6 @@ dependencies {
     api("com.google.dagger:dagger:$daggerVersion")
     kapt("com.google.dagger:dagger-compiler:$daggerVersion")
 
-    // Arbor : Like Timber, just different.
-    api("com.ToxicBakery.logging:arbor-jvm:1.34.109")
-
     // Cyclone : https://github.com/theapache64/cyclone
     implementation("com.theapache64:cyclone:1.0.0-alpha01")
 
@@ -43,6 +46,14 @@ dependencies {
 
     // Arrow
     implementation("io.arrow-kt:arrow-core:1.0.1")
+
+    // Logging
+    implementation("io.github.microutils:kotlin-logging-jvm:2.0.11")
+    implementation("ch.qos.logback:logback-classic:1.2.6")
+
+    // i18n
+    implementation("de.comahe.i18n4k:i18n4k-core:0.3.0")
+    implementation("de.comahe.i18n4k:i18n4k-core-jvm:0.3.0")
 
 
     /**
@@ -69,6 +80,11 @@ dependencies {
 
     // JUnit : JUnit is a unit testing framework for Java, created by Erich Gamma and Kent Beck.
     testImplementation(kotlin("test-junit5"))
+}
+
+i18n4k {
+    sourceCodeLocales = listOf("en", "de")
+    inputDirectory = "src/main/resources/i18n"
 }
 
 

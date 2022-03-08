@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.mouseClickable
 import androidx.compose.foundation.window.WindowDraggableArea
@@ -29,15 +30,21 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
+import com.github.jan222ik.model.mock.MockBackgroundJobs
 import com.github.jan222ik.ui.feature.LocalWindowActions
 import com.github.jan222ik.ui.feature.LocalWindowScope
+import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun MenuToolBarComponent(modifier: Modifier) {
+fun MenuToolBarComponent(
+    modifier: Modifier,
+    jobHandler: JobHandler
+) {
     with(LocalWindowScope.current) {
         WindowDraggableArea(
             modifier = modifier
@@ -55,7 +62,16 @@ fun MenuToolBarComponent(modifier: Modifier) {
                         painter = painterResource("drawables/launcher_icons/system.png"),
                         contentDescription = "Logo"
                     )
-                    MenuButton(key = Key.F, displayText = "File", popupContent = { repeat(5) { Text("File Popup") } })
+                    val fileMenu = remember {
+                        listOf(
+                            MenuItem(
+                                icon = null,
+                                displayName = "Create mock background jobs",
+                                command = MockBackgroundJobs()
+                            )
+                        )
+                    }
+                    MenuButton(key = Key.F, displayText = "File", popupContent = { MenuItemList(fileMenu, jobHandler) })
                     MenuButton(key = Key.E, displayText = "Edit", popupContent = { Text("Edit Popup") })
                 }
                 Row(
@@ -127,7 +143,6 @@ fun MenuButton(
                         if (buttons.isPrimaryPressed) {
                             if (!isClosing) {
                                 showPopup = true
-                                println("Open $displayText popup")
                             }
                         }
                     }),
@@ -152,7 +167,6 @@ fun MenuButton(
                 alignment = Alignment.TopStart,
                 focusable = true,
                 onDismissRequest = {
-                    println("Dismiss")
                     showPopup = false
                     isClosing = true
                 }
@@ -167,4 +181,38 @@ fun MenuButton(
         }
     }
 
+}
+
+@Composable
+fun MenuItemList(items: List<IMenuItem>, jobHandler: JobHandler) {
+    Column(
+        modifier = Modifier.padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        items.forEach { item ->
+            val enabled = item.isActive()
+            val scope = rememberCoroutineScope()
+            Row(
+                modifier = Modifier.clickable(onClick = {
+                    scope.launch { item.command.execute(jobHandler) }
+                }),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Box(
+                    modifier = Modifier.size(16.dp)
+                ) {
+                    item.icon?.let {
+                        Icon(
+                            imageVector = it,
+                            contentDescription = "Execute: ${item.displayName}"
+                        )
+                    }
+                }
+                Text(
+                    text = item.displayName
+                )
+            }
+        }
+    }
 }

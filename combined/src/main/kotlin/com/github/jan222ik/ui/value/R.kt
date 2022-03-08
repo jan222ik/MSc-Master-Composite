@@ -1,5 +1,7 @@
 package com.github.jan222ik.ui.value
 
+import MainWindowStrings
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 object R {
@@ -13,6 +15,6 @@ object R {
 
     @Suppress("ClassName")
     object string {
-        const val ACTION_MAIN_CLICK_ME = "Click Me!"
+        val mainWindow = MainWindowStrings
     }
 }
