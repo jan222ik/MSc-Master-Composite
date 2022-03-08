@@ -1,31 +1,13 @@
 package com.github.jan222ik.ui.feature.main.diagram
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.Button
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.unit.dp
-import com.github.jan222ik.ui.feature.LocalI18N
-import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
-import com.github.jan222ik.ui.feature.main.ComposableSlot
-import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
-import com.github.jan222ik.ui.feature.stringResource
-import com.github.jan222ik.ui.value.R
-import de.comahe.i18n4k.Locale
 import mu.KLogging
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
+import org.jetbrains.compose.splitpane.SplitPaneState
 import org.jetbrains.compose.splitpane.VerticalSplitPane
-import org.jetbrains.compose.splitpane.rememberSplitPaneState
 
 @ExperimentalComposeUiApi
 @ExperimentalSplitPaneApi
@@ -37,31 +19,23 @@ class DiagramAreaComponent {
     private val paletteComponent = PaletteComponent(this)
     private val propertiesViewComponent = PropertiesViewComponent(this)
 
-    @Composable
-    fun render() {
-        DiagramAreaComponentLayout(
-            palette = { paletteComponent.render() },
-            canvas = { canvasComponent.render() },
-            propertyView = { propertiesViewComponent.render() }
-        )
-    }
+    internal val hSplitter = SplitPaneState(moveEnabled = true, initialPositionPercentage = 1f)
+    internal val vSplitter = SplitPaneState(moveEnabled = true, initialPositionPercentage = 1f)
 
     @Composable
-    fun DiagramAreaComponentLayout(
-        palette: ComposableSlot,
-        propertyView: ComposableSlot,
-        canvas: ComposableSlot
-    ) {
-        val hSplitter = rememberSplitPaneState()
+    fun render() {
         HorizontalSplitPane(splitPaneState = hSplitter) {
-            first {
-                val vSplitter = rememberSplitPaneState()
+            first() {
                 VerticalSplitPane(splitPaneState = vSplitter) {
-                    first { canvas.invoke() }
-                    second { palette.invoke() }
+                    first() { canvasComponent.render() }
+                    second(minSize = PaletteComponent.PALETTE_MIN_HEIGHT) {
+                        paletteComponent.render()
+                    }
                 }
             }
-            second { propertyView.invoke() }
+            second(minSize = PropertiesViewComponent.PROPERTIES_MIN_WIDTH) {
+                propertiesViewComponent.render()
+            }
         }
     }
 }
