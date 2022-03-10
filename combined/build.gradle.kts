@@ -25,6 +25,7 @@ dependencies {
     implementation(compose.ui)
     implementation(compose.uiTooling)
     implementation(compose.foundation)
+    implementation("org.jetbrains.compose.ui:ui-util:1.1.0-alpha05")
 
     // Module dependencies
     implementation(project(":data"))
