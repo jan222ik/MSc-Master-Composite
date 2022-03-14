@@ -1,5 +1,6 @@
 package com.github.jan222ik.ui.feature.main.diagram
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
@@ -17,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 
+@ExperimentalFoundationApi
 @ExperimentalComposeUiApi
 @ExperimentalSplitPaneApi
 class PaletteComponent(
@@ -28,31 +30,28 @@ class PaletteComponent(
     }
 
     @Composable
-    fun render() {
+    fun render(onToggle: () -> Unit) {
         val isMinimized = remember(parent.vSplitter.positionPercentage) { parent.vSplitter.positionPercentage > 0.97 }
         Surface(
             color = Color.Gray
         ) {
             Box(Modifier.fillMaxSize()) {
-                ShowMoreLess(isMinimized = isMinimized)
+                ShowMoreLess(isMinimized = isMinimized, onToggle)
             }
         }
     }
 
     @Composable
     fun BoxScope.ShowMoreLess(
-        isMinimized: Boolean
+        isMinimized: Boolean,
+        onToggle: () -> Unit
     ) {
         Row(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .clickable(
                     onClick = {
-                        if (isMinimized) {
-                            parent.vSplitter.setToDpFromSecond(PALETTE_EXPAND_POINT_HEIGHT)
-                        } else {
-                            parent.vSplitter.setToMax()
-                        }
+                        onToggle.invoke()
                     }
                 ),
             verticalAlignment = Alignment.CenterVertically,

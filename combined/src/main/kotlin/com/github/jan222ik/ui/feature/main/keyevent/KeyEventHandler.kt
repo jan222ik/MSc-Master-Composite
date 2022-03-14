@@ -213,22 +213,26 @@ class KeyEventHandler(
     private val keyDownActions = hashMapOf<Int, MutableList<ShortcutAction>>()
 
     override fun register(action: ShortcutAction): ShortcutAction {
+        logger.debug { "Register Action: $action" }
         keyDownActions.getOrPut(action.key.nativeKeyCode, ::ArrayList).add(action)
         return action
     }
 
     override fun deregister(action: ShortcutAction) {
+        logger.debug { "Deregister Action: $action" }
         keyDownActions[action.key.nativeKeyCode]?.remove(action)
     }
 
     private val keyReleaseActions = hashMapOf<Int, MutableList<ShortcutAction>>()
 
     override fun registerOnRelease(action: ShortcutAction): ShortcutAction {
+        logger.debug { "Register OnRelease Action: $action" }
         keyReleaseActions.getOrPut(action.key.nativeKeyCode, ::ArrayList).add(action)
         return action
     }
 
     override fun deregisterOnRelease(action: ShortcutAction) {
+        logger.debug { "Deregister OnRelease Action: $action" }
         keyReleaseActions[action.key.nativeKeyCode]?.remove(action)
     }
 

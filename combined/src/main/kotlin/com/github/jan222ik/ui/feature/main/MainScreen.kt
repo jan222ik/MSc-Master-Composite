@@ -2,14 +2,22 @@ package com.github.jan222ik.ui.feature.main
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
@@ -18,7 +26,6 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.github.jan222ik.ui.feature.LocalI18N
 import com.github.jan222ik.ui.feature.LocalProjectSwitcher
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.diagram.DiagramAreaComponent
@@ -28,13 +35,9 @@ import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.MenuToolBarComponent
 import com.github.jan222ik.ui.feature.main.tree.FileTree
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
-import com.github.jan222ik.ui.feature.stringResource
-import com.github.jan222ik.ui.value.R
-import de.comahe.i18n4k.Locale
-import mu.KotlinLogging
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
-import org.jetbrains.compose.splitpane.VerticalSplitPane
+import org.jetbrains.compose.splitpane.SplitPaneState
 import org.jetbrains.compose.splitpane.rememberSplitPaneState
 import java.awt.Cursor
 
@@ -42,12 +45,31 @@ import java.awt.Cursor
 private fun Modifier.cursorForHorizontalResize(): Modifier =
     pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
 
+
 @OptIn(ExperimentalSplitPaneApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel,
     jobHandler: JobHandler
 ) {
+    val project = LocalProjectSwitcher.current.first
+    LaunchedEffect(project) {
+        if (project == null) {
+            FileTree.setRoot("C:\\Users\\jan\\Documents\\master-dependencies\\")
+        } else {
+            FileTree.setRoot(project.root.absolutePath)
+        }
+    }
+
+    val projectTreeHandler = remember(FileTree.root) {
+        ProjectTreeHandler(
+            showRoot = true
+        )
+    }
+
+    val diagramAreaComponent = remember(projectTreeHandler) {
+        DiagramAreaComponent(projectTreeHandler)
+    }
     MainScreenScaffold(
         menuToolBar = {
             MenuToolBarComponent(
@@ -66,53 +88,52 @@ fun MainScreen(
             )
         },
         content = {
-            val splitterState = rememberSplitPaneState()
-            var fileTreeExpanded by remember(splitterState) { mutableStateOf(splitterState.positionPercentage < 0.2f) }
+            val hSplitter = rememberSplitPaneState()
+            val isMinimized = remember(hSplitter.positionPercentage) {
+                hSplitter.positionPercentage < 0.03f
+            }
+
+            val action = remember {
+                ShortcutAction.of(
+                    key = Key.One,
+                    modifierSum = ShortcutAction.KeyModifier.ALT,
+                    action = {
+                        if (hSplitter.positionPercentage < 0.03f) {
+                            hSplitter.setToDpFromFirst(400.dp)
+                        } else {
+                            hSplitter.setToMin()
+                        }
+                        /* consume = */ true
+                    }
+                )
+            }
+            val shortcutActionsHandler = LocalShortcutActionHandler.current
+            DisposableEffect(Unit) {
+                shortcutActionsHandler.register(action)
+                onDispose {
+                    shortcutActionsHandler.deregister(action)
+                }
+            }
 
             HorizontalSplitPane(
                 //modifier = Modifier.fillMaxSize(),
-                splitPaneState = splitterState
+                splitPaneState = hSplitter
             ) {
-                first(400.dp) {
+                first(20.dp) {
                     Box(Modifier.background(Color.Magenta).fillMaxSize()) {
-                        Column {
+
+                        Column(Modifier.padding(end = 20.dp)) {
                             Text("File Tree")
-                            val project = LocalProjectSwitcher.current.first
-                            LaunchedEffect(project) {
-                                if (project == null) {
-                                    FileTree.setRoot("C:\\Users\\jan\\Documents\\master-dependencies\\")
-                                } else {
-                                    FileTree.setRoot(project.root.absolutePath)
-                                }
-                            }
                             FileTree.root?.let {
-                                val projectTreeHandler = remember(it) {
-                                    ProjectTreeHandler(
-                                        showRoot = true,
-                                    )
-                                }
                                 projectTreeHandler.render(root = it)
                             }
                         }
-                        Button(
-                            modifier = Modifier.align(Alignment.TopEnd),
-                            onClick = {
-                                fileTreeExpanded = if (fileTreeExpanded) {
-                                    splitterState.setToMin()
-                                    false
-                                } else {
-                                    splitterState.dispatchRawMovement(100f)
-                                    true
-                                }
 
-                            }
-                        ) {
-                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Open File Tree")
-                        }
+                        ShowMoreLess(hSplitter, isMinimized = isMinimized)
                     }
                 }
                 second(50.dp) {
-                    DiagramAreaComponent().render()
+                    diagramAreaComponent.render()
                 }
                 splitter {
                     visiblePart {
@@ -138,6 +159,52 @@ fun MainScreen(
         }
     )
 
+}
+
+@OptIn(ExperimentalSplitPaneApi::class)
+@Composable
+fun BoxScope.ShowMoreLess(
+    hSplitter: SplitPaneState,
+    isMinimized: Boolean
+) {
+    Layout(modifier = Modifier.align(Alignment.CenterEnd), content = {
+        Row(
+            modifier = Modifier
+                .rotate(90f)
+                .clickable(
+                    onClick = {
+                        if (isMinimized) {
+                            hSplitter.setToDpFromFirst(400.dp)
+                        } else {
+                            hSplitter.setToMin()
+                        }
+
+                    }
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            val imageVector = when (isMinimized) {
+                true -> Icons.Filled.ExpandLess
+                false -> Icons.Filled.ExpandMore
+            }
+            Icon(
+                imageVector = imageVector,
+                contentDescription = null
+            )
+            Text(text = "Tree")
+            Icon(
+                imageVector = imageVector,
+                contentDescription = null
+            )
+        }
+    }) { measurables, constraints ->
+        val pRow = measurables.first()
+            .measure(constraints.copy(maxHeight = constraints.maxWidth, maxWidth = constraints.maxHeight))
+        layout(pRow.height, constraints.maxHeight) {
+            pRow.placeRelative(x = (-pRow.width / 2) + pRow.height / 2, y = constraints.maxHeight / 2)
+        }
+    }
 }
 
 typealias ComposableSlot = @Composable () -> Unit

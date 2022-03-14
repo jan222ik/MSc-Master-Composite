@@ -41,12 +41,15 @@ class ProjectTreeHandler(
 
     private var focus by mutableStateOf<FocusState?>(null)
 
+    var singleSelectedItem by mutableStateOf<TreeDisplayableItem?>(treeSelection.firstOrNull()?.let { items.getOrNull(it)?.actual })
+
     private val selectAllAction = ShortcutAction.of(
         key = Key.A,
         modifierSum = ShortcutAction.KeyModifier.CTRL,
         action = {
             if (focus?.hasFocus == true) {
                 treeSelection = items.indices.toMutableList()
+                singleSelectedItem = null
                 /*consume = */ true
             } else /*consume = */ false
         }
@@ -57,6 +60,7 @@ class ProjectTreeHandler(
         action = {
             if (focus?.hasFocus == true) {
                 treeSelection = emptyList()
+                singleSelectedItem = null
                 /*consume = */ true
             } else /*consume = */ false
         }
@@ -72,6 +76,7 @@ class ProjectTreeHandler(
             if (it.size != items.size) {
                 items = it
                 treeSelection = emptyList()
+                singleSelectedItem = null
             }
         }
 
@@ -177,7 +182,7 @@ class ProjectTreeHandler(
 
 
     internal class TreeItem(
-        private val actual: TreeDisplayableItem,
+        internal val actual: TreeDisplayableItem,
         private val treeHandler: ProjectTreeHandler
     ) {
         val name: String
@@ -229,6 +234,11 @@ class ProjectTreeHandler(
             }
         }
         treeSelection = selection
+        singleSelectedItem = if (selection.size == 1) {
+            treeSelection.firstOrNull()?.let { items.getOrNull(it)?.actual }
+        } else {
+            null
+        }
     }
 
 
