@@ -80,7 +80,7 @@ fun MainScreen(
                             val project = LocalProjectSwitcher.current.first
                             LaunchedEffect(project) {
                                 if (project == null) {
-                                    FileTree.setRoot("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite")
+                                    FileTree.setRoot("C:\\Users\\jan\\Documents\\master-dependencies\\")
                                 } else {
                                     FileTree.setRoot(project.root.absolutePath)
                                 }

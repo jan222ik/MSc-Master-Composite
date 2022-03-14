@@ -29,6 +29,7 @@ dependencies {
 
     // Module dependencies
     implementation(project(":data"))
+    implementation(project(":ecore"))
     implementation(project(":forked-libs"))
 
 
