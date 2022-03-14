@@ -26,7 +26,8 @@ import de.comahe.i18n4k.config.I18n4kConfigDefault
 import de.comahe.i18n4k.i18n4k
 import mu.KLogging
 import java.awt.GraphicsEnvironment
-import androidx.compose.ui.window.application as setContent
+import androidx.compose.ui.window.application
+import com.github.jan222ik.ui.feature.wizard.Project
 
 /**
  * The activity who will be hosting all screens in this app
@@ -52,7 +53,7 @@ class MainActivity : Activity() {
         }
         val taskbarHeight = displaySize.height - maxWinSize.height
         val applicableSize = displaySize.copy(height = displaySize.height.minus(taskbarHeight))
-        setContent {
+        application {
             val windowState = rememberWindowState(
                 size = applicableSize,
                 position = WindowPosition(Alignment.TopStart)
@@ -86,6 +87,11 @@ class MainActivity : Activity() {
                 logger.debug { "Switched Theme form $isDarkMode to $toDarkMode (true=dark)" }
                 isDarkMode = toDarkMode
             }
+            var project by remember { mutableStateOf<Project?>(null) }
+            fun switchProject(newProject: Project?) {
+                logger.debug { "Switched Project form $project to $newProject" }
+                project = newProject
+            }
             Window(
                 onCloseRequest = ::exitApplication,
                 title = "${App.appArgs.appName} (${App.appArgs.version})",
@@ -109,12 +115,13 @@ class MainActivity : Activity() {
                                 WindowPlacement.Maximized else WindowPlacement.Floating
                         },
                         close = {},
-                        exitApplication = this@setContent::exitApplication,
+                        exitApplication = this@application::exitApplication,
                     ),
                     LocalWindowScope provides this,
                     LocalShortcutActionHandler provides keyEventHandler,
                     LocalI18N provides (locale to ::switchLocale),
-                    LocalThemeSwitcher provides (isDarkMode to ::switchTheme)
+                    LocalThemeSwitcher provides (isDarkMode to ::switchTheme),
+                    LocalProjectSwitcher provides (project to ::switchProject)
                 ) {
                     AppTheme(
                         isDark = isDarkMode

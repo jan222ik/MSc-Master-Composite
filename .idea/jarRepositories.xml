@@ -41,5 +41,10 @@
       <option name="name" value="MavenLocal" />
       <option name="url" value="file:/$MAVEN_REPOSITORY$/" />
     </remote-repository>
+    <remote-repository>
+      <option name="id" value="it.filippor.p2.repo" />
+      <option name="name" value="it.filippor.p2.repo" />
+      <option name="url" value="https://raw.githubusercontent.com/filippor/p2Gradle/repo/repo" />
+    </remote-repository>
   </component>
 </project>

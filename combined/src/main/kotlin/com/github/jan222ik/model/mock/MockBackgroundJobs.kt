@@ -42,7 +42,6 @@ class MockBackgroundJobs : ICommand {
         }
     }
 
-    override suspend fun undo() {
-        TODO("Not yet implemented")
-    }
+    override fun canUndo(): Boolean = false
+    override suspend fun undo() = error("Can't be undone.")
 }

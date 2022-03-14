@@ -27,7 +27,6 @@ import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
 import mu.KLogging
-import java.io.File
 
 @ExperimentalFoundationApi
 class ProjectTreeHandler(
@@ -53,6 +52,16 @@ class ProjectTreeHandler(
         }
     )
 
+    private val clearSelection = ShortcutAction.of(
+        key = Key.Escape,
+        action = {
+            if (focus?.hasFocus == true) {
+                treeSelection = emptyList()
+                /*consume = */ true
+            } else /*consume = */ false
+        }
+    )
+
 
     @Composable
     fun render(
@@ -68,9 +77,15 @@ class ProjectTreeHandler(
 
 
         DisposableEffect(shortcutActionsHandler) {
-            shortcutActionsHandler.register(action = selectAllAction)
+            shortcutActionsHandler.apply {
+                register(action = selectAllAction)
+                register(action = clearSelection)
+            }
             onDispose {
-                shortcutActionsHandler.deregister(action = selectAllAction)
+                shortcutActionsHandler.apply {
+                    deregister(action = selectAllAction)
+                    deregister(action = clearSelection)
+                }
             }
         }
         val focusRequester = remember { FocusRequester() }
@@ -79,7 +94,6 @@ class ProjectTreeHandler(
                 .fillMaxSize()
                 .focusRequester(focusRequester)
                 .onFocusChanged {
-                    println("Focus State = $it")
                     focus = it
                 }.apply {
                     if (focus?.hasFocus == true) {
@@ -229,83 +243,6 @@ class ProjectTreeHandler(
         val list = mutableListOf<TreeItem>()
         addTo(list)
         return list
-    }
-
-}
-
-@ExperimentalFoundationApi
-abstract class TreeDisplayableItem(
-    open val level: Int
-) {
-    abstract val onPrimaryAction: (MouseClickScope.(idx: Int) -> Unit)?
-    abstract val onDoublePrimaryAction: MouseClickScope.() -> Unit
-    abstract val onSecondaryAction: MouseClickScope.() -> Unit
-    abstract val displayName: String
-    abstract val canExpand: Boolean
-
-    var children: List<TreeDisplayableItem> by mutableStateOf(emptyList())
-}
-
-@ExperimentalFoundationApi
-data class FileTreeItem(
-    override val level: Int,
-    override val displayName: String,
-    override val canExpand: Boolean,
-    val file: File
-) : TreeDisplayableItem(level = level) {
-
-    companion object : KLogging()
-
-    fun addChild(item: FileTreeItem) {
-        children = children + item
-    }
-
-    override val onPrimaryAction: (MouseClickScope.(idx: Int) -> Unit)?
-        get() = null
-
-    override val onDoublePrimaryAction: MouseClickScope.() -> Unit
-        get() = {
-            if (canExpand) {
-                if (children.isNotEmpty()) {
-                    children = emptyList()
-                } else {
-                    file.listFiles()?.forEach {
-                        FileTree.fileToFileTreeItem(it, this@FileTreeItem)
-                    }
-                }
-            }
-        }
-
-    override val onSecondaryAction: MouseClickScope.() -> Unit
-        get() = {
-            logger.debug { "TODO: Secondary Action" }
-        }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-object FileTree {
-    var root by mutableStateOf<FileTreeItem?>(null)
-
-    fun setRoot(path: String) {
-        val file = File(path)
-        root = FileTreeItem(
-            level = 0,
-            displayName = file.name,
-            canExpand = file.isDirectory && file.listFiles()?.isNotEmpty() == true,
-            file = file
-        )
-    }
-
-    fun fileToFileTreeItem(file: File, parent: FileTreeItem) {
-        if (file.exists()) {
-            val item = FileTreeItem(
-                level = parent.level + 1,
-                displayName = file.name,
-                canExpand = file.isDirectory && file.listFiles()?.isNotEmpty() == true,
-                file = file
-            )
-            parent.addChild(item)
-        }
     }
 
 }

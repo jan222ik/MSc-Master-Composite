@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.window.WindowScope
 import androidx.compose.ui.window.WindowState
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutActionsHandler
+import com.github.jan222ik.ui.feature.wizard.Project
 import de.comahe.i18n4k.Locale
 
 /**
@@ -78,6 +79,11 @@ val LocalI18N = compositionLocalOf<Pair<Locale, (Locale) -> Unit>> { error("No v
  * LocalThemeSwitcher is a [ProvidableCompositionLocal] that provides a [Pair] with the theme.isDarkMode for the current window [Boolean] and a setter to change it.
  */
 val LocalThemeSwitcher = compositionLocalOf<Pair<Boolean, (Boolean) -> Unit>> { error("No value for LocalThemeSwitcher in composition tree!") }
+
+/**
+ * LocalProjectSwitcher is a [ProvidableCompositionLocal] that provides a [Pair] with the project for the current window [Project] and a setter to change it.
+ */
+val LocalProjectSwitcher = compositionLocalOf<Pair<Project?, (Project?) -> Unit>> { error("No value for LocalProjectSwitcher in composition tree!") }
 
 @Composable
 fun stringResource(key: Any? = null, string: () -> String) : String {

@@ -10,3 +10,4 @@ rootProject.name = "MSc-Master-Composite"
 include("data")
 include("combined")
 include("forked-libs")
+include("ecore")

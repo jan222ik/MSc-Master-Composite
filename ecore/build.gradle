@@ -1,0 +1,33 @@
+plugins {
+    id ("java-library")
+    id ("it.filippor.p2") version "0.0.10"
+    id("java")
+}
+repositories {
+    //maven{
+    //  url = uri("../../p2GradleRepo/repo")
+    //}
+    mavenCentral()
+    mavenLocal()
+}
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(15))
+    }
+}
+p2.updateSites = [
+        uri("http://download.eclipse.org/releases/2021-09"),
+        uri("https://download.eclipse.org/modeling/mdt/papyrus/components/sysml16/2021-09/")
+]
+dependencies {
+    implementation api(p2.bundles(false, "org.eclipse.emf.common"))
+    implementation api(p2.bundles(false, "org.eclipse.emf.ecore"))
+    implementation api(p2.bundles(false, "org.eclipse.emf.mapping.ecore2xml"))
+    implementation api(p2.bundles(false, "org.eclipse.emf.ecore.xmi"))
+    implementation api(p2.bundles(false, "org.eclipse.uml2.uml.resources"))
+    implementation api(p2.bundles(false, "org.eclipse.uml2.uml"))
+    implementation api(p2.bundles(false, "org.eclipse.uml2.common"))
+    implementation api(p2.bundles(false, "org.eclipse.uml2.types"))
+    implementation api(p2.bundles(false, "org.eclipse.uml2.uml.profile.standard"))
+    implementation api(p2.bundles(false, "org.eclipse.papyrus.sysml16"))
+}

@@ -8,10 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.mouseClickable
 import androidx.compose.foundation.window.WindowDraggableArea
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Maximize
@@ -28,16 +25,22 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import com.github.jan222ik.model.mock.MockBackgroundJobs
+import com.github.jan222ik.ui.feature.LocalProjectSwitcher
 import com.github.jan222ik.ui.feature.LocalWindowActions
 import com.github.jan222ik.ui.feature.LocalWindowScope
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
+import com.github.jan222ik.ui.feature.wizard.CreateProjectWizard
+import com.github.jan222ik.ui.feature.wizard.Project
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.swing.JFileChooser
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -62,8 +65,55 @@ fun MenuToolBarComponent(
                         painter = painterResource("drawables/launcher_icons/system.png"),
                         contentDescription = "Logo"
                     )
+                    var showWizard by remember { mutableStateOf(false) }
+                    val (project, switchProject) = LocalProjectSwitcher.current
+                    val createProjectWizard = remember {
+                        CreateProjectWizard(
+                            onCreationFinished = switchProject,
+                            onDismissRequest = {
+                                showWizard = false
+                            }
+                        )
+                    }
+                    createProjectWizard.render(showWizard)
                     val fileMenu = remember {
                         listOf(
+                            SubmenuItem(
+                                icon = null,
+                                displayName = "New",
+                                items = listOf(
+                                    MenuItem(
+                                        icon = null,
+                                        displayName = "Create new project",
+                                        command = object : ICommand {
+                                            override fun isActive() = true
+                                            override suspend fun execute(handler: JobHandler) {
+                                                showWizard = true
+                                            }
+                                            override fun canUndo() = false
+                                            override suspend fun undo() = error("Can't be undone.")
+                                        }
+                                    )
+                                )
+                            ),
+                            MenuItem(
+                                icon = null,
+                                displayName = "Open existing project",
+                                command = object : ICommand {
+                                    override fun isActive(): Boolean = true
+                                    override suspend fun execute(handler: JobHandler) {
+                                        val f = JFileChooser()
+                                        f.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+                                        f.showSaveDialog(null)
+                                        val root = f.selectedFile?.absoluteFile
+                                        if (root != null) {
+                                            switchProject(Project.load(root))
+                                        }
+                                    }
+                                    override fun canUndo() = false
+                                    override suspend fun undo() = error("Can't be undone.")
+                                }
+                            ),
                             MenuItem(
                                 icon = null,
                                 displayName = "Create mock background jobs",
@@ -71,8 +121,17 @@ fun MenuToolBarComponent(
                             )
                         )
                     }
-                    MenuButton(key = Key.F, displayText = "File", popupContent = { MenuItemList(fileMenu, jobHandler) })
-                    MenuButton(key = Key.E, displayText = "Edit", popupContent = { Text("Edit Popup") })
+                    MenuButton(
+                        key = Key.F,
+                        displayText = "File",
+                        popupContent = { MenuItemList(fileMenu, jobHandler, 400.dp) })
+                    MenuButton(
+                        key = Key.E,
+                        displayText = "Edit",
+                        popupContent = { Text("Edit Popup") }
+                    )
+                    Spacer(Modifier.width(16.dp))
+                    Text(text = project?.name ?: "No project open", style = MaterialTheme.typography.overline)
                 }
                 Row(
                     Modifier.align(Alignment.CenterEnd)
@@ -184,18 +243,45 @@ fun MenuButton(
 }
 
 @Composable
-fun MenuItemList(items: List<IMenuItem>, jobHandler: JobHandler) {
+fun MenuItemList(items: List<IMenuItem>, jobHandler: JobHandler, width: Dp) {
+
     Column(
-        modifier = Modifier.padding(8.dp),
+        modifier = Modifier
+            .width(width)
+            .padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         items.forEach { item ->
             val enabled = item.isActive()
             val scope = rememberCoroutineScope()
+            var showSubFor by remember { mutableStateOf(emptyList<IMenuItem>()) }
+            if (showSubFor.isNotEmpty()) {
+                Popup(
+                    alignment = Alignment.TopEnd,
+                    focusable = true,
+                    offset = IntOffset(width.value.toInt(), 0),
+                    onDismissRequest = {
+                        showSubFor = emptyList()
+                    }
+                ) {
+                    MenuItemList(items = showSubFor, jobHandler = jobHandler, width)
+                }
+            }
             Row(
-                modifier = Modifier.clickable(onClick = {
-                    scope.launch { item.command.execute(jobHandler) }
-                }),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        onClick = {
+                            when (item) {
+                                is SubmenuItem -> {
+                                    showSubFor = item.items
+                                }
+                                else -> item.command?.let {
+                                    scope.launch { it.execute(jobHandler) }
+                                }
+                            }
+                        }
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
