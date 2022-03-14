@@ -3,6 +3,7 @@ package org.jetbrains.compose.splitpane
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.Dp
 
 @ExperimentalSplitPaneApi
 class SplitPaneState(
@@ -32,6 +33,27 @@ class SplitPaneState(
         val movableArea = maxPosition - minPosition
         if (movableArea > 0) {
             positionPercentage = minPosition / movableArea
+        }
+    }
+
+    fun setToMax() {
+        val movableArea = maxPosition - minPosition
+        if (movableArea > 0) {
+            positionPercentage = 1f
+        }
+    }
+
+    fun setToDpFromFirst(dp: Dp) {
+        val movableArea = maxPosition - minPosition
+        if (movableArea > 0) {
+            positionPercentage = dp.value / movableArea
+        }
+    }
+
+    fun setToDpFromSecond(dp: Dp) {
+        val movableArea = maxPosition - minPosition
+        if (movableArea > 0) {
+            positionPercentage = 1 - (dp.value / movableArea)
         }
     }
 
