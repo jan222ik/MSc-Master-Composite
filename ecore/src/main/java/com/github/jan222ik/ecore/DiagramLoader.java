@@ -11,7 +11,7 @@ import java.io.File;
 public class DiagramLoader {
     public static void open(File file) {
         URI testUri = URI.createFileURI(file.getAbsolutePath());
-        EMFResourceLoader.initBaseResources();
+        //EMFResourceLoader.initBaseResources();
         ResourceSet resourceSet1 = new ResourceSetImpl();
         resourceSet1.setResourceFactoryRegistry(Resource.Factory.Registry.INSTANCE);
         resourceSet1.getResource(testUri, true);
