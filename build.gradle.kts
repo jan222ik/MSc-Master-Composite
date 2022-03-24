@@ -6,7 +6,7 @@ plugins {
     val kotlinVersion = "1.6.10"
     kotlin("jvm") version kotlinVersion
     kotlin("kapt") version kotlinVersion
-    id("org.jetbrains.compose") version "1.1.0-alpha05"
+    id("org.jetbrains.compose") version "1.1.1"
     id("org.jetbrains.dokka") version kotlinVersion
     id("de.comahe.i18n4k") version "0.3.0"
 }
