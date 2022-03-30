@@ -1,4 +1,4 @@
-package com.github.jan222ik.playground.propertyview
+package com.github.jan222ik.ui.components.tooltips
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 
