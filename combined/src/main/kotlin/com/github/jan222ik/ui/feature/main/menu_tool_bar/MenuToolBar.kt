@@ -18,8 +18,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isPrimaryPressed
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
@@ -29,6 +32,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.singleWindowApplication
 import com.github.jan222ik.model.mock.MockBackgroundJobs
 import com.github.jan222ik.ui.feature.LocalProjectSwitcher
 import com.github.jan222ik.ui.feature.LocalWindowActions
@@ -90,6 +94,7 @@ fun MenuToolBarComponent(
                                             override suspend fun execute(handler: JobHandler) {
                                                 showWizard = true
                                             }
+
                                             override fun canUndo() = false
                                             override suspend fun undo() = error("Can't be undone.")
                                         }
@@ -110,6 +115,7 @@ fun MenuToolBarComponent(
                                             switchProject(Project.load(root))
                                         }
                                     }
+
                                     override fun canUndo() = false
                                     override suspend fun undo() = error("Can't be undone.")
                                 }
@@ -137,7 +143,7 @@ fun MenuToolBarComponent(
                     Modifier.align(Alignment.CenterEnd)
                 ) {
                     val windowActions = LocalWindowActions.current
-                    Button(
+                    ActionButton(
                         onClick = windowActions::minimize
                     ) {
                         Icon(
@@ -145,7 +151,7 @@ fun MenuToolBarComponent(
                             contentDescription = "Minimize Application"
                         )
                     }
-                    Button(
+                    ActionButton(
                         onClick = windowActions::maximize
                     ) {
                         Icon(
@@ -153,8 +159,9 @@ fun MenuToolBarComponent(
                             contentDescription = "Maximize Application"
                         )
                     }
-                    Button(
-                        onClick = windowActions::exitApplication
+                    ActionButton(
+                        onClick = windowActions::exitApplication,
+                        isClose = true
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Close,
@@ -165,6 +172,28 @@ fun MenuToolBarComponent(
             }
 
         }
+    }
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun ActionButton(
+    onClick: () -> Unit,
+    isClose: Boolean = false,
+    content: @Composable RowScope.() -> Unit
+) {
+    var isHover by remember { mutableStateOf(false) }
+    IconButton(
+        modifier = Modifier
+            .background(when (isClose) {
+                true -> MaterialTheme.colors.background.takeUnless { isHover } ?: MaterialTheme.colors.error
+                else -> MaterialTheme.colors.background.takeUnless { isHover } ?: MaterialTheme.colors.background.copy(alpha = ContentAlpha.medium)
+            })
+            .onPointerEvent(PointerEventType.Enter) { isHover = true}
+            .onPointerEvent(PointerEventType.Exit) { isHover = false},
+        onClick = onClick
+    ) {
+        Row(content = content)
     }
 }
 

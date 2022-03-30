@@ -19,6 +19,9 @@ subprojects {
         google()
         maven { url = uri("https://jitpack.io") }
         maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
+        maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots/") }
+        maven { url = uri("https://dist.wso2.org/maven2/") }
+        maven { url = uri("https://repo1.maven.org/maven2/") }
     }
 }
 

@@ -82,7 +82,7 @@ class MainActivity : Activity() {
                 locale = nextLocale
                 (i18n4k as I18n4kConfigDefault).locale = locale
             }
-            var isDarkMode by remember { mutableStateOf(true) }
+            var isDarkMode by remember { mutableStateOf(false) }
             fun switchTheme(toDarkMode: Boolean) {
                 logger.debug { "Switched Theme form $isDarkMode to $toDarkMode (true=dark)" }
                 isDarkMode = toDarkMode

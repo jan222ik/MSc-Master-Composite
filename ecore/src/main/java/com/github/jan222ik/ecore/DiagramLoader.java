@@ -1,24 +1,21 @@
 package com.github.jan222ik.ecore;
 
-import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.Element;
 import org.eclipse.uml2.uml.Model;
+import org.eclipse.uml2.uml.Class;
 
 import java.io.File;
 
 public class DiagramLoader {
     public static ResourceSet open(File file) {
         URI fileUri = URI.createFileURI(file.getAbsolutePath());
-        EMFResourceLoader.initBaseResources();
+        //EMFResourceLoader.initBaseResources();
         ResourceSet resourceSet1 = new ResourceSetImpl();
         resourceSet1.setResourceFactoryRegistry(Resource.Factory.Registry.INSTANCE);
         resourceSet1.getResource(fileUri, true);
