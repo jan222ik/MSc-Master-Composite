@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm")
     java
     id("java-library")
+    application
 }
 
 group = "com.github.jan222ik.ecore"
@@ -20,6 +21,9 @@ repositories {
 
 dependencies {
     api(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+    api(fileTree(mapOf("dir" to "libs/mdt-uml2-Update-5.5.2/", "include" to listOf("*.jar"))))
+    api(fileTree(mapOf("dir" to "libs/mdt-uml2-Update-5.5.2/features", "include" to listOf("*.jar"))))
+    api(fileTree(mapOf("dir" to "libs/mdt-uml2-Update-5.5.2/plugins", "include" to listOf("*.jar"))))
     val emfVersion = "0.7.0-SNAPSHOT"
     api("org.eclipse.emfcloud.modelserver:org.eclipse.emfcloud.modelserver.bundles.parent:$emfVersion")
     //api("org.eclipse.emfcloud.modelserver:org.eclipse.emfcloud.modelserver.client.tests:$emfVersion")
@@ -49,7 +53,7 @@ dependencies {
     // api("com.google.guava:guava:31.1-jre")
 
     val apachelogginglog4jversion = "2.17.1"
-    val google_guice_version = "3.0"
+    val google_guice_version = "5.0.1"
     val google_guava_version = "30.1-jre"
     val jackson_databind_version = "2.12.1"
     val eclipse_core_runtime_version = "3.7.0"
@@ -74,7 +78,7 @@ dependencies {
     api("org.apache.logging.log4j:log4j-core:${apachelogginglog4jversion}")
     api("org.apache.logging.log4j:log4j-web:${apachelogginglog4jversion}")
     api("com.google.inject:guice:${google_guice_version}")
-    api("com.google.inject.extensions:guice-multibindings:${google_guice_version}")
+    api("com.google.inject.extensions:guice-multibindings:3.0")
     api("com.google.guava:guava:${google_guava_version}")
     api("com.fasterxml.jackson.core:jackson-databind:${jackson_databind_version}")
     api("org.eclipse.core:org.eclipse.core.runtime:${eclipse_core_runtime_version}")
@@ -105,6 +109,9 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
+application {
+    applicationDefaultJvmArgs = mutableListOf("--add-opens", "java.base/java.lang=com.google.guice,javassist", "--add-opens", "java.base/java.lang=ALL-UNNAMED")
+}
 
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
