@@ -2,6 +2,7 @@ package com.github.jan222ik.ui.feature.main.tree
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.MouseClickScope
+import androidx.compose.ui.graphics.vector.ImageVector
 import mu.KLogging
 import org.eclipse.emf.common.notify.Notifier
 
@@ -11,6 +12,9 @@ sealed class ModelTreeItem(
     override val displayName: String,
     override val canExpand: Boolean
 ) : TreeDisplayableItem(level = level) {
+
+    override val icon: ImageVector?
+        get() = null
 
     companion object : KLogging() {
         fun parseItem(

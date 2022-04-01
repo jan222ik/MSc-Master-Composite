@@ -23,6 +23,7 @@ fun StingBasedInput(
     propViewElement: IPropertyViewElement,
     initialValue: String,
     iTransformation: ITransformation<String, String> = remember { NonTransformer() },
+    isReadOnly: Boolean = false,
     focusRequester: FocusRequester,
     focusOrderReceiver: FocusOrder.() -> Unit
 ) {
@@ -46,6 +47,7 @@ fun StingBasedInput(
             value = textState.tfv,
             onValueChange = textState::onValueChange,
             isError = textState.errors.isNotEmpty(),
+            readOnly = isReadOnly
         )
     }
 }

@@ -2,13 +2,10 @@
 
 package com.github.jan222ik.ui.feature.main.tree
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.MouseClickScope
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.mouseClickable
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -18,14 +15,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.*
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.dp
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
+import com.github.jan222ik.ui.value.Colors
 import mu.KLogging
 
 @ExperimentalFoundationApi
@@ -39,9 +40,11 @@ class ProjectTreeHandler(
 
     private var treeSelection by mutableStateOf(emptyList<Int>())
 
+    private val focusRequester = FocusRequester()
     private var focus by mutableStateOf<FocusState?>(null)
 
-    var singleSelectedItem by mutableStateOf<TreeDisplayableItem?>(treeSelection.firstOrNull()?.let { items.getOrNull(it)?.actual })
+    var singleSelectedItem by mutableStateOf<TreeDisplayableItem?>(
+        treeSelection.firstOrNull()?.let { items.getOrNull(it)?.actual })
 
     private val selectAllAction = ShortcutAction.of(
         key = Key.A,
@@ -77,6 +80,9 @@ class ProjectTreeHandler(
                 items = it
                 treeSelection = emptyList()
                 singleSelectedItem = null
+                if (it.size == 1) {
+                    it.first().onDoublePrimaryAction.invoke(com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext)
+                }
             }
         }
 
@@ -93,12 +99,12 @@ class ProjectTreeHandler(
                 }
             }
         }
-        val focusRequester = remember { FocusRequester() }
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .focusRequester(focusRequester)
                 .onFocusChanged {
+                    println("TreeFocus = ${it}")
                     focus = it
                 }.apply {
                     if (focus?.hasFocus == true) {
@@ -118,13 +124,27 @@ class ProjectTreeHandler(
                     treeSelection.contains(itemIdx)
                 }
                 Row(
-                    modifier = Modifier.padding(start = item.level.times(8).dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(
+                            when {
+                                isSelected -> {
+                                    Modifier.background(
+                                        color = Colors.focusActive.takeIf { focus?.hasFocus == true }
+                                            ?: Colors.focusInactive
+                                    )
+                                }
+                                else -> Modifier
+                            }
+                        )
+                        .padding(start = item.level.times(16).dp)
+                        .drawBehind { drawLine(Color.Black, Offset.Zero, Offset.Zero.copy(y = this.size.height)) },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp),
+                            .size(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         if (item.canExpand) {
@@ -133,6 +153,11 @@ class ProjectTreeHandler(
                                     modifier = Modifier.mouseClickable {
                                         if (buttons.isPrimaryPressed) {
                                             item.onDoublePrimaryAction.invoke(this)
+                                            selectItem(
+                                                idx = itemIdx,
+                                                singleSelect = true,
+                                                keepSelect = this.keyboardModifiers.isCtrlPressed
+                                            )
                                         }
                                     },
                                     imageVector = Icons.Filled.ExpandMore,
@@ -143,6 +168,11 @@ class ProjectTreeHandler(
                                     modifier = Modifier.mouseClickable {
                                         if (buttons.isPrimaryPressed) {
                                             item.onDoublePrimaryAction.invoke(this)
+                                            selectItem(
+                                                idx = itemIdx,
+                                                singleSelect = true,
+                                                keepSelect = this.keyboardModifiers.isCtrlPressed
+                                            )
                                         }
                                     },
                                     imageVector = Icons.Filled.ChevronRight,
@@ -151,10 +181,16 @@ class ProjectTreeHandler(
                             }
                         }
                     }
+                    item.icon?.let {
+                        Icon(
+                            modifier = Modifier.size(16.dp),
+                            imageVector = it,
+                            contentDescription = "tree item icon"
+                        )
+
+                    }
                     Text(
-                        modifier = (if (isSelected) {
-                            Modifier.border(width = 4.dp, color = Color.Red)
-                        } else Modifier)
+                        modifier = Modifier
                             .mouseCombinedClickable(
                                 onClick = {
                                     with(buttons) {
@@ -185,6 +221,8 @@ class ProjectTreeHandler(
         internal val actual: TreeDisplayableItem,
         private val treeHandler: ProjectTreeHandler
     ) {
+        val icon: ImageVector?
+            get() = actual.icon
         val name: String
             get() = actual.displayName
 
@@ -196,6 +234,7 @@ class ProjectTreeHandler(
 
         val onPrimaryAction: MouseClickScope.(idx: Int) -> Unit
             get() = actual.onPrimaryAction ?: { idx ->
+                treeHandler.focusRequester.requestFocus()
                 val singleSelect = keyboardModifiers.let { it.isCtrlPressed && !it.isShiftPressed }
                 val keepSelect = keyboardModifiers.let { it.isCtrlPressed || it.isShiftPressed }
                 selectItem(idx = idx, singleSelect = singleSelect, keepSelect = keepSelect)

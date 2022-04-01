@@ -1,52 +1,21 @@
-package com.github.jan222ik.ecore;
+package com.github.jan222ik.ecore
 
-import org.eclipse.emf.common.util.TreeIterator;
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.eclipse.uml2.uml.Element;
-import org.eclipse.uml2.uml.Model;
-import org.eclipse.uml2.uml.Class;
+import org.eclipse.emfcloud.modelserver.client.v2.ModelServerClientV2
+import com.github.jan222ik.ecore.UMLPackageConfiguration
+import com.github.jan222ik.ecore.ProjectClientPerModel
 
-import java.io.File;
+object DiagramLoader {
+    private val clientV2 = ModelServerClientV2("http://localhost:8081/api/v2/", UMLPackageConfiguration())
 
-public class DiagramLoader {
-    public static ResourceSet open(File file) {
-        URI fileUri = URI.createFileURI(file.getAbsolutePath());
-        //EMFResourceLoader.initBaseResources();
-        ResourceSet resourceSet1 = new ResourceSetImpl();
-        resourceSet1.setResourceFactoryRegistry(Resource.Factory.Registry.INSTANCE);
-        resourceSet1.getResource(fileUri, true);
-        return resourceSet1;
+    fun open(name: String?): ProjectClientPerModel {
+        val existingModels = clientV2.modelUris.get().body().also { println(it) }
+        val find = existingModels.find { it == name }
+        if (find != null) {
+            return ProjectClientPerModel(
+                generalClient = clientV2,
+                modelId = find
+            )
+        }
+        throw IllegalArgumentException("Model does not exist for file")
     }
-
-    public static void main(String[] args) {
-        File file = new File("C:\\Users\\jan\\Documents\\master-dependencies\\master-dependencies.uml");
-        assert file.exists();
-        ResourceSet resourceSet1 = DiagramLoader.open(file);
-        TreeIterator<Object> allContents = EcoreUtil.getAllContents(resourceSet1, true);
-
-
-        allContents.forEachRemaining(el -> {
-            if (el instanceof Element) {
-                Element castEl = ((Element) el);
-                System.out.println("el.getOwner() = " + castEl.getOwner());
-                if (((Element) el).getOwner() instanceof Model) {
-                    Class casted = (Class) el;
-                    var name = casted.getQualifiedName();
-                    System.out.println("name = " + name);
-                    casted.getAppliedStereotypes().forEach(System.out::println);
-                } else {
-                    System.out.println("el = " + el);
-                }
-            } else {
-                System.err.println("el = " + el.getClass());
-            }
-        });
-
-
-    }
-
 }

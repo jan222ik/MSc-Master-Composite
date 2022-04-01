@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.unit.dp
 import com.github.jan222ik.ui.value.descriptions.IPropertyViewElement
 
@@ -40,7 +41,7 @@ fun TitleWithTooltip(propViewElement: IPropertyViewElement) {
                 imageVector = Icons.Outlined.Info,
                 contentDescription = "Show tooltip",
                 tint = LocalContentColor.current.copy(alpha = TextFieldDefaults.IconOpacity),
-                modifier = Modifier.focusable(enabled = false).clickable { visibleState.value = !visibleState.value })
+                modifier = Modifier.clickable { visibleState.value = !visibleState.value }.focusProperties { canFocus = false })
         }
     }
 }

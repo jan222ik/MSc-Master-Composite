@@ -120,7 +120,7 @@ fun MainScreen(
                 splitPaneState = hSplitter
             ) {
                 first(20.dp) {
-                    Box(Modifier.background(Color.Magenta).fillMaxSize()) {
+                    Box(Modifier.fillMaxSize()) {
 
                         Column(Modifier.padding(end = 20.dp)) {
                             Text("File Tree")

@@ -4,10 +4,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import org.eclipse.emf.ecore.resource.ResourceSet
-import org.eclipse.emf.ecore.util.EcoreUtil
+import com.github.jan222ik.ecore.ProjectClientPerModel
 import org.eclipse.uml2.uml.Element
-import org.eclipse.uml2.uml.Model
 import java.io.File
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -36,33 +34,27 @@ object FileTree {
         }
     }
 
-    fun modelFilesToModelTreeRoot(resourceSet: ResourceSet, parent: FileTreeItem) {
-        val contents = EcoreUtil.getAllContents<Any>(resourceSet, true)
-        contents.forEachRemaining {
-            if (!(it is Element && it.mustBeOwned())) {
-                if (it is Model) {
-                    val packageItem = ModelTreeItem.PackageItem(
-                        level = parent.level,
-                        displayName = it.name,
-                        canExpand = it.eContents().isNotEmpty(),
-                        umlPackage = it as org.eclipse.uml2.uml.Package
-                    )
-                    parent.addChild(packageItem)
-                }
-            }
-        }
-
+    fun modelFilesToModelTreeRoot(clientPerModel: ProjectClientPerModel, parent: FileTreeItem) {
+        val it = clientPerModel.model
+        val packageItem = ModelTreeItem.PackageItem(
+            level = parent.level.inc(),
+            displayName = it.name,
+            canExpand = it.eContents().isNotEmpty(),
+            umlPackage = it as org.eclipse.uml2.uml.Package
+        )
+        parent.addChild(packageItem)
     }
+
 
     fun eContentsToModelTreeItem(element: Element, parent: ModelTreeItem) {
         element.eContents().forEach {
-            val mapped = ModelTreeItem.parseItem(parent.level, it)
+            val mapped = ModelTreeItem.parseItem(parent.level.inc(), it)
             if (mapped != null) {
                 parent.addChild(mapped)
             }
         }
     }
 
-    val loadedResourceSets = mutableMapOf<String, ResourceSet>()
+    val loadedClients = mutableMapOf<String, ProjectClientPerModel>()
 
 }

@@ -5,11 +5,13 @@ import androidx.compose.foundation.MouseClickScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @ExperimentalFoundationApi
 abstract class TreeDisplayableItem(
     open val level: Int
 ) {
+    abstract val icon: ImageVector?
     abstract val onPrimaryAction: (MouseClickScope.(idx: Int) -> Unit)?
     abstract val onDoublePrimaryAction: MouseClickScope.() -> Unit
     abstract val onSecondaryAction: MouseClickScope.() -> Unit

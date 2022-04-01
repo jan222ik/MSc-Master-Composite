@@ -2,7 +2,12 @@ package com.github.jan222ik.ui.feature.main.tree
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.MouseClickScope
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FileCopy
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.github.jan222ik.ecore.DiagramLoader
+import com.github.jan222ik.ecore.ProjectClientPerModel
 import mu.KLogging
 import org.eclipse.emf.ecore.resource.ResourceSet
 import java.io.File
@@ -17,6 +22,12 @@ data class FileTreeItem(
 
     companion object : KLogging()
 
+    override val icon: ImageVector?
+        get() = when {
+            canExpand -> Icons.Default.Folder
+            else -> Icons.Default.FileCopy
+        }
+
     override val onPrimaryAction: (MouseClickScope.(idx: Int) -> Unit)?
         get() = null
 
@@ -29,10 +40,10 @@ data class FileTreeItem(
                     if (file.listFiles() != null) {
                         file.listFiles()!!.forEach { file ->
                             if (file.name.contains(".uml")) {
-                                val res: ResourceSet = FileTree.loadedResourceSets.computeIfAbsent(
-                                    file.absolutePath
+                                val res: ProjectClientPerModel = FileTree.loadedClients.computeIfAbsent(
+                                    file.name
                                 ) {
-                                    DiagramLoader.open(file)
+                                    DiagramLoader.open("testuml.uml") // TODO Change
                                 }
                                 FileTree.modelFilesToModelTreeRoot(res, this@FileTreeItem)
                             } else {
