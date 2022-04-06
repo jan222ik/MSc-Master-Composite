@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.window.singleWindowApplication
 import androidx.compose.ui.zIndex
+import com.github.jan222ik.ui.feature.LocalDropTargetHandler
 
 
 fun main() {

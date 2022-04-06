@@ -1,11 +1,10 @@
 package com.github.jan222ik.ui.feature
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ProvidableCompositionLocal
-import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.window.WindowScope
 import androidx.compose.ui.window.WindowState
+import com.github.jan222ik.ui.components.dnd.DnDHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutActionsHandler
 import com.github.jan222ik.ui.feature.wizard.Project
 import de.comahe.i18n4k.Locale
@@ -84,6 +83,18 @@ val LocalThemeSwitcher = compositionLocalOf<Pair<Boolean, (Boolean) -> Unit>> { 
  * LocalProjectSwitcher is a [ProvidableCompositionLocal] that provides a [Pair] with the project for the current window [Project] and a setter to change it.
  */
 val LocalProjectSwitcher = compositionLocalOf<Pair<Project?, (Project?) -> Unit>> { error("No value for LocalProjectSwitcher in composition tree!") }
+
+/**
+ * LocalPointerOverrideService is a [ProvidableCompositionLocal] that provides a [MutableState] that can be used to change the icon of the mouse.
+ */
+val LocalPointerOverrideService =
+    staticCompositionLocalOf<MutableState<PointerIcon?>> { error("No value for LocalPointerOverrideService in composition tree!") }
+
+/**
+ * LocalDropTargetHandler is a [ProvidableCompositionLocal] that provides a [DnDHandler] for registering drag and drop handlers.
+ */
+val LocalDropTargetHandler = compositionLocalOf<DnDHandler> { error("No value for LocalDropTargetHandler in composition tree!") }
+
 
 @Composable
 fun stringResource(key: Any? = null, string: () -> String) : String {

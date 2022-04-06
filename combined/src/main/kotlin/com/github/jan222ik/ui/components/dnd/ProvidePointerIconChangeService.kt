@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import com.github.jan222ik.ui.feature.LocalPointerOverrideService
 import java.awt.Cursor
 
 @Composable

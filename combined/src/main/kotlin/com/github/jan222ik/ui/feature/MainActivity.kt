@@ -27,6 +27,7 @@ import de.comahe.i18n4k.i18n4k
 import mu.KLogging
 import java.awt.GraphicsEnvironment
 import androidx.compose.ui.window.application
+import com.github.jan222ik.ui.components.dnd.DnDHandler
 import com.github.jan222ik.ui.feature.wizard.Project
 
 /**
@@ -53,6 +54,7 @@ class MainActivity : Activity() {
         }
         val taskbarHeight = displaySize.height - maxWinSize.height
         val applicableSize = displaySize.copy(height = displaySize.height.minus(taskbarHeight))
+        val dnDHandler = DnDHandler()
         application {
             val windowState = rememberWindowState(
                 size = applicableSize,
@@ -121,7 +123,8 @@ class MainActivity : Activity() {
                     LocalShortcutActionHandler provides keyEventHandler,
                     LocalI18N provides (locale to ::switchLocale),
                     LocalThemeSwitcher provides (isDarkMode to ::switchTheme),
-                    LocalProjectSwitcher provides (project to ::switchProject)
+                    LocalProjectSwitcher provides (project to ::switchProject),
+                    LocalDropTargetHandler provides dnDHandler
                 ) {
                     AppTheme(
                         isDark = isDarkMode
