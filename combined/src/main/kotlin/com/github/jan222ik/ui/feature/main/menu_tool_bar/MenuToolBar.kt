@@ -12,6 +12,7 @@ import androidx.compose.foundation.mouseClickable
 import androidx.compose.foundation.window.WindowDraggableArea
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Maximize
 import androidx.compose.material.icons.filled.Minimize
@@ -342,7 +343,11 @@ fun MenuItemList(items: List<IMenuItem>, jobHandler: JobHandler, width: Dp) {
                             text = item.displayName
                         )
                         Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-                            ShortcutDisplay(item.keyShortcut)
+                            if (item is SubmenuItem) {
+                                Icon(imageVector = Icons.Filled.ChevronRight, contentDescription = null)
+                            } else {
+                                ShortcutDisplay(item.keyShortcut)
+                            }
                         }
                     }
                 }

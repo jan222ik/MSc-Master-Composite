@@ -1,6 +1,4 @@
-@file:OptIn(ExperimentalComposeUiApi::class)
-
-package com.github.jan222ik.playground.dragdrop
+package com.github.jan222ik.ui.components.dnd
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,7 +7,6 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
@@ -51,7 +48,12 @@ fun main() {
                             Text(
                                 text = "Test 0", modifier = Modifier.dndDraggable(
                                     handler = dnDHandler,
-                                    dataProvider = { "Test 0" }
+                                    dataProvider = { "Test 0" },
+                                    onDragFinished = { success, snapBackAction ->
+                                        if (success) {
+                                            snapBackAction.invoke()
+                                        }
+                                    }
                                 )
                             )
                         }
@@ -79,8 +81,10 @@ fun main() {
                                                             hasDropHover = true
                                                         }
 
-                                                        override fun drop(data: Any?) {
+                                                        override fun drop(data: Any?): Boolean {
                                                             println("Drop $loop data: $data")
+                                                            hasDropHover = false
+                                                            return true
                                                         }
 
                                                         override fun dropExit() {
@@ -107,8 +111,9 @@ fun main() {
                                                     println("Drop Enter outer data: $data")
                                                 }
 
-                                                override fun drop(data: Any?) {
+                                                override fun drop(data: Any?): Boolean {
                                                     println("Drop outer data: $data")
+                                                    return true
                                                 }
 
                                                 override fun dropExit() {
@@ -130,8 +135,9 @@ fun main() {
                                                             println("Drop Enter inner data: $data")
                                                         }
 
-                                                        override fun drop(data: Any?) {
+                                                        override fun drop(data: Any?): Boolean {
                                                             println("Drop inner data: $data")
+                                                            return true
                                                         }
 
                                                         override fun dropExit() {
@@ -153,24 +159,3 @@ fun main() {
         }
     }
 }
-
-
-/*
-                var dropped by remember { mutableStateOf("") }
-                window.dropTarget = object : DropTarget() {
-
-                    @Synchronized
-                    override fun drop(dtde: DropTargetDropEvent?) {
-                        dtde?.location
-                        dtde?.acceptDrop(DnDConstants.ACTION_REFERENCE)
-                        val transferData = dtde?.transferable?.getTransferData(DataFlavor.javaFileListFlavor) as List<*>
-                        dropped = transferData.joinToString { (it as File).absolutePath }
-                    }
-
-                    @Synchronized
-                    override fun dragOver(dtde: DropTargetDragEvent?) {
-                        super.dragOver(dtde)
-                        println("Over")
-                    }
-                }
- */

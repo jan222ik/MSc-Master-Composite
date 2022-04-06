@@ -1,6 +1,5 @@
-package com.github.jan222ik.playground.dragdrop
+package com.github.jan222ik.ui.components.dnd
 
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -8,11 +7,9 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.IntOffset
 
-val LocalDropTargetHandler = compositionLocalOf<DnDHandler> { error("None present") }
-
-class DnDHandler() {
-    var dropTargets by mutableStateOf<List<Pair<LayoutCoordinates, DnDAction>>>(emptyList())
-    var activeTarget by mutableStateOf<Pair<LayoutCoordinates, DnDAction>?>(null)
+class DnDHandler {
+    internal var dropTargets by mutableStateOf<List<Pair<LayoutCoordinates, DnDAction>>>(emptyList())
+    private var activeTarget by mutableStateOf<Pair<LayoutCoordinates, DnDAction>?>(null)
 
     fun updateActiveTarget(offset: IntOffset, data: Any?) {
         val filter = dropTargets.filter { (coord, _) ->
@@ -32,8 +29,9 @@ class DnDHandler() {
     }
 
 
-    fun drop(data: Any?) {
-        activeTarget?.second?.drop(data)
+    fun drop(data: Any?): Boolean? {
+        val b = activeTarget?.second?.drop(data)
         activeTarget = null
+        return b
     }
 }

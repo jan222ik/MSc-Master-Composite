@@ -1,4 +1,4 @@
-package com.github.jan222ik.playground.dragdrop
+package com.github.jan222ik.ui.components.dnd
 
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.offset
@@ -16,7 +16,8 @@ import kotlin.math.roundToInt
 @Composable
 fun Modifier.dndDraggable(
     handler: DnDHandler,
-    dataProvider: () -> Any?
+    dataProvider: () -> Any?,
+    onDragFinished: (Boolean, () -> Unit) -> Unit
 ): Modifier {
     var offset by remember { mutableStateOf(IntOffset.Zero) }
     var pos by remember { mutableStateOf(IntOffset.Zero) }
@@ -45,7 +46,9 @@ fun Modifier.dndDraggable(
 
                 },
                 onDragEnd = {
-                    handler.drop(data)
+                    handler.drop(data)?.let {
+                        onDragFinished(it) { offset = IntOffset.Zero }
+                    }
                 }
             )
         })
