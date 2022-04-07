@@ -17,6 +17,7 @@ import kotlin.math.roundToInt
 fun Modifier.dndDraggable(
     handler: DnDHandler,
     dataProvider: () -> Any?,
+    onDragCancel: (snapBack: () -> Unit) -> Unit,
     onDragFinished: (Boolean, () -> Unit) -> Unit
 ): Modifier {
     var offset by remember { mutableStateOf(IntOffset.Zero) }
@@ -46,9 +47,10 @@ fun Modifier.dndDraggable(
 
                 },
                 onDragEnd = {
-                    handler.drop(data)?.let {
-                        onDragFinished(it) { offset = IntOffset.Zero }
-                    }
+                    val snapBack = { offset = IntOffset.Zero }
+                    handler.drop(offset + pos, data)?.let {
+                        onDragFinished(it, snapBack)
+                    } ?: onDragCancel(snapBack)
                 }
             )
         })

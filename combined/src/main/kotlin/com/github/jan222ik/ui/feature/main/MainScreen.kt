@@ -26,6 +26,7 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.github.jan222ik.ui.feature.LocalProjectSwitcher
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.diagram.DiagramAreaComponent
@@ -120,7 +121,7 @@ fun MainScreen(
                 splitPaneState = hSplitter
             ) {
                 first(20.dp) {
-                    Box(Modifier.fillMaxSize()) {
+                    Box(Modifier.fillMaxSize().zIndex(3f)) {
 
                         Column(Modifier.padding(end = 20.dp)) {
                             Text("File Tree")
@@ -133,7 +134,9 @@ fun MainScreen(
                     }
                 }
                 second(50.dp) {
-                    diagramAreaComponent.render()
+                    Box(Modifier.zIndex(1f)) {
+                        diagramAreaComponent.render()
+                    }
                 }
                 splitter {
                     visiblePart {
@@ -240,9 +243,9 @@ fun MainScreenScaffold(
             width = constraints.maxWidth,
             height = constraints.maxHeight
         ) {
-            pTop.placeRelative(IntOffset.Zero)
-            pContent.placeRelative(x = 0, y = pTop.height)
-            pBottom.placeRelative(x = 0, y = constraints.maxHeight - pBottom.height)
+            pTop.placeRelative(IntOffset.Zero, zIndex = 2f)
+            pContent.placeRelative(x = 0, y = pTop.height, zIndex = 3f)
+            pBottom.placeRelative(x = 0, y = constraints.maxHeight - pBottom.height, zIndex = 1f)
         }
     }
 }

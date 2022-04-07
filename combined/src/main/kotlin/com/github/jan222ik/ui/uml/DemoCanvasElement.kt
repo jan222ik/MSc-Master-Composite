@@ -11,13 +11,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.singleWindowApplication
 
-class Demo(
+class DemoCanvasElement(
     uiConfig: DiagramBlockUIConfig,
     onNextUIConfig: (self: MovableAndResizeableComponent, old: DiagramBlockUIConfig, new: DiagramBlockUIConfig) -> Unit
 ) : MovableAndResizeableComponent(uiConfig, onNextUIConfig) {
     @Composable
     override fun ColumnScope.content() {
-        Text("Test [Selected:${this@Demo.selected}]")
+        Text("Test [Selected:${this@DemoCanvasElement.selected}]")
     }
 
 }
@@ -53,7 +53,7 @@ fun main() {
         }
 
         val movableAndResizeableComponent = remember {
-            Demo(
+            DemoCanvasElement(
                 uiConfig = DiagramBlockUIConfig(
                     x = 100.dp,
                     y = 45.dp,

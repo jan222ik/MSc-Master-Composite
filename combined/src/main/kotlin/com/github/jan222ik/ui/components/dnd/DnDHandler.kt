@@ -29,8 +29,8 @@ class DnDHandler {
     }
 
 
-    fun drop(data: Any?): Boolean? {
-        val b = activeTarget?.second?.drop(data)
+    fun drop(pos: IntOffset, data: Any?): Boolean? {
+        val b = activeTarget?.second?.drop(pos, data)
         activeTarget = null
         return b
     }

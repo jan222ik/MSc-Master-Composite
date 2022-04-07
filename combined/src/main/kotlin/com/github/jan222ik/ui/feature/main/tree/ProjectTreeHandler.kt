@@ -23,6 +23,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.dp
+import com.github.jan222ik.ui.components.dnd.dndDraggable
+import com.github.jan222ik.ui.feature.LocalDropTargetHandler
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
@@ -138,7 +140,19 @@ class ProjectTreeHandler(
                             }
                         )
                         .padding(start = item.level.times(16).dp)
-                        .drawBehind { drawLine(Color.Black, Offset.Zero, Offset.Zero.copy(y = this.size.height)) },
+                        .drawBehind { drawLine(Color.Black, Offset.Zero, Offset.Zero.copy(y = this.size.height)) }
+                        .then(
+                            when (val actual = item.actual) {
+                                is ModelTreeItem -> Modifier.dndDraggable(
+                                    handler = LocalDropTargetHandler.current,
+                                    dataProvider = { actual.getElement() },
+                                    onDragCancel = Function0<Unit>::invoke,
+                                    onDragFinished = { _, snapback -> snapback.invoke()}
+                                )
+                                else -> Modifier
+                            }
+                        )
+                        ,
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {

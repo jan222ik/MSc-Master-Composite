@@ -1,8 +1,10 @@
 package com.github.jan222ik.ui.components.dnd
 
+import androidx.compose.ui.unit.IntOffset
+
 interface DnDAction {
     fun name(): String
     fun dropEnter(data: Any?) {}
-    fun drop(data: Any?) : Boolean = true
+    fun drop(pos: IntOffset, data: Any?) : Boolean = true
     fun dropExit() {}
 }
