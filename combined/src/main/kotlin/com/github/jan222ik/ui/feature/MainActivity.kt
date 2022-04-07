@@ -1,10 +1,6 @@
 package com.github.jan222ik.ui.feature
 
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.res.painterResource
@@ -27,6 +23,7 @@ import de.comahe.i18n4k.i18n4k
 import mu.KLogging
 import java.awt.GraphicsEnvironment
 import androidx.compose.ui.window.application
+import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.ui.components.dnd.DnDHandler
 import com.github.jan222ik.ui.feature.wizard.Project
 
@@ -94,6 +91,8 @@ class MainActivity : Activity() {
                 logger.debug { "Switched Project form $project to $newProject" }
                 project = newProject
             }
+            val scope = rememberCoroutineScope()
+            val commandStackHandler = remember { CommandStackHandler(scope = scope) }
             Window(
                 onCloseRequest = ::exitApplication,
                 title = "${App.appArgs.appName} (${App.appArgs.version})",
@@ -124,7 +123,8 @@ class MainActivity : Activity() {
                     LocalI18N provides (locale to ::switchLocale),
                     LocalThemeSwitcher provides (isDarkMode to ::switchTheme),
                     LocalProjectSwitcher provides (project to ::switchProject),
-                    LocalDropTargetHandler provides dnDHandler
+                    LocalDropTargetHandler provides dnDHandler,
+                    LocalCommandStackHandler provides commandStackHandler
                 ) {
                     AppTheme(
                         isDark = isDarkMode

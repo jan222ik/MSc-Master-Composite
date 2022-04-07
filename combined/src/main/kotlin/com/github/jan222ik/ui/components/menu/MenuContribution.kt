@@ -3,7 +3,7 @@ package com.github.jan222ik.ui.components.menu
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import com.github.jan222ik.model.command.ICommand
-import com.github.jan222ik.model.command.NotImplementedCommand
+import com.github.jan222ik.model.command.commands.NotImplementedCommand
 
 sealed class MenuContribution {
     object Separator : MenuContribution()

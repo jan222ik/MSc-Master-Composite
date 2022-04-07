@@ -10,6 +10,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.singleWindowApplication
+import com.github.jan222ik.model.command.CommandStackHandler
+import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
 
 class DemoCanvasElement(
     uiConfig: DiagramBlockUIConfig,
@@ -28,7 +30,7 @@ fun main() {
             Thread.currentThread().name = "AWT-EQ-0"
         }
         val scope = rememberCoroutineScope()
-        val commandStack = remember { CommandStack(scope = scope) }
+        val commandStack = remember { CommandStackHandler(scope = scope) }
         Row {
             Button(
                 enabled = commandStack.hasUndo,

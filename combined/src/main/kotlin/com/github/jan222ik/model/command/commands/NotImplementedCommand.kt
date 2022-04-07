@@ -1,5 +1,6 @@
-package com.github.jan222ik.model.command
+package com.github.jan222ik.model.command.commands
 
+import com.github.jan222ik.model.command.ICommand
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import mu.KLogging
 

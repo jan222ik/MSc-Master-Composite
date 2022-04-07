@@ -1,15 +1,14 @@
-package com.github.jan222ik.ui.uml
+package com.github.jan222ik.model.command
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
-import com.github.jan222ik.model.command.ICommand
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mu.KLogging
 
-class CommandStack(
+class CommandStackHandler(
     val stackSize: Int = 60,
     val scope: CoroutineScope
 ) {

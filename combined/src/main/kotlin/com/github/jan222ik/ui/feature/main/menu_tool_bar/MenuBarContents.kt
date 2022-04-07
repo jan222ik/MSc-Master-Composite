@@ -7,7 +7,7 @@ import androidx.compose.material.icons.filled.Undo
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.key.Key
 import com.github.jan222ik.model.command.ICommand
-import com.github.jan222ik.model.command.NotImplementedCommand
+import com.github.jan222ik.model.command.commands.NotImplementedCommand
 import com.github.jan222ik.model.mock.MockBackgroundJobs
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.components.menu.MenuContribution.Contentful.MenuItem
