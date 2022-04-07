@@ -91,7 +91,7 @@ fun MenuPopup(
     popupPositionProvider: PopupPositionProvider,
     onDismissRequest: () -> Unit,
     item: DemoDataItem,
-    menuItems: List<IContextMenuEntry>
+    menuItems: List<MenuContribution>
 ) {
     val hasDirectHover = remember { mutableStateOf(true) }
     val hasIndirectHover = remember { mutableStateOf(false) }
@@ -128,24 +128,17 @@ fun MenuPopupNested(
     popupPositionProvider: PopupPositionProvider,
     onDismissRequest: () -> Unit,
     item: DemoDataItem,
-    menuItems: List<IContextMenuEntry>,
+    menuItems: List<MenuContribution>,
     hasDirectHover: MutableState<Boolean>,
     hasIndirectHover: MutableState<Boolean>
 ) {
-    var showNestedPopupFor by remember { mutableStateOf<IContextMenuEntry.NestedContextMenuEntry?>(null) }
+    var showNestedPopupFor by remember { mutableStateOf<MenuContribution.Contentful.NestedMenuItem?>(null) }
     var onceEnterOrTimeout by remember { mutableStateOf(false) }
 
     val childPopupHover = remember { mutableStateOf(false) }
 
     val childHoverDirect = remember { mutableStateOf(false) }
     val childHoverIndirect = remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        launch(Dispatchers.IO) {
-            delay(300)
-            onceEnterOrTimeout = true
-        }
-    }
 
     remember(onceEnterOrTimeout, childHoverDirect.value, childHoverIndirect.value, childPopupHover.value) {
         /*
@@ -183,61 +176,70 @@ fun MenuPopupNested(
             Column(Modifier.width(200.dp)) {
                 Text("Context for ${item.name}")
                 menuItems.forEach { menuEntry ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .then(if (menuEntry.hasSubmenu) {
-                                Modifier
-                                    .onPointerEvent(PointerEventType.Enter) {
-                                        showNestedPopupFor = menuEntry as IContextMenuEntry.NestedContextMenuEntry
-                                        childPopupHover.value = true
-                                    }
-                                    .onPointerEvent(PointerEventType.Exit) {
-                                        childPopupHover.value = false
-                                    }
-                                    .clickable {
-                                        childPopupHover.value = !childPopupHover.value
-                                    }
-                            } else {
-                                Modifier.clickable(enabled = menuEntry.isEnabled()) {
-                                    scope.launch(Dispatchers.IO) {
-                                        menuEntry.command?.execute()
+                    when (menuEntry) {
+                        MenuContribution.Separator -> TODO()
+                        is MenuContribution.Contentful -> {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .then(when (menuEntry) {
+                                        is MenuContribution.Contentful.MenuItem -> {
+                                            Modifier.clickable(enabled = menuEntry.isActive()) {
+                                                scope.launch(Dispatchers.IO) {
+                                                    menuEntry.command?.execute()
+                                                }
+                                            }
+                                        }
+                                        is MenuContribution.Contentful.NestedMenuItem -> {
+                                            Modifier
+                                                .onPointerEvent(PointerEventType.Enter) {
+                                                    showNestedPopupFor = menuEntry
+                                                    childPopupHover.value = true
+                                                }
+                                                .onPointerEvent(PointerEventType.Exit) {
+                                                    childPopupHover.value = false
+                                                }
+                                                .clickable {
+                                                    childPopupHover.value = !childPopupHover.value
+                                                }
+                                        }
+                                    })
+                            ) {
+                                if (showNestedPopupFor == menuEntry && (childPopupHover.value || childHoverDirect.value || childHoverIndirect.value)) {
+                                    MenuPopupNested(
+                                        popupPositionProvider = object : PopupPositionProvider {
+                                            override fun calculatePosition(
+                                                anchorBounds: IntRect,
+                                                windowSize: IntSize,
+                                                layoutDirection: LayoutDirection,
+                                                popupContentSize: IntSize
+                                            ): IntOffset {
+                                                return anchorBounds.topRight
+                                            }
+                                        },
+                                        onDismissRequest = onDismissRequest,
+                                        item = item,
+                                        menuItems = showNestedPopupFor!!.nestedItems,
+                                        hasDirectHover = childHoverDirect,
+                                        hasIndirectHover = childHoverIndirect
+                                    )
+                                }
+                                Box(modifier = Modifier.size(24.dp)) {
+                                    menuEntry.icon?.let { Icon(it, null) }
+                                }
+                                Text(text = menuEntry.displayName)
+                                Spacer(Modifier.weight(1f))
+                                Box(modifier = Modifier.size(24.dp)) {
+                                    if (menuEntry is MenuContribution.Contentful.NestedMenuItem && menuEntry.nestedItems.isNotEmpty()) {
+                                        Icon(Icons.Filled.ChevronRight, null)
                                     }
                                 }
-                            })
-                    ) {
-                        if (showNestedPopupFor == menuEntry && (childPopupHover.value || childHoverDirect.value || childHoverIndirect.value)) {
-                            MenuPopupNested(
-                                popupPositionProvider = object : PopupPositionProvider {
-                                    override fun calculatePosition(
-                                        anchorBounds: IntRect,
-                                        windowSize: IntSize,
-                                        layoutDirection: LayoutDirection,
-                                        popupContentSize: IntSize
-                                    ): IntOffset {
-                                        return anchorBounds.topRight
-                                    }
-                                },
-                                onDismissRequest = onDismissRequest,
-                                item = item,
-                                menuItems = showNestedPopupFor!!.content,
-                                hasDirectHover = childHoverDirect,
-                                hasIndirectHover = childHoverIndirect
-                            )
-                        }
-                        Box(modifier = Modifier.size(24.dp)) {
-                            menuEntry.icon?.let { Icon(it, null) }
-                        }
-                        Text(text = menuEntry.name)
-                        Spacer(Modifier.weight(1f))
-                        Box(modifier = Modifier.size(24.dp)) {
-                            if (menuEntry.hasSubmenu) {
-                                Icon(Icons.Filled.ChevronRight, null)
                             }
                         }
                     }
+
                 }
             }
         }

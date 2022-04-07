@@ -2,7 +2,7 @@ package com.github.jan222ik.model.mock
 
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import com.github.jan222ik.ui.feature.main.footer.progress.ProgressObservedJob
-import com.github.jan222ik.ui.feature.main.menu_tool_bar.ICommand
+import com.github.jan222ik.model.command.ICommand
 import kotlinx.coroutines.delay
 
 class MockBackgroundJobs : ICommand {

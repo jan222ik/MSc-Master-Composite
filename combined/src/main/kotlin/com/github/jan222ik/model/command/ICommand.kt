@@ -1,4 +1,4 @@
-package com.github.jan222ik.ui.feature.main.menu_tool_bar
+package com.github.jan222ik.model.command
 
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 
