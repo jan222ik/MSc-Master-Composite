@@ -3,10 +3,7 @@ package com.github.jan222ik.ui.components.menu
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.runtime.*
@@ -46,6 +43,9 @@ fun MenuItemList(items: List<MenuContribution>, jobHandler: JobHandler, width: D
                     val enabled = item.isActive()
                     val scope = rememberCoroutineScope()
                     var loc by remember { mutableStateOf<LayoutCoordinates?>(null) }
+                    val colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.onSurface)
+                    val bgColor = colors.backgroundColor(enabled)
+                    val contentColor = colors.contentColor(enabled)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -63,6 +63,7 @@ fun MenuItemList(items: List<MenuContribution>, jobHandler: JobHandler, width: D
                                 }
                             )
                             .onGloballyPositioned { loc = it }
+                            .background(color = bgColor.value)
                             .then(
                                 Modifier.takeUnless { loc == subLocation } ?: Modifier.background(Color.LightGray)
                             ),
@@ -75,20 +76,25 @@ fun MenuItemList(items: List<MenuContribution>, jobHandler: JobHandler, width: D
                             item.icon?.let {
                                 Icon(
                                     imageVector = it,
-                                    contentDescription = "Execute: ${item.displayName}"
+                                    contentDescription = "Execute: ${item.displayName}",
+                                    tint = contentColor.value
                                 )
                             }
                         }
                         Box(Modifier.fillMaxWidth()) {
                             Text(
                                 modifier = Modifier.align(Alignment.CenterStart),
-                                text = item.displayName
+                                text = item.displayName,
+                                color = contentColor.value
                             )
                             Box(modifier = Modifier.align(Alignment.CenterEnd)) {
                                 if (item is MenuContribution.Contentful.NestedMenuItem) {
-                                    Icon(imageVector = Icons.Filled.ChevronRight, contentDescription = null)
+                                    Icon(imageVector = Icons.Filled.ChevronRight, contentDescription = null, tint = contentColor.value)
                                 } else {
-                                    ShortcutDisplay(item.keyShortcut)
+                                    ShortcutDisplay(
+                                        keys = item.keyShortcut,
+                                        enabled = enabled
+                                    )
                                 }
                             }
                         }

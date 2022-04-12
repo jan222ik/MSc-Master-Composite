@@ -1,7 +1,6 @@
 package com.github.jan222ik.ui.uml
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.Button
 import androidx.compose.material.Text
@@ -18,7 +17,7 @@ class DemoCanvasElement(
     onNextUIConfig: (self: MovableAndResizeableComponent, old: DiagramBlockUIConfig, new: DiagramBlockUIConfig) -> Unit
 ) : MovableAndResizeableComponent(uiConfig, onNextUIConfig) {
     @Composable
-    override fun ColumnScope.content() {
+    override fun content() {
         Text("Test [Selected:${this@DemoCanvasElement.selected}]")
     }
 

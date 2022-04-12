@@ -8,7 +8,10 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -51,7 +54,7 @@ abstract class MovableAndResizeableComponent(
         pointerHoverIcon(PointerIcon(Cursor(if (se2nw) Cursor.SE_RESIZE_CURSOR else Cursor.SW_RESIZE_CURSOR)))
 
     @Composable
-    internal abstract fun ColumnScope.content()
+    internal abstract fun content()
 
     @OptIn(ExperimentalComposeUiApi::class)
     @Composable
@@ -116,11 +119,7 @@ abstract class MovableAndResizeableComponent(
                 shape = RectangleShape,
                 elevation = 16.dp
             ) {
-                Column(
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    content()
-                }
+                content()
             }
             ResizeHandle(
                 alignment = Alignment.TopCenter,

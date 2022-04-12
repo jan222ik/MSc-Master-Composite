@@ -119,7 +119,7 @@ object PropertyViewConfigs {
     val pvForPackage: PropertyViewConfig<Package> = PropertyViewConfig(
         elements = listOf(
             Nameable(DescriptiveElements.name),
-            PlaceholderElement(DescriptiveElements.label),
+            Labelable(DescriptiveElements.label),
             PlaceholderElement(DescriptiveElements.uri),
             Visibility(DescriptiveElements.visibility),
             ReadOnlyStringElement(DescriptiveElements.location) { it.nestingPackage?.qualifiedName.toString() }
@@ -129,7 +129,7 @@ object PropertyViewConfigs {
     val pvForClass: PropertyViewConfig<org.eclipse.uml2.uml.Class> = PropertyViewConfig(
         elements = listOf(
             Nameable(DescriptiveElements.name),
-            PlaceholderElement(DescriptiveElements.label),
+            Labelable(DescriptiveElements.label),
             ReadOnlyStringElement(DescriptiveElements.qualifiedName) { it.qualifiedName },
             PlaceholderElementBool(DescriptiveElements.isAbstract),
             PlaceholderElementBool(DescriptiveElements.isActive),
@@ -143,7 +143,7 @@ object PropertyViewConfigs {
     val pvForProperty: PropertyViewConfig<Property> = PropertyViewConfig(
         elements = listOf(
             Nameable(DescriptiveElements.name),
-            PlaceholderElement(DescriptiveElements.label),
+            Labelable(DescriptiveElements.label),
             PlaceholderElementBool(DescriptiveElements.isDerived),
             PlaceholderElementBool(DescriptiveElements.isReadOnly),
             PlaceholderElementBool(DescriptiveElements.isUnique),
@@ -230,7 +230,27 @@ data class Nameable<T : NamedElement>(
     override fun render(umlElement: T, fReqSelf: FocusRequester) {
         StingBasedInput(
             propViewElement = propViewElement,
-            initialValue = "",
+            initialValue = umlElement.name,
+            focusRequester = fReqSelf,
+            focusOrderReceiver = {
+                // TODO
+            }
+        )
+    }
+
+}
+
+data class Labelable<T : NamedElement>(
+    override val propViewElement: IPropertyViewElement
+) : IPropertyViewConfigElement<T> {
+
+
+    @OptIn(ExperimentalFoundationApi::class)
+    @Composable
+    override fun render(umlElement: T, fReqSelf: FocusRequester) {
+        StingBasedInput(
+            propViewElement = propViewElement,
+            initialValue = umlElement.label,
             focusRequester = fReqSelf,
             focusOrderReceiver = {
                 // TODO

@@ -2,7 +2,6 @@
 
 package com.github.jan222ik.ui.feature.main.menu_tool_bar
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.window.WindowDraggableArea
@@ -23,6 +22,7 @@ import com.github.jan222ik.model.command.ICommand
 import com.github.jan222ik.ui.components.menu.ActionButton
 import com.github.jan222ik.ui.components.menu.MenuButton
 import com.github.jan222ik.ui.components.menu.MenuItemList
+import com.github.jan222ik.ui.feature.LocalCommandStackHandler
 import com.github.jan222ik.ui.feature.LocalProjectSwitcher
 import com.github.jan222ik.ui.feature.LocalWindowActions
 import com.github.jan222ik.ui.feature.LocalWindowScope
@@ -93,7 +93,9 @@ fun MenuToolBarComponent(
                             }
                         )
                     }
-                    val editMenu = remember { MenuBarContents.editMenu() }
+                    val commandStackHandler = LocalCommandStackHandler.current
+                    val editMenu = remember(commandStackHandler) { MenuBarContents.editMenu(commandStackHandler) }
+                    val viewMenu = remember() { MenuBarContents.viewMenu() }
                     MenuButton(
                         key = Key.F,
                         displayText = "File",
@@ -102,6 +104,11 @@ fun MenuToolBarComponent(
                         key = Key.E,
                         displayText = "Edit",
                         popupContent = { MenuItemList(editMenu, jobHandler, 300.dp) }
+                    )
+                    MenuButton(
+                        key = Key.W,
+                        displayText = "Window",
+                        popupContent = { MenuItemList(viewMenu, jobHandler, 350.dp) }
                     )
                     Spacer(Modifier.width(16.dp))
                     Text(text = project?.name ?: "No project open", style = MaterialTheme.typography.overline)

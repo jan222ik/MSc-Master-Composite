@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -23,12 +21,13 @@ import java.awt.event.KeyEvent
 
 @ExperimentalComposeUiApi
 @Composable
-fun ShortcutDisplay(keys: List<Key>) {
+fun ShortcutDisplay(keys: List<Key>, enabled: Boolean = true) {
+    val textColor = Color.Black.copy(alpha = 1f.takeIf { enabled } ?: ContentAlpha.disabled)
     @Composable
     fun KeyDisplay(key: Key) {
         Box(
             modifier = Modifier
-                .background(color = Color.LightGray)
+                .background(color = Color.LightGray.copy(alpha = 1f.takeIf { enabled } ?: ContentAlpha.disabled))
                 .border(
                     width = 1.dp,
                     color = Color.DarkGray
@@ -43,7 +42,8 @@ fun ShortcutDisplay(keys: List<Key>) {
                 Text(
                     text = key.nativeKeyCode.takeIf { key != Key.Escape }
                         ?.let { KeyEvent.getKeyText(it) } ?: "Esc",
-                    style = MaterialTheme.typography.caption
+                    style = MaterialTheme.typography.caption,
+                    color = textColor
                 )
             }
         }
@@ -56,7 +56,8 @@ fun ShortcutDisplay(keys: List<Key>) {
             if (index != 0) {
                 Text(
                     text = "+",
-                    style = MaterialTheme.typography.caption
+                    style = MaterialTheme.typography.caption,
+                    color = textColor
                 )
             }
             KeyDisplay(key)

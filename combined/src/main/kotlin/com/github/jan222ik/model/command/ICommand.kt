@@ -7,4 +7,5 @@ interface ICommand {
     suspend fun execute(handler: JobHandler)
     fun canUndo() : Boolean
     suspend fun undo()
+    fun pushToStack() : Boolean = true
 }

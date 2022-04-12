@@ -67,6 +67,15 @@ sealed class ModelTreeItem(
                         umlValue = element
                     )
                 }
+                is org.eclipse.uml2.uml.Generalization -> {
+                    logger.debug { "Generalization" }
+                    GeneralizationItem(
+                        level = level,
+                        displayName = "Generalization:" + element.general.name,
+                        canExpand = element.ownedElements.isNotEmpty(),
+                        umlGeneralization = element
+                    )
+                }
                 else -> {
                     logger.debug { "Item can not be converted to a element in the tree. ${element.javaClass}" }
                     null
@@ -162,6 +171,20 @@ sealed class ModelTreeItem(
         canExpand = canExpand
     ) {
         override fun getElement() = umlValue
+
+    }
+
+    class GeneralizationItem(
+        level: Int,
+        displayName: String,
+        canExpand: Boolean,
+        val umlGeneralization: org.eclipse.uml2.uml.Generalization
+    ) : ModelTreeItem(
+        level = level,
+        displayName = displayName,
+        canExpand = canExpand
+    ) {
+        override fun getElement() = umlGeneralization
 
     }
 

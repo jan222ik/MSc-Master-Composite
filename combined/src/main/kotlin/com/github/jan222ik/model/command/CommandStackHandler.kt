@@ -3,6 +3,7 @@ package com.github.jan222ik.model.command
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.github.jan222ik.model.command.commands.AddToDiagramCommand
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

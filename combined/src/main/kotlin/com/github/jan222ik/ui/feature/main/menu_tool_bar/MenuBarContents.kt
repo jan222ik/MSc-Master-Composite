@@ -6,12 +6,14 @@ import androidx.compose.material.icons.filled.Redo
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.key.Key
+import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.ICommand
 import com.github.jan222ik.model.command.commands.NotImplementedCommand
 import com.github.jan222ik.model.mock.MockBackgroundJobs
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.components.menu.MenuContribution.Contentful.MenuItem
 import com.github.jan222ik.ui.components.menu.MenuContribution.Contentful.NestedMenuItem
+import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 
 @OptIn(ExperimentalComposeUiApi::class)
 object MenuBarContents {
@@ -130,13 +132,75 @@ object MenuBarContents {
         ),
     )
 
-    fun editMenu() = listOf(
+    fun viewMenu() = listOf(
+        kotlin.run {
+            val displayName = "Show/Hide Model Explorer"
+            MenuItem(
+                icon = null,
+                displayName = displayName,
+                command = object : ICommand {
+                    override fun isActive(): Boolean = true
+                    override suspend fun execute(handler: JobHandler) {
+                        TODO()
+                    }
+                    override fun canUndo(): Boolean = false
+                    override suspend fun undo() {}
+                    override fun pushToStack(): Boolean = false
+                },
+                keyShortcut = listOf(Key.AltLeft, Key.One)
+            )
+        },
+        kotlin.run {
+            val displayName = "Show/Hide Property View"
+            MenuItem(
+                icon = null,
+                displayName = displayName,
+                command = object : ICommand {
+                    override fun isActive(): Boolean = true
+                    override suspend fun execute(handler: JobHandler) {
+                        TODO()
+                    }
+                    override fun canUndo(): Boolean = false
+                    override suspend fun undo() {}
+                    override fun pushToStack(): Boolean = false
+                },
+                keyShortcut = listOf(Key.AltLeft, Key.Two)
+            )
+        },
+        kotlin.run {
+            val displayName = "Show/Hide Palette"
+            MenuItem(
+                icon = null,
+                displayName = displayName,
+                command = object : ICommand {
+                    override fun isActive(): Boolean = true
+                    override suspend fun execute(handler: JobHandler) {
+                        TODO()
+                    }
+                    override fun canUndo(): Boolean = false
+                    override suspend fun undo() {}
+                    override fun pushToStack(): Boolean = false
+                },
+                keyShortcut = listOf(Key.AltLeft, Key.Three)
+            )
+        }
+    )
+
+    fun editMenu(commandStackHandler: CommandStackHandler) = listOf(
         kotlin.run {
             val displayName = "Undo"
             MenuItem(
                 icon = Icons.Filled.Undo,
                 displayName = displayName,
-                command = NotImplementedCommand(displayName),
+                command = object : ICommand {
+                    override fun isActive(): Boolean = commandStackHandler.hasUndo
+                    override suspend fun execute(handler: JobHandler) {
+                        commandStackHandler.undo()
+                    }
+                    override fun canUndo(): Boolean = false
+                    override suspend fun undo() {}
+                    override fun pushToStack(): Boolean = false
+                },
                 keyShortcut = listOf(Key.CtrlLeft, Key.Z)
             )
         },
@@ -145,7 +209,15 @@ object MenuBarContents {
             MenuItem(
                 icon = Icons.Filled.Redo,
                 displayName = displayName,
-                command = NotImplementedCommand(displayName),
+                command = object : ICommand {
+                    override fun isActive(): Boolean = commandStackHandler.hasUndo
+                    override suspend fun execute(handler: JobHandler) {
+                        commandStackHandler.redo()
+                    }
+                    override fun canUndo(): Boolean = false
+                    override suspend fun undo() {}
+                    override fun pushToStack(): Boolean = false
+                },
                 keyShortcut = listOf(Key.CtrlLeft, Key.ShiftLeft, Key.Z)
             )
         },
