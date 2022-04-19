@@ -23,9 +23,11 @@ import de.comahe.i18n4k.i18n4k
 import mu.KLogging
 import java.awt.GraphicsEnvironment
 import androidx.compose.ui.window.application
+import com.github.jan222ik.inspector.CompoundCollector
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.ui.components.dnd.DnDHandler
 import com.github.jan222ik.ui.feature.wizard.Project
+import java.io.File
 
 /**
  * The activity who will be hosting all screens in this app
@@ -52,6 +54,9 @@ class MainActivity : Activity() {
         val taskbarHeight = displaySize.height - maxWinSize.height
         val applicableSize = displaySize.copy(height = displaySize.height.minus(taskbarHeight))
         val dnDHandler = DnDHandler()
+        val compoundCollector = CompoundCollector(
+            File("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite\\build\\spy\\").apply { delete(); mkdirs(); }
+        )
         application {
             val windowState = rememberWindowState(
                 size = applicableSize,
@@ -73,7 +78,8 @@ class MainActivity : Activity() {
                     if (windowState.placement != it) {
                         windowState.placement = it
                     }
-                }
+                },
+               compoundCollector = compoundCollector
             )
             var locale by remember { mutableStateOf(i18n4k.locale) }
             fun switchLocale(nextLocale: Locale) {
@@ -93,6 +99,11 @@ class MainActivity : Activity() {
             }
             val scope = rememberCoroutineScope()
             val commandStackHandler = remember { CommandStackHandler(scope = scope) }
+            DisposableEffect(compoundCollector) {
+                onDispose {
+                    compoundCollector.save()
+                }
+            }
             Window(
                 onCloseRequest = ::exitApplication,
                 title = "${App.appArgs.appName} (${App.appArgs.version})",

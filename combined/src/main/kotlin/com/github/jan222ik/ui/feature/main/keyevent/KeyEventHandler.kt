@@ -7,13 +7,15 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
+import com.github.jan222ik.inspector.CompoundCollector
 import mu.KLogging
 
 class KeyEventHandler(
     val applicableSize: DpSize,
     val setWindowPosition: (Alignment) -> Unit,
     val setWindowSize: (DpSize) -> Unit,
-    val setPlacement: (WindowPlacement) -> Unit
+    val setPlacement: (WindowPlacement) -> Unit,
+    val compoundCollector: CompoundCollector
 ) : ShortcutActionsHandler {
 
     companion object : KLogging() {
@@ -49,6 +51,7 @@ class KeyEventHandler(
             )
             down.remove(nativeKeyCode)
         }
+        compoundCollector.keyPressCollector.recordEvent(event, consume)
         return consume
     }
 
@@ -196,7 +199,15 @@ class KeyEventHandler(
         val eventActions =
             keyEventActions.filter { it.modifiers == modifiers || it.modifiers == ShortcutAction.KeyModifier.ANY_MODIFIERS }
         eventActions.forEach {
-            if (it.action.invoke()) return true
+            if (it.action.invoke()) {
+                compoundCollector.keyShortCutCollector.recordAction(
+                    key = it.key,
+                    isCtrlPressed = event.isCtrlPressed,
+                    isShiftPressed = event.isShiftPressed,
+                    isAltPressed = event.isAltPressed
+                )
+                return true
+            }
         }
         return false
     }

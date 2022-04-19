@@ -31,6 +31,7 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":ecore"))
     implementation(project(":forked-libs"))
+    api(project(":recorder"))
 
 
     // Dagger
