@@ -4,9 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -26,6 +24,7 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.github.jan222ik.ui.feature.LocalProjectSwitcher
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
@@ -73,20 +72,24 @@ fun MainScreen(
     }
     MainScreenScaffold(
         menuToolBar = {
-            MenuToolBarComponent(
-                modifier = Modifier
-                    .height(MainScreenScaffoldConstants.menuToolBarHeight)
-                    .fillMaxWidth(),
-                jobHandler = jobHandler
-            )
+            ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
+                MenuToolBarComponent(
+                    modifier = Modifier
+                        .height(MainScreenScaffoldConstants.menuToolBarHeight)
+                        .fillMaxWidth(),
+                    jobHandler = jobHandler
+                )
+            }
         },
         footer = {
-            val component = remember(jobHandler) { FooterComponent(jobHandler) }
-            component.render(
-                modifier = Modifier
-                    .height(MainScreenScaffoldConstants.footerHeight)
-                    .fillMaxWidth()
-            )
+            ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
+                val component = remember(jobHandler) { FooterComponent(jobHandler) }
+                component.render(
+                    modifier = Modifier
+                        .height(MainScreenScaffoldConstants.footerHeight)
+                        .fillMaxWidth()
+                )
+            }
         },
         content = {
             val hSplitter = rememberSplitPaneState()
@@ -124,9 +127,11 @@ fun MainScreen(
                     Box(Modifier.fillMaxSize().zIndex(3f)) {
 
                         Column(Modifier.padding(end = 20.dp)) {
-                            Text("File Tree")
-                            FileTree.root?.let {
-                                projectTreeHandler.render(root = it)
+                            ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
+                                Text("File Tree")
+                                FileTree.root?.let {
+                                    projectTreeHandler.render(root = it)
+                                }
                             }
                         }
 
@@ -135,7 +140,9 @@ fun MainScreen(
                 }
                 second(50.dp) {
                     Box(Modifier.zIndex(1f)) {
-                        diagramAreaComponent.render()
+                        ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
+                            diagramAreaComponent.render()
+                        }
                     }
                 }
                 splitter {

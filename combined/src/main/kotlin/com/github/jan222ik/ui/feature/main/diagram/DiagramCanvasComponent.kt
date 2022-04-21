@@ -1,12 +1,16 @@
 package com.github.jan222ik.ui.feature.main.diagram
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.TabRow
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.Icon
+import androidx.compose.material.ScrollableTabRow
+import androidx.compose.material.TabRowDefaults
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -17,9 +21,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.github.jan222ik.canvas.axis.drawer.simpleAxisLineDrawer
+import com.github.jan222ik.canvas.canvas.Chart
+import com.github.jan222ik.canvas.grid.intGridRenderer
+import com.github.jan222ik.canvas.math.linearFunctionPointProvider
+import com.github.jan222ik.canvas.math.linearFunctionRenderer
+import com.github.jan222ik.canvas.viewport.Viewport
 import com.github.jan222ik.model.command.commands.AddToDiagramCommand
 import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
@@ -27,16 +38,12 @@ import com.github.jan222ik.ui.components.dnd.DnDAction
 import com.github.jan222ik.ui.components.dnd.dndDropTarget
 import com.github.jan222ik.ui.feature.LocalCommandStackHandler
 import com.github.jan222ik.ui.feature.LocalDropTargetHandler
-import com.github.jan222ik.ui.feature.main.diagram.canvas.axis.drawer.simpleAxisLineDrawer
-import com.github.jan222ik.ui.feature.main.diagram.canvas.canvas.Chart
-import com.github.jan222ik.ui.feature.main.diagram.canvas.grid.intGridRenderer
-import com.github.jan222ik.ui.feature.main.diagram.canvas.math.linearFunctionPointProvider
-import com.github.jan222ik.ui.feature.main.diagram.canvas.math.linearFunctionRenderer
-import com.github.jan222ik.ui.feature.main.diagram.canvas.viewport.Viewport
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import com.github.jan222ik.ui.uml.DiagramBlockUIConfig
 import com.github.jan222ik.ui.uml.MovableAndResizeableComponent
 import com.github.jan222ik.ui.uml.UMLClass
+import com.github.jan222ik.ui.value.EditorColors
+import com.github.jan222ik.util.HorizontalDivider
 import mu.KLogging
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 
@@ -57,9 +64,19 @@ class DiagramCanvasComponent(
             val tabs = listOf(
                 EditorTabs(name = "First diagram", DiagramType.PACKAGE),
                 EditorTabs(name = "block diagram", DiagramType.BLOCK_DEFINITION),
-                EditorTabs(name = "parametric diagram", DiagramType.PARAMETRIC)
+                EditorTabs(name = "parametric diagram", DiagramType.PARAMETRIC),
+                EditorTabs(name = "First diagram", DiagramType.PACKAGE),
+                EditorTabs(name = "a", DiagramType.BLOCK_DEFINITION),
+                EditorTabs(name = "parametric diagram", DiagramType.PARAMETRIC),
+                EditorTabs(name = "First diagram", DiagramType.PACKAGE),
+                EditorTabs(name = "block diagram", DiagramType.BLOCK_DEFINITION),
+                EditorTabs(name = "parametric diagram", DiagramType.PARAMETRIC),
+                EditorTabs(name = "First diagram", DiagramType.PACKAGE),
+                EditorTabs(name = "block diagram", DiagramType.BLOCK_DEFINITION),
+                EditorTabs(name = "parametric diagram", DiagramType.PARAMETRIC),
             )
             DiagramTabRow(editorTabs = tabs)
+            HorizontalDivider(modifier = Modifier.fillMaxWidth(), color = EditorColors.dividerGray)
             val maxViewport = remember { mutableStateOf(Viewport(0f, 0f, 1000f, 1000f)) }
             val viewport = remember { mutableStateOf(Viewport(0f, 0f, 100f, 100f)) }
             val items = remember { mutableStateOf(emptyList<MovableAndResizeableComponent>()) }
@@ -86,7 +103,7 @@ class DiagramCanvasComponent(
                                             initUiConfig = DiagramBlockUIConfig(
                                                 x = pos.x.minus(coords.x).dp,
                                                 y = pos.y.minus(coords.y).dp,
-                                                width = 200.dp,
+                                                width = 255.dp,
                                                 height = 300.dp
                                             ),
                                             onNextUIConfig = { self, old, new ->
@@ -128,24 +145,19 @@ class DiagramCanvasComponent(
                             }
                         ),
                     viewport = viewport,
-                    maxViewport = maxViewport.value
+                    maxViewport = maxViewport.value,
+                    enableZoom = true
                 ) {
-                    grid(intGridRenderer(stepAbscissa = 2))
+                    grid(intGridRenderer(stepAbscissa = 20, stepOrdinate = 20))
                     linearFunction(
                         linearFunctionRenderer(
                             lineDrawer = simpleAxisLineDrawer(brush = SolidColor(Color.White)),
                             linearFunctionPointProvider = linearFunctionPointProvider { it }
                         )
                     )
-                    linearFunction(
-                        linearFunctionRenderer(
-                            lineDrawer = simpleAxisLineDrawer(brush = SolidColor(Color.White)),
-                            linearFunctionPointProvider = linearFunctionPointProvider { it.div(2) }
-                        )
-                    )
                 }
                 items.value.forEach {
-                    it.render()
+                    it.render(projectTreeHandler = parent.projectTreeHandler)
                 }
             }
         }
@@ -156,13 +168,53 @@ class DiagramCanvasComponent(
         editorTabs: List<EditorTabs>
     ) {
         var selectedIdx by remember { mutableStateOf(0) }
-        TabRow(selectedIdx) {
+        ScrollableTabRow(
+            selectedTabIndex = selectedIdx,
+            backgroundColor = EditorColors.backgroundGray,
+            edgePadding = TabRowDefaults.ScrollableTabRowPadding.div(2)
+        ) {
             editorTabs.forEachIndexed { idx, it ->
-                Text(
-                    text = "Tab ${it.name} [${it.type}]",
-                    modifier = Modifier.clickable { selectedIdx = idx },
-                    textAlign = TextAlign.Center
-                )
+                Row(
+                    modifier = Modifier
+                        .defaultMinSize(minWidth = 90.dp, minHeight = 24.dp)
+                        .clickable { selectedIdx = idx }
+                        .then(
+                            if (idx == selectedIdx) {
+                                Modifier.background(Color.White)
+                            } else Modifier
+                        )
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(
+                        space = 8.dp,
+                        alignment = Alignment.CenterHorizontally
+                    )
+                ) {
+
+                    Image(
+                        painter = when (it.type) {
+                            DiagramType.PACKAGE -> painterResource("drawables/uml_icons/Diagram_SysML_Package.gif")
+                            DiagramType.PARAMETRIC -> painterResource("drawables/uml_icons/Diagram_Parametric.png")
+                            DiagramType.BLOCK_DEFINITION -> painterResource("drawables/uml_icons/Diagram_BlockDefinition.gif")
+                        },
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+
+                    Text(
+                        text = it.name,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close editor tab",
+                        modifier = Modifier.size(16.dp).clickable {
+                            logger.debug { "Close tab clicked - TODO: Impl Close" } // TODO Impl close
+                        },
+                        tint = EditorColors.dividerGray
+                    )
+                }
             }
         }
     }

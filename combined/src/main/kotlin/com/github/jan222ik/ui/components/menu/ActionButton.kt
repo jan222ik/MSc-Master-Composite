@@ -11,6 +11,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
+import com.github.jan222ik.ui.value.EditorColors
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -23,8 +24,8 @@ fun ActionButton(
     IconButton(
         modifier = Modifier
             .background(when (isClose) {
-                true -> MaterialTheme.colors.background.takeUnless { isHover } ?: MaterialTheme.colors.error
-                else -> MaterialTheme.colors.background.takeUnless { isHover } ?: MaterialTheme.colors.background.copy(
+                true -> EditorColors.backgroundGray.takeUnless { isHover } ?: EditorColors.closeBtn
+                else -> EditorColors.backgroundGray.takeUnless { isHover } ?: EditorColors.backgroundGray.copy(
                     alpha = ContentAlpha.medium
                 )
             })

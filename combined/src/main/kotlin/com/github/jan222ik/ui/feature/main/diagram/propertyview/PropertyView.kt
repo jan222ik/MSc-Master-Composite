@@ -100,7 +100,7 @@ fun <T : EObject> renderConfig(umlElement: T, config: PropertyViewConfig<T>) {
 
         Row {
             LazyColumn(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(8.dp),
                 state = lazyListState
             ) {
                 config.elements.forEachIndexed { idx, it ->

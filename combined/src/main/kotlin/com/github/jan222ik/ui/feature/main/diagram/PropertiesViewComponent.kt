@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.github.jan222ik.ui.feature.main.diagram.propertyview.PropertyView
 import mu.KLogging
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
@@ -41,11 +42,17 @@ class PropertiesViewComponent(
         ) {
             Row(Modifier.fillMaxSize()) {
                 Box(
-                    modifier = Modifier.fillMaxHeight()
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .clickable(
+                            onClick = onToggle
+                        )
                 ) {
                     ShowMoreLess(isMinimized = isMinimized, onToggle)
                 }
-                PropertyView(selectedElement = parent.projectTreeHandler.singleSelectedItem)
+                ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
+                    PropertyView(selectedElement = parent.projectTreeHandler.singleSelectedItem)
+                }
             }
         }
     }

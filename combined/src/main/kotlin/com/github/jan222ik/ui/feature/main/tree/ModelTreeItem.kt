@@ -1,10 +1,14 @@
 package com.github.jan222ik.ui.feature.main.tree
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.MouseClickScope
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import mu.KLogging
 import org.eclipse.emf.common.notify.Notifier
+import org.eclipse.uml2.uml.Model
 
 @ExperimentalFoundationApi
 sealed class ModelTreeItem(
@@ -13,7 +17,7 @@ sealed class ModelTreeItem(
     override val canExpand: Boolean
 ) : TreeDisplayableItem(level = level) {
 
-    override val icon: ImageVector?
+    override val icon: @Composable ((modifier: Modifier) -> Unit)?
         get() = null
 
     companion object : KLogging() {
@@ -35,7 +39,7 @@ sealed class ModelTreeItem(
                     logger.debug { "Class" }
                     ClassItem(
                         level = level,
-                        displayName = "Class:" + element.name,
+                        displayName = element.name,
                         canExpand = element.ownedElements.isNotEmpty(),
                         umlClass = element
                     )
@@ -44,7 +48,7 @@ sealed class ModelTreeItem(
                     logger.debug { "PackageImport" }
                     ImportItem(
                         level = level,
-                        displayName = "Import:" + element.importingNamespace.name,
+                        displayName = element.importingNamespace.name,
                         canExpand = element.ownedElements.isNotEmpty(),
                         umlImport = element
                     )
@@ -53,7 +57,7 @@ sealed class ModelTreeItem(
                     logger.debug { "Property" }
                     PropertyItem(
                         level = level,
-                        displayName = "Property:" + element.name,
+                        displayName = element.name,
                         canExpand = element.ownedElements.isNotEmpty(),
                         umlProperty = element
                     )
@@ -71,7 +75,7 @@ sealed class ModelTreeItem(
                     logger.debug { "Generalization" }
                     GeneralizationItem(
                         level = level,
-                        displayName = "Generalization:" + element.general.name,
+                        displayName = element.general.name,
                         canExpand = element.ownedElements.isNotEmpty(),
                         umlGeneralization = element
                     )
@@ -84,7 +88,7 @@ sealed class ModelTreeItem(
         }
     }
 
-    abstract fun getElement() : org.eclipse.uml2.uml.Element
+    abstract fun getElement(): org.eclipse.uml2.uml.Element
 
     override val onPrimaryAction: (MouseClickScope.(idx: Int) -> Unit)? = null
 
@@ -116,6 +120,18 @@ sealed class ModelTreeItem(
     ) {
         override fun getElement() = umlPackage
 
+        override val icon: (@Composable (modifier: Modifier) -> Unit)
+            get() = @Composable {
+                Image(
+                    if (umlPackage is Model) {
+                        painterResource("drawables/uml_icons/Model.gif")
+                    } else {
+                        painterResource("drawables/uml_icons/Package.gif")
+                    },
+                    contentDescription = null,
+                    modifier = it
+                )
+            }
     }
 
     class ClassItem(
@@ -129,7 +145,14 @@ sealed class ModelTreeItem(
         canExpand = canExpand
     ) {
         override fun getElement() = umlClass
-
+        override val icon: (@Composable (modifier: Modifier) -> Unit)
+            get() = @Composable {
+                Image(
+                    painterResource("drawables/uml_icons/Block.gif"),
+                    contentDescription = null,
+                    modifier = it
+                )
+            }
     }
 
     class ImportItem(
@@ -143,6 +166,15 @@ sealed class ModelTreeItem(
         canExpand = canExpand
     ) {
         override fun getElement() = umlImport
+
+        override val icon: (@Composable (modifier: Modifier) -> Unit)
+            get() = @Composable {
+                Image(
+                    painterResource("drawables/uml_icons/PackageImport.gif"),
+                    contentDescription = null,
+                    modifier = it
+                )
+            }
 
     }
 
@@ -158,6 +190,14 @@ sealed class ModelTreeItem(
     ) {
         override fun getElement() = umlProperty
 
+        override val icon: (@Composable (modifier: Modifier) -> Unit)
+            get() = @Composable {
+                Image(
+                    painterResource("drawables/uml_icons/Property.gif"),
+                    contentDescription = null,
+                    modifier = it
+                )
+            }
     }
 
     class ValueItem(
@@ -185,7 +225,14 @@ sealed class ModelTreeItem(
         canExpand = canExpand
     ) {
         override fun getElement() = umlGeneralization
-
+        override val icon: (@Composable (modifier: Modifier) -> Unit)
+            get() = @Composable {
+                Image(
+                    painterResource("drawables/uml_icons/Generalization.gif"),
+                    contentDescription = null,
+                    modifier = it
+                )
+            }
     }
 
 }

@@ -28,6 +28,7 @@ dependencies {
     implementation("org.jetbrains.compose.ui:ui-util:1.1.0-alpha05")
 
     // Module dependencies
+    implementation(project(":canvas"))
     implementation(project(":data"))
     implementation(project(":ecore"))
     implementation(project(":forked-libs"))
@@ -96,7 +97,7 @@ compose.desktop {
         mainClass = "com.github.jan222ik.AppKt"
         nativeDistributions {
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb)
-            packageName = "asid-standalone"
+            packageName = "modelling-standalone"
             packageVersion = "1.0.0"
 
             val iconsRoot = project.file("src/main/resources/drawables")

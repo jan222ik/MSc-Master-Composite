@@ -11,13 +11,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.singleWindowApplication
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
+import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 
 class DemoCanvasElement(
     uiConfig: DiagramBlockUIConfig,
     onNextUIConfig: (self: MovableAndResizeableComponent, old: DiagramBlockUIConfig, new: DiagramBlockUIConfig) -> Unit
 ) : MovableAndResizeableComponent(uiConfig, onNextUIConfig) {
     @Composable
-    override fun content() {
+    override fun content(projectTreeHandler: ProjectTreeHandler) {
         Text("Test [Selected:${this@DemoCanvasElement.selected}]")
     }
 
@@ -71,7 +72,7 @@ fun main() {
                 }
             )
         }
-        movableAndResizeableComponent.render()
+        movableAndResizeableComponent.render(ProjectTreeHandler(false))
 
     }
 }

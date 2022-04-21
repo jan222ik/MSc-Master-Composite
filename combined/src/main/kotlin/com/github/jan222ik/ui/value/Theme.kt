@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 
 @Composable
 fun AppTheme(
@@ -12,7 +11,7 @@ fun AppTheme(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     MaterialTheme(
-        colors = if (isDark) Colors.DarkTheme else Colors.LightTheme,
+        colors = if (isDark) EditorColors.DarkTheme else EditorColors.LightTheme,
         typography = AppTypography
     ) {
         Surface {

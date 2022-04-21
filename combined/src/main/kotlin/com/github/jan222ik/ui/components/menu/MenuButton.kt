@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
-import com.github.jan222ik.ui.value.Colors
+import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.util.KeyHelpers
 import com.github.jan222ik.util.KeyHelpers.consumeOnKey
 import kotlinx.coroutines.Dispatchers
@@ -83,7 +83,7 @@ fun MenuButton(
                             }
                         }
                     })
-                .then(if (showPopup) Modifier.background(Colors.focusActive) else Modifier),
+                .then(if (showPopup) Modifier.background(EditorColors.focusActive) else Modifier),
             text = text
         )
 

@@ -19,7 +19,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.dp
@@ -28,10 +27,12 @@ import com.github.jan222ik.ui.feature.LocalDropTargetHandler
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
-import com.github.jan222ik.ui.value.Colors
+import com.github.jan222ik.ui.value.EditorColors
 import mu.KLogging
+import org.eclipse.uml2.uml.Element
 
-@ExperimentalFoundationApi
+
+@OptIn(ExperimentalFoundationApi::class)
 class ProjectTreeHandler(
     private val showRoot: Boolean
 ) {
@@ -47,6 +48,8 @@ class ProjectTreeHandler(
 
     var singleSelectedItem by mutableStateOf<TreeDisplayableItem?>(
         treeSelection.firstOrNull()?.let { items.getOrNull(it)?.actual })
+
+    var setTreeSelectionByElements : ((List<Element>) -> Unit)? by mutableStateOf(null)
 
     private val selectAllAction = ShortcutAction.of(
         key = Key.A,
@@ -84,6 +87,15 @@ class ProjectTreeHandler(
                 singleSelectedItem = null
                 if (it.size == 1) {
                     it.first().onDoublePrimaryAction.invoke(com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext)
+                }
+                setTreeSelectionByElements = { elements: List<Element> ->
+                    logger.debug { "setTreeSelectionByElements elements:${elements.size} items:${items.size}" }
+                    treeSelection = items.mapIndexed { index, treeItem ->
+                        logger.debug { "treeItem = ${treeItem.actual}" }
+                        if (treeItem.actual is ModelTreeItem && elements.contains(treeItem.actual.getElement())) {
+                            index
+                        } else null
+                    }.filterNotNull()
                 }
             }
         }
@@ -132,8 +144,8 @@ class ProjectTreeHandler(
                             when {
                                 isSelected -> {
                                     Modifier.background(
-                                        color = Colors.focusActive.takeIf { focus?.hasFocus == true }
-                                            ?: Colors.focusInactive
+                                        color = EditorColors.focusActive.takeIf { focus?.hasFocus == true }
+                                            ?: EditorColors.focusInactive
                                     )
                                 }
                                 else -> Modifier
@@ -147,12 +159,11 @@ class ProjectTreeHandler(
                                     handler = LocalDropTargetHandler.current,
                                     dataProvider = { actual.getElement() },
                                     onDragCancel = Function0<Unit>::invoke,
-                                    onDragFinished = { _, snapback -> snapback.invoke()}
+                                    onDragFinished = { _, snapback -> snapback.invoke() }
                                 )
                                 else -> Modifier
                             }
-                        )
-                        ,
+                        ),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -195,14 +206,7 @@ class ProjectTreeHandler(
                             }
                         }
                     }
-                    item.icon?.let {
-                        Icon(
-                            modifier = Modifier.size(16.dp),
-                            imageVector = it,
-                            contentDescription = "tree item icon"
-                        )
-
-                    }
+                    item.icon?.invoke(Modifier.size(16.dp))
                     Text(
                         modifier = Modifier
                             .mouseCombinedClickable(
@@ -235,7 +239,7 @@ class ProjectTreeHandler(
         internal val actual: TreeDisplayableItem,
         private val treeHandler: ProjectTreeHandler
     ) {
-        val icon: ImageVector?
+        val icon: @Composable ((modifier: Modifier) -> Unit)?
             get() = actual.icon
         val name: String
             get() = actual.displayName

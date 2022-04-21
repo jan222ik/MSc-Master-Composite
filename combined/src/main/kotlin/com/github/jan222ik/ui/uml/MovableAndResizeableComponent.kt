@@ -22,6 +22,7 @@ import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import mu.KLogging
 import java.awt.Cursor
 import kotlin.math.roundToInt
@@ -54,11 +55,11 @@ abstract class MovableAndResizeableComponent(
         pointerHoverIcon(PointerIcon(Cursor(if (se2nw) Cursor.SE_RESIZE_CURSOR else Cursor.SW_RESIZE_CURSOR)))
 
     @Composable
-    internal abstract fun content()
+    internal abstract fun content(projectTreeHandler: ProjectTreeHandler)
 
     @OptIn(ExperimentalComposeUiApi::class)
     @Composable
-    fun render() {
+    fun render(projectTreeHandler: ProjectTreeHandler) {
         Box(
             modifier = Modifier
                 .defaultMinSize(minSize.width, minSize.height)
@@ -86,13 +87,6 @@ abstract class MovableAndResizeableComponent(
                             else -> Color.Black
                         }
                     )
-                    .clickable(
-                        interactionSource = MutableInteractionSource(),
-                        indication = null,
-                        role = null
-                    ) {
-                        selected = true
-                    }
                     .pointerInput(Unit) {
                         detectDragGestures(
                             onDragEnd = {
@@ -119,7 +113,7 @@ abstract class MovableAndResizeableComponent(
                 shape = RectangleShape,
                 elevation = 16.dp
             ) {
-                content()
+                content(projectTreeHandler)
             }
             ResizeHandle(
                 alignment = Alignment.TopCenter,

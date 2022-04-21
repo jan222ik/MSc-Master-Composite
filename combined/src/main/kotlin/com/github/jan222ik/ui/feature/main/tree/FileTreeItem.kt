@@ -1,10 +1,13 @@
 package com.github.jan222ik.ui.feature.main.tree
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.MouseClickScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileCopy
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.github.jan222ik.ecore.DiagramLoader
 import com.github.jan222ik.ecore.ProjectClientPerModel
@@ -22,10 +25,16 @@ data class FileTreeItem(
 
     companion object : KLogging()
 
-    override val icon: ImageVector?
-        get() = when {
-            canExpand -> Icons.Default.Folder
-            else -> Icons.Default.FileCopy
+    override val icon: @Composable ((modifier: Modifier) -> Unit)
+        get() = @Composable { modifier ->
+            Image(
+                modifier = modifier,
+                imageVector = when {
+                    canExpand -> Icons.Default.Folder
+                    else -> Icons.Default.FileCopy
+                },
+                contentDescription = null,
+            )
         }
 
     override val onPrimaryAction: (MouseClickScope.(idx: Int) -> Unit)?

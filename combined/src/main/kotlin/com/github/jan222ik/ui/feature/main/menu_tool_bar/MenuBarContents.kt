@@ -210,7 +210,7 @@ object MenuBarContents {
                 icon = Icons.Filled.Redo,
                 displayName = displayName,
                 command = object : ICommand {
-                    override fun isActive(): Boolean = commandStackHandler.hasUndo
+                    override fun isActive(): Boolean = commandStackHandler.hasRedo
                     override suspend fun execute(handler: JobHandler) {
                         commandStackHandler.redo()
                     }
