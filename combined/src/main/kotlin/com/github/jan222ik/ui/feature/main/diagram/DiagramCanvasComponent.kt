@@ -53,6 +53,23 @@ import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 class DiagramCanvasComponent(
     val parent: DiagramAreaComponent
 ) {
+    val tabs = listOf(
+        EditorTabs(name = "First diagram", DiagramType.PACKAGE),
+        EditorTabs(name = "block diagram", DiagramType.BLOCK_DEFINITION),
+        EditorTabs(name = "parametric diagram", DiagramType.PARAMETRIC),
+        EditorTabs(name = "First diagram", DiagramType.PACKAGE),
+        EditorTabs(name = "a", DiagramType.BLOCK_DEFINITION),
+        EditorTabs(name = "parametric diagram", DiagramType.PARAMETRIC),
+        EditorTabs(name = "First diagram", DiagramType.PACKAGE),
+        EditorTabs(name = "block diagram", DiagramType.BLOCK_DEFINITION),
+        EditorTabs(name = "parametric diagram", DiagramType.PARAMETRIC),
+        EditorTabs(name = "First diagram", DiagramType.PACKAGE),
+        EditorTabs(name = "block diagram", DiagramType.BLOCK_DEFINITION),
+        EditorTabs(name = "parametric diagram", DiagramType.PARAMETRIC),
+    )
+
+    val activeEditorTab = mutableStateOf(tabs.first())
+
     companion object : KLogging()
 
     @Composable
@@ -61,20 +78,6 @@ class DiagramCanvasComponent(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val tabs = listOf(
-                EditorTabs(name = "First diagram", DiagramType.PACKAGE),
-                EditorTabs(name = "block diagram", DiagramType.BLOCK_DEFINITION),
-                EditorTabs(name = "parametric diagram", DiagramType.PARAMETRIC),
-                EditorTabs(name = "First diagram", DiagramType.PACKAGE),
-                EditorTabs(name = "a", DiagramType.BLOCK_DEFINITION),
-                EditorTabs(name = "parametric diagram", DiagramType.PARAMETRIC),
-                EditorTabs(name = "First diagram", DiagramType.PACKAGE),
-                EditorTabs(name = "block diagram", DiagramType.BLOCK_DEFINITION),
-                EditorTabs(name = "parametric diagram", DiagramType.PARAMETRIC),
-                EditorTabs(name = "First diagram", DiagramType.PACKAGE),
-                EditorTabs(name = "block diagram", DiagramType.BLOCK_DEFINITION),
-                EditorTabs(name = "parametric diagram", DiagramType.PARAMETRIC),
-            )
             DiagramTabRow(editorTabs = tabs)
             HorizontalDivider(modifier = Modifier.fillMaxWidth(), color = EditorColors.dividerGray)
             val maxViewport = remember { mutableStateOf(Viewport(0f, 0f, 1000f, 1000f)) }
@@ -168,6 +171,9 @@ class DiagramCanvasComponent(
         editorTabs: List<EditorTabs>
     ) {
         var selectedIdx by remember { mutableStateOf(0) }
+        LaunchedEffect(selectedIdx) {
+            activeEditorTab.value = editorTabs[selectedIdx]
+        }
         ScrollableTabRow(
             selectedTabIndex = selectedIdx,
             backgroundColor = EditorColors.backgroundGray,

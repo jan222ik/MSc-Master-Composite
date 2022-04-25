@@ -31,6 +31,8 @@ class DiagramAreaComponent(
     internal val hSplitter = SplitPaneState(moveEnabled = true, initialPositionPercentage = 1f)
     internal val vSplitter = SplitPaneState(moveEnabled = true, initialPositionPercentage = 1f)
 
+    val activeEditorTab = canvasComponent.activeEditorTab
+
 
     private val expandToggleForPropViewShortcutAction = ShortcutAction.of(
         key = Key.Two,

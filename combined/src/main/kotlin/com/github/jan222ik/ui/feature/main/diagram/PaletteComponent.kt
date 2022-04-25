@@ -16,6 +16,8 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.github.jan222ik.ui.feature.main.diagram.paletteview.PaletteView
+import com.github.jan222ik.ui.value.EditorColors
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 
 @ExperimentalFoundationApi
@@ -33,10 +35,13 @@ class PaletteComponent(
     fun render(onToggle: () -> Unit) {
         val isMinimized = remember(parent.vSplitter.positionPercentage) { parent.vSplitter.positionPercentage > 0.97 }
         Surface(
-            color = Color.Gray
+            color = EditorColors.backgroundGray
         ) {
-            Box(Modifier.fillMaxSize()) {
-                ShowMoreLess(isMinimized = isMinimized, onToggle)
+            Column(Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxWidth()) {
+                    ShowMoreLess(isMinimized = isMinimized, onToggle)
+                }
+                PaletteView(activeEditorTab = parent.activeEditorTab.value)
             }
         }
     }
