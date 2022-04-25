@@ -3,6 +3,7 @@ package com.github.jan222ik.ui.feature.main.tree
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.MouseClickScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileCopy
 import androidx.compose.material.icons.filled.Folder
@@ -64,8 +65,8 @@ data class FileTreeItem(
             }
         }
 
-    override val onSecondaryAction: MouseClickScope.() -> Unit
-        get() = {
+    override val onSecondaryAction: MouseClickScope.(LazyListState, Int, ITreeContextFor) -> Unit
+        get() = { state, idx, treeContextProvider ->
             logger.debug { "TODO: Secondary Action" }
         }
 }

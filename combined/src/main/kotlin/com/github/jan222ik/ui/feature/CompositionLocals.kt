@@ -6,6 +6,7 @@ import androidx.compose.ui.window.WindowScope
 import androidx.compose.ui.window.WindowState
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.ui.components.dnd.DnDHandler
+import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutActionsHandler
 import com.github.jan222ik.ui.feature.wizard.Project
 import de.comahe.i18n4k.Locale
@@ -100,6 +101,11 @@ val LocalDropTargetHandler = compositionLocalOf<DnDHandler> { error("No value fo
  * LocalCommandStackHandler is a [ProvidableCompositionLocal] that provides a [CommandStackHandler] for handling commands.
  */
 val LocalCommandStackHandler = compositionLocalOf<CommandStackHandler> { error("No value for LocalCommandStackHandler in composition tree!") }
+
+/**
+ * LocalJobHandler is a [ProvidableCompositionLocal] that provides a [JobHandler] for handling command execution.
+ */
+val LocalJobHandler = compositionLocalOf<JobHandler> { error("No value for LocalJobHandler in composition tree!") }
 
 
 @Composable

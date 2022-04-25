@@ -2,6 +2,7 @@ package com.github.jan222ik.ui.feature.main.tree
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.MouseClickScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,7 +17,7 @@ abstract class TreeDisplayableItem(
     abstract val icon: @Composable ((modifier: Modifier) -> Unit)?
     abstract val onPrimaryAction: (MouseClickScope.(idx: Int) -> Unit)?
     abstract val onDoublePrimaryAction: MouseClickScope.() -> Unit
-    abstract val onSecondaryAction: MouseClickScope.() -> Unit
+    abstract val onSecondaryAction: MouseClickScope.(LazyListState, Int, ITreeContextFor) -> Unit
     abstract val displayName: String
     abstract val canExpand: Boolean
 

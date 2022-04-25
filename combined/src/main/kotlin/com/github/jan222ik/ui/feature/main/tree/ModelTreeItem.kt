@@ -3,12 +3,20 @@ package com.github.jan222ik.ui.feature.main.tree
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.MouseClickScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.window.PopupPositionProvider
+import com.github.jan222ik.ui.feature.main.menu_tool_bar.MenuBarContents
 import mu.KLogging
 import org.eclipse.emf.common.notify.Notifier
 import org.eclipse.uml2.uml.Model
+import kotlin.math.roundToInt
 
 @ExperimentalFoundationApi
 sealed class ModelTreeItem(
@@ -103,9 +111,26 @@ sealed class ModelTreeItem(
             }
         }
 
-    override val onSecondaryAction: MouseClickScope.() -> Unit
-        get() = {
+    override val onSecondaryAction: MouseClickScope.(LazyListState, Int, ITreeContextFor) -> Unit
+        get() = action@{ state, idx, treeContextProvider ->
             logger.debug { "TODO: Secondary Action" }
+            treeContextProvider.setContextFor(
+                object : PopupPositionProvider {
+                    override fun calculatePosition(
+                        anchorBounds: IntRect,
+                        windowSize: IntSize,
+                        layoutDirection: LayoutDirection,
+                        popupContentSize: IntSize
+                    ): IntOffset {
+                        val find = state.layoutInfo.visibleItemsInfo.find { it.index == idx }
+                        return IntOffset(
+                            x = anchorBounds.width.times(0.75f).roundToInt(),
+                            y = find?.let { it.offset.minus(it.size).plus(popupContentSize.height.div(2)) } ?: 0
+                        )
+
+                    }
+                } to MenuBarContents.viewMenu()
+            )
         }
 
     class PackageItem(

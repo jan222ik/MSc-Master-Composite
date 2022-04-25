@@ -6,6 +6,9 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -21,13 +24,20 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.*
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
 import com.github.jan222ik.ui.components.dnd.dndDraggable
+import com.github.jan222ik.ui.components.menu.MenuContribution
+import com.github.jan222ik.ui.components.menu.MenuItemList
 import com.github.jan222ik.ui.feature.LocalDropTargetHandler
+import com.github.jan222ik.ui.feature.LocalJobHandler
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
 import com.github.jan222ik.ui.value.EditorColors
+import com.github.jan222ik.util.KeyHelpers
+import com.github.jan222ik.util.KeyHelpers.consumeOnKey
 import mu.KLogging
 import org.eclipse.uml2.uml.Element
 
@@ -35,7 +45,7 @@ import org.eclipse.uml2.uml.Element
 @OptIn(ExperimentalFoundationApi::class)
 class ProjectTreeHandler(
     private val showRoot: Boolean
-) {
+) : ITreeContextFor {
 
     companion object : KLogging()
 
@@ -49,7 +59,13 @@ class ProjectTreeHandler(
     var singleSelectedItem by mutableStateOf<TreeDisplayableItem?>(
         treeSelection.firstOrNull()?.let { items.getOrNull(it)?.actual })
 
-    var setTreeSelectionByElements : ((List<Element>) -> Unit)? by mutableStateOf(null)
+    var setTreeSelectionByElements: ((List<Element>) -> Unit)? by mutableStateOf(null)
+
+    var contextMenuFor by mutableStateOf<Pair<PopupPositionProvider, List<MenuContribution>>?>(null)
+
+    override fun setContextFor(pair: Pair<PopupPositionProvider, List<MenuContribution>>?) {
+        contextMenuFor = pair
+    }
 
     private val selectAllAction = ShortcutAction.of(
         key = Key.A,
@@ -99,6 +115,29 @@ class ProjectTreeHandler(
                 }
             }
         }
+        val lazyListState = rememberLazyListState()
+        val scrollbarAdapter = rememberScrollbarAdapter(scrollState = lazyListState)
+
+
+        contextMenuFor?.let {
+            val (popupPosProvider, menuContributions) = it
+            Popup(
+                popupPositionProvider = popupPosProvider ,
+                onDismissRequest = { contextMenuFor = null },
+                onPreviewKeyEvent = { KeyHelpers.onKeyDown(it) { consumeOnKey(Key.Escape) { contextMenuFor = null } } },
+                focusable = true
+            ) {
+                Card(
+                    border = BorderStroke(1.dp, EditorColors.dividerGray)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(8.dp),
+                    ) {
+                        MenuItemList(items = menuContributions, jobHandler = LocalJobHandler.current, width = 400.dp)
+                    }
+                }
+            }
+        }
 
 
         DisposableEffect(shortcutActionsHandler) {
@@ -113,6 +152,7 @@ class ProjectTreeHandler(
                 }
             }
         }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -130,7 +170,8 @@ class ProjectTreeHandler(
                     detectTapGestures {
                         focusRequester.requestFocus()
                     }
-                }
+                },
+            state = lazyListState
         ) {
             items(items.size) { itemIdx ->
                 val item = items[itemIdx]
@@ -217,7 +258,12 @@ class ProjectTreeHandler(
                                                 this@mouseCombinedClickable,
                                                 itemIdx
                                             )
-                                            isSecondaryPressed -> item.onSecondaryAction.invoke(this@mouseCombinedClickable)
+                                            isSecondaryPressed -> item.onSecondaryAction.invoke(
+                                                this@mouseCombinedClickable,
+                                                lazyListState,
+                                                items.indexOf(item),
+                                                this@ProjectTreeHandler as ITreeContextFor
+                                            )
                                         }
                                     }
                                 },
@@ -261,8 +307,11 @@ class ProjectTreeHandler(
         val onDoublePrimaryAction: MouseClickScope.() -> Unit
             get() = actual.onDoublePrimaryAction
 
-        val onSecondaryAction: MouseClickScope.() -> Unit
-            get() = actual.onSecondaryAction
+        val onSecondaryAction: MouseClickScope.(LazyListState, Int, ITreeContextFor) -> Unit
+            get() = { state, idx, contextFor ->
+                onPrimaryAction.invoke(this, idx)
+                actual.onSecondaryAction.invoke(this, state, idx, contextFor)
+            }
 
         val children: List<TreeDisplayableItem>
             get() = actual.children
