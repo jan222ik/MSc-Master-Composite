@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.isPrimaryPressed
@@ -35,11 +36,13 @@ class UMLClass(
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     override fun content(projectTreeHandler: ProjectTreeHandler) {
-        selected = projectTreeHandler.singleSelectedItem?.let {
-            if (it is ModelTreeItem) {
-                it.getElement() == umlClass
-            } else null
-        } ?: false
+        remember(projectTreeHandler.singleSelectedItem) {
+            selected = projectTreeHandler.singleSelectedItem?.let {
+                if (it is ModelTreeItem) {
+                    it.getElement() == umlClass
+                } else null
+            } ?: false
+        }
 
         val commandStackHandler = LocalCommandStackHandler.current
         Column(
@@ -104,10 +107,12 @@ class UMLClass(
     @Composable
     fun org.eclipse.uml2.uml.Property.displayProp(projectTreeHandler: ProjectTreeHandler) {
         this.let { prop ->
-            val selected = projectTreeHandler.singleSelectedItem?.let {
-                if (it is ModelTreeItem) {
-                    it.getElement() == prop
-                } else null
+            val selected = remember(projectTreeHandler.singleSelectedItem) {
+                projectTreeHandler.singleSelectedItem?.let {
+                    if (it is ModelTreeItem) {
+                        it.getElement() == prop
+                    } else null
+                }
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
