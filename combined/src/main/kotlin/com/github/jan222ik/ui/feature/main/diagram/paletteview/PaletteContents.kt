@@ -4,7 +4,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.res.loadImageBitmap
 import androidx.compose.ui.res.useResource
-import com.github.jan222ik.ui.feature.main.diagram.DiagramType
+import com.github.jan222ik.ui.feature.main.diagram.canvas.DiagramType
 
 object PaletteContents {
 

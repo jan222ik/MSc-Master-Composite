@@ -1,12 +1,11 @@
 package com.github.jan222ik.ui.feature.main.diagram
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.key.Key
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
+import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import mu.KLogging
@@ -14,6 +13,8 @@ import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import org.jetbrains.compose.splitpane.SplitPaneState
 import org.jetbrains.compose.splitpane.VerticalSplitPane
+
+val LocalActiveEditorTab = compositionLocalOf<MutableState<EditorTabViewModel?>> { error("Not provided") }
 
 @ExperimentalComposeUiApi
 @ExperimentalSplitPaneApi
@@ -30,8 +31,6 @@ class DiagramAreaComponent(
 
     internal val hSplitter = SplitPaneState(moveEnabled = true, initialPositionPercentage = 1f)
     internal val vSplitter = SplitPaneState(moveEnabled = true, initialPositionPercentage = 1f)
-
-    val activeEditorTab = canvasComponent.activeEditorTab
 
 
     private val expandToggleForPropViewShortcutAction = ShortcutAction.of(
@@ -74,35 +73,40 @@ class DiagramAreaComponent(
                 shortcutActionsHandler.deregister(expandToggleForPaletteShortcutAction)
             }
         }
-        HorizontalSplitPane(splitPaneState = hSplitterRem) {
-            first() {
-                VerticalSplitPane(splitPaneState = vSplitterRem) {
-                    first() {
-                        canvasComponent.render()
-                    }
-                    second(minSize = PaletteComponent.PALETTE_MIN_HEIGHT) {
-                        paletteComponent.render(
-                            onToggle = {
-                                if (vSplitterRem.positionPercentage > 0.97) {
-                                    vSplitterRem.setToDpFromSecond(PaletteComponent.PALETTE_EXPAND_POINT_HEIGHT)
-                                } else {
-                                    vSplitterRem.setToMax()
+        val activeEditorTab = remember { mutableStateOf<EditorTabViewModel?>(null) }
+        CompositionLocalProvider(
+            LocalActiveEditorTab provides activeEditorTab
+        ) {
+            HorizontalSplitPane(splitPaneState = hSplitterRem) {
+                first() {
+                    VerticalSplitPane(splitPaneState = vSplitterRem) {
+                        first() {
+                            canvasComponent.render()
+                        }
+                        second(minSize = PaletteComponent.PALETTE_MIN_HEIGHT) {
+                            paletteComponent.render(
+                                onToggle = {
+                                    if (vSplitterRem.positionPercentage > 0.97) {
+                                        vSplitterRem.setToDpFromSecond(PaletteComponent.PALETTE_EXPAND_POINT_HEIGHT)
+                                    } else {
+                                        vSplitterRem.setToMax()
+                                    }
                                 }
-                            }
-                        )
-                    }
-                }
-            }
-            second(minSize = PropertiesViewComponent.PROPERTIES_MIN_WIDTH) {
-                propertiesViewComponent.render(
-                    onToggle = {
-                        if (hSplitterRem.positionPercentage > 0.99) {
-                            hSplitterRem.setToDpFromSecond(PropertiesViewComponent.PROPERTIES_EXPAND_POINT_WIDTH)
-                        } else {
-                            hSplitterRem.setToMax()
+                            )
                         }
                     }
-                )
+                }
+                second(minSize = PropertiesViewComponent.PROPERTIES_MIN_WIDTH) {
+                    propertiesViewComponent.render(
+                        onToggle = {
+                            if (hSplitterRem.positionPercentage > 0.99) {
+                                hSplitterRem.setToDpFromSecond(PropertiesViewComponent.PROPERTIES_EXPAND_POINT_WIDTH)
+                            } else {
+                                hSplitterRem.setToMax()
+                            }
+                        }
+                    )
+                }
             }
         }
     }

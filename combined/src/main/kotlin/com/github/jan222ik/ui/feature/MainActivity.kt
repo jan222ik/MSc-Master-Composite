@@ -1,5 +1,8 @@
 package com.github.jan222ik.ui.feature
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -143,6 +146,21 @@ class MainActivity : Activity() {
                         // Igniting navigation
                         rememberRootComponent(factory = ::NavHostComponent)
                             .render()
+                    }
+                    var open by remember { mutableStateOf(true) }
+                    val current = LocalDropTargetHandler.current
+                    Window(visible = open, onCloseRequest = {open = false}) {
+                        Surface {
+                            Column {
+
+                                current.activeTarget.value.let {
+                                    Text("Active: ${it?.second?.name}")
+                                }
+                                current.dropTargets.value.forEach {
+                                    Text(text = it.second.name)
+                                }
+                            }
+                        }
                     }
                 }
             }

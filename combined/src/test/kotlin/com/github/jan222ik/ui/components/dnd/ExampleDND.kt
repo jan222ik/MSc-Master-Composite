@@ -45,7 +45,7 @@ fun main() {
                         Column(Modifier.zIndex(1f).background(Color.Magenta)) {
                             Text(
                                 "Drag form here! ${
-                                    dnDHandler.dropTargets.joinToString(separator = "\n") { it.second.name() + " " + it.first.size }
+                                    dnDHandler.dropTargets.joinToString(separator = "\n") { it.second.name + " " + it.first.size }
                                 }"
                             )
                             Text(
@@ -78,7 +78,7 @@ fun main() {
                                                 .dndDropTarget(
                                                     handler = dnDHandler,
                                                     dropActions = object : DnDAction {
-                                                        override fun name(): String = "Surface $loop"
+                                                        override val name: String = "Surface $loop"
 
                                                         override fun dropEnter(data: Any?) {
                                                             println("Drop Enter $loop data: $data")
@@ -109,7 +109,7 @@ fun main() {
                                         .dndDropTarget(
                                             handler = dnDHandler,
                                             dropActions = object : DnDAction {
-                                                override fun name() = "Outer"
+                                                override val name = "Outer"
 
                                                 override fun dropEnter(data: Any?) {
                                                     println("Drop Enter outer data: $data")
@@ -134,7 +134,7 @@ fun main() {
                                                 .dndDropTarget(
                                                     handler = dnDHandler,
                                                     dropActions = object : DnDAction {
-                                                        override fun name() = "Inner"
+                                                        override val name = "Inner"
                                                         override fun dropEnter(data: Any?) {
                                                             println("Drop Enter inner data: $data")
                                                         }

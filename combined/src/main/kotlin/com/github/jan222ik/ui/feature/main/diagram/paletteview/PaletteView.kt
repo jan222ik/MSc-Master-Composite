@@ -14,10 +14,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.sp
 import com.github.jan222ik.ui.components.dnd.dndDraggable
 import com.github.jan222ik.ui.feature.LocalDropTargetHandler
-import com.github.jan222ik.ui.feature.main.diagram.EditorTabs
+import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
 
 @Composable
-fun PaletteView(activeEditorTab: EditorTabs) {
+fun PaletteView(activeEditorTab: EditorTabViewModel) {
     var showSearch by remember { mutableStateOf(false) }
     var textState by remember { mutableStateOf(TextFieldValue()) }
     val categories = remember(

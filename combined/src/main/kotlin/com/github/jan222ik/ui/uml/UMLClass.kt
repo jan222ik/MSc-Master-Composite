@@ -22,6 +22,7 @@ import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
 import com.github.jan222ik.ui.feature.main.tree.ModelTreeItem
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.util.HorizontalDivider
+import mu.KLogging
 import org.eclipse.uml2.uml.Stereotype
 import org.eclipse.uml2.uml.VisibilityKind
 
@@ -31,6 +32,9 @@ class UMLClass(
     initUiConfig: DiagramBlockUIConfig,
     onNextUIConfig: (MovableAndResizeableComponent, DiagramBlockUIConfig, DiagramBlockUIConfig) -> Unit,
 ) : MovableAndResizeableComponent(initUiConfig, onNextUIConfig) {
+
+    companion object : KLogging()
+
     lateinit var deleteSelfCommand: RemoveFromDiagramCommand
 
     @OptIn(ExperimentalFoundationApi::class)
