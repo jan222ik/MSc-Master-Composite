@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.PopupPositionProvider
+import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.MenuBarContents
 import mu.KLogging
 import org.eclipse.emf.common.notify.Notifier
@@ -129,7 +130,14 @@ sealed class ModelTreeItem(
                         )
 
                     }
-                } to MenuBarContents.viewMenu()
+                } to listOf(
+                    MenuContribution.Contentful.MenuItem(
+                        icon = null,
+                        displayName = "Option 1",
+                        command = null
+                    ),
+                    MenuContribution.Separator,
+                )
             )
         }
 

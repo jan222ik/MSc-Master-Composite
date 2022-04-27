@@ -5,6 +5,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.key.Key
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
+import com.github.jan222ik.ui.feature.SharedCommands
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
@@ -32,11 +33,11 @@ class DiagramAreaComponent(
     internal val hSplitter = SplitPaneState(moveEnabled = true, initialPositionPercentage = 1f)
     internal val vSplitter = SplitPaneState(moveEnabled = true, initialPositionPercentage = 1f)
 
-
     private val expandToggleForPropViewShortcutAction = ShortcutAction.of(
         key = Key.Two,
         modifierSum = ShortcutAction.KeyModifier.ALT,
         action = {
+            println("showHidePalette action")
             if (hSplitter.positionPercentage > 0.99) {
                 hSplitter.setToDpFromSecond(PropertiesViewComponent.PROPERTIES_EXPAND_POINT_WIDTH)
             } else {
@@ -63,14 +64,20 @@ class DiagramAreaComponent(
     fun render() {
         val hSplitterRem = remember { hSplitter }
         val vSplitterRem = remember { vSplitter }
+        val expandToggleForPropViewShortcutActionRem = remember { expandToggleForPropViewShortcutAction }
+        val expandToggleForPaletteShortcutActionRem = remember { expandToggleForPaletteShortcutAction }
 
         val shortcutActionsHandler = LocalShortcutActionHandler.current
         DisposableEffect(Unit) {
-            shortcutActionsHandler.register(expandToggleForPropViewShortcutAction)
-            shortcutActionsHandler.register(expandToggleForPaletteShortcutAction)
+            shortcutActionsHandler.register(expandToggleForPropViewShortcutActionRem)
+            SharedCommands.showHidePropertiesView = expandToggleForPropViewShortcutActionRem
+            shortcutActionsHandler.register(expandToggleForPaletteShortcutActionRem)
+            SharedCommands.showHidePalette = expandToggleForPaletteShortcutActionRem
             onDispose {
-                shortcutActionsHandler.deregister(expandToggleForPropViewShortcutAction)
-                shortcutActionsHandler.deregister(expandToggleForPaletteShortcutAction)
+                shortcutActionsHandler.deregister(expandToggleForPropViewShortcutActionRem)
+                SharedCommands.showHidePropertiesView = null
+                shortcutActionsHandler.deregister(expandToggleForPaletteShortcutActionRem)
+                SharedCommands.showHidePalette = null
             }
         }
         val activeEditorTab = remember { mutableStateOf<EditorTabViewModel?>(null) }

@@ -1,8 +1,5 @@
 package com.github.jan222ik.ui.feature
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -29,6 +26,7 @@ import androidx.compose.ui.window.application
 import com.github.jan222ik.inspector.CompoundCollector
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.ui.components.dnd.DnDHandler
+import com.github.jan222ik.ui.feature.debug.ApplicationBaseDebugWindow
 import com.github.jan222ik.ui.feature.wizard.Project
 import java.io.File
 
@@ -148,20 +146,7 @@ class MainActivity : Activity() {
                             .render()
                     }
                     var open by remember { mutableStateOf(true) }
-                    val current = LocalDropTargetHandler.current
-                    Window(visible = open, onCloseRequest = {open = false}) {
-                        Surface {
-                            Column {
-
-                                current.activeTarget.value.let {
-                                    Text("Active: ${it?.second?.name}")
-                                }
-                                current.dropTargets.value.forEach {
-                                    Text(text = it.second.name)
-                                }
-                            }
-                        }
-                    }
+                    ApplicationBaseDebugWindow.render(open, onClose = { open = false}, keyEventHandler)
                 }
             }
 

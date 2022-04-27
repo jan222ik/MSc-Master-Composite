@@ -84,7 +84,7 @@ dependencies {
     api("org.eclipse.core:org.eclipse.core.runtime:${eclipse_core_runtime_version}")
     api("org.eclipse.core:org.eclipse.core.resources:${eclipse_core_resources_version}")
     api("org.eclipse.emf:org.eclipse.emf.common:${emf_common_version}")
-    api("org.eclipse.emf:org.eclipse.emf.ecore:${emf_ecore_version}")
+    //api("org.eclipse.emf:org.eclipse.emf.ecore:${emf_ecore_version}")
     api("org.eclipse.emf:org.eclipse.emf.ecore.change:${emf_ecore_change_version}")
     api("org.eclipse.emf:org.eclipse.emf.edit:${emf_edit_version}")
     api("org.eclipse:org.eclipse.emf.transaction:${emf_transaction_version}")

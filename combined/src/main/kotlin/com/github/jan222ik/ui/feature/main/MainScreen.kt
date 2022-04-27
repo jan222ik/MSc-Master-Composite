@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.github.jan222ik.ui.feature.LocalProjectSwitcher
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
+import com.github.jan222ik.ui.feature.SharedCommands
 import com.github.jan222ik.ui.feature.main.diagram.DiagramAreaComponent
 import com.github.jan222ik.ui.feature.main.footer.FooterComponent
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
@@ -109,7 +110,9 @@ fun MainScreen(
                         }
                         /* consume = */ true
                     }
-                )
+                ).also {
+                    SharedCommands.showHideExplorer = it
+                }
             }
             val shortcutActionsHandler = LocalShortcutActionHandler.current
             DisposableEffect(Unit) {

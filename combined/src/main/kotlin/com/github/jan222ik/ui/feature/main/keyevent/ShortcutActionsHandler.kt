@@ -8,6 +8,7 @@ interface ShortcutActionsHandler {
 
     fun registerOnRelease(action: ShortcutAction) : ShortcutAction
     fun deregisterOnRelease(action: ShortcutAction)
+    fun execute(action: ShortcutAction?)
 }
 
 data class ShortcutAction(

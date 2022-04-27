@@ -22,16 +22,16 @@ import androidx.compose.ui.unit.dp
 import com.github.jan222ik.model.command.ICommand
 import com.github.jan222ik.ui.components.menu.ActionButton
 import com.github.jan222ik.ui.components.menu.MenuButton
+import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.components.menu.MenuItemList
-import com.github.jan222ik.ui.feature.LocalCommandStackHandler
-import com.github.jan222ik.ui.feature.LocalProjectSwitcher
-import com.github.jan222ik.ui.feature.LocalWindowActions
-import com.github.jan222ik.ui.feature.LocalWindowScope
+import com.github.jan222ik.ui.feature.*
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
+import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.wizard.CreateProjectWizard
 import com.github.jan222ik.ui.feature.wizard.Project
 import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.util.HorizontalDivider
+import kotlinx.coroutines.launch
 import javax.swing.JFileChooser
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -101,8 +101,12 @@ fun MenuToolBarComponent(
                             )
                         }
                         val commandStackHandler = LocalCommandStackHandler.current
+                        val shortcutActionsHandler = LocalShortcutActionHandler.current
                         val editMenu = remember(commandStackHandler) { MenuBarContents.editMenu(commandStackHandler) }
-                        val viewMenu = remember() { MenuBarContents.viewMenu() }
+                        val viewMenu = remember() { MenuBarContents.viewMenu(shortcutActionsHandler) }
+                        DisposableShortcutsFor(menus = fileMenu)
+                        DisposableShortcutsFor(menus = editMenu)
+                        DisposableShortcutsFor(menus = viewMenu)
                         MenuButton(
                             key = Key.F,
                             displayText = "File",
@@ -154,6 +158,88 @@ fun MenuToolBarComponent(
                 HorizontalDivider(modifier = Modifier.fillMaxWidth(), color = EditorColors.dividerGray)
             }
 
+        }
+    }
+}
+
+fun extractMenuItems(menus: List<MenuContribution>): List<MenuContribution.Contentful.MenuItem> {
+    if (menus.isEmpty()) return emptyList()
+    val (menuItems, nested) = menus
+        .filterIsInstance<MenuContribution.Contentful>()
+        .partition { it is MenuContribution.Contentful.MenuItem }
+        .mapPair(
+            mapFirst = { it.filterIsInstance<MenuContribution.Contentful.MenuItem>() },
+            mapSecond = { it.filterIsInstance<MenuContribution.Contentful.NestedMenuItem>()}
+        )
+        .mapPair(
+            mapFirst = { it },
+            mapSecond = { nested -> nested.map { it.nestedItems }.flatten()}
+        )
+    return menuItems + extractMenuItems(nested)
+}
+
+fun <E, ER, F, FR> Pair<E, F>.mapPair(
+    mapFirst: (E) -> ER,
+    mapSecond: (F) -> FR
+) : Pair<ER, FR> {
+    return Pair(
+        first = mapFirst(first),
+        second = mapSecond(second),
+    )
+}
+
+@Composable
+fun DisposableShortcutsFor(menus: List<MenuContribution>) {
+    val shortcutActionsHandler = LocalShortcutActionHandler.current
+    val jobHandler = LocalJobHandler.current
+    val scope = rememberCoroutineScope()
+    DisposableEffect(menus) {
+        val menuItems = extractMenuItems(menus)
+        val shortcutActions = menuItems
+            .filter { it.keyShortcut.isNotEmpty() && it.command != null && !it.keyShortcutAlreadyExists }
+            .mapNotNull {
+                var kModSum = ShortcutAction.KeyModifier.NO_MODIFIERS
+                val nonModifierKeys = it.keyShortcut
+                    .filterNot { key ->
+                        if (listOf(Key.CtrlLeft, Key.CtrlRight).contains(key)) {
+                            kModSum += ShortcutAction.KeyModifier.CTRL
+                            true
+                        } else {
+                            if (listOf(Key.AltLeft, Key.AltRight).contains(key)) {
+                                kModSum += ShortcutAction.KeyModifier.ALT
+                                true
+                            } else {
+                                if (listOf(Key.ShiftLeft, Key.ShiftRight).contains(key)) {
+                                    kModSum += ShortcutAction.KeyModifier.SHIFT
+                                    true
+                                } else {
+                                    if (listOf(Key.MetaLeft, Key.MetaRight).contains(key)) {
+                                        kModSum += ShortcutAction.KeyModifier.META
+                                        true
+                                    } else false
+                                }
+                            }
+                        }
+                    }
+                if (nonModifierKeys.isNotEmpty()) {
+                    ShortcutAction.of(
+                        key = nonModifierKeys.first(),
+                        modifierSum = kModSum,
+                        action = { // Command is forced not null
+                            it.command!!.let {
+                                if (it.isActive()) {
+                                    scope.launch { it.execute(jobHandler) }
+                                    true
+                                } else false
+                            }
+                        }
+                    )
+                } else null
+            }
+        shortcutActions.forEach(shortcutActionsHandler::register)
+
+        onDispose {
+            shortcutActions.forEach(shortcutActionsHandler::deregister)
         }
     }
 }

@@ -13,7 +13,14 @@ import com.github.jan222ik.model.mock.MockBackgroundJobs
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.components.menu.MenuContribution.Contentful.MenuItem
 import com.github.jan222ik.ui.components.menu.MenuContribution.Contentful.NestedMenuItem
+import com.github.jan222ik.ui.feature.SharedCommands
+import com.github.jan222ik.ui.feature.main.footer.progress.IProgressMonitor
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
+import com.github.jan222ik.ui.feature.main.footer.progress.ProgressObservedJob
+import com.github.jan222ik.ui.feature.main.keyevent.KeyEventHandler
+import com.github.jan222ik.ui.feature.main.keyevent.ShortcutActionsHandler
+import kotlinx.coroutines.withContext
+import org.jetbrains.skiko.MainUIDispatcher
 
 @OptIn(ExperimentalComposeUiApi::class)
 object MenuBarContents {
@@ -132,7 +139,7 @@ object MenuBarContents {
         ),
     )
 
-    fun viewMenu() = listOf(
+    fun viewMenu(shortcutActionsHandler: ShortcutActionsHandler) = listOf(
         kotlin.run {
             val displayName = "Show/Hide Model Explorer"
             MenuItem(
@@ -141,13 +148,22 @@ object MenuBarContents {
                 command = object : ICommand {
                     override fun isActive(): Boolean = true
                     override suspend fun execute(handler: JobHandler) {
-                        TODO()
+                        handler.run(ProgressObservedJob(
+                            hasTicks = false,
+                            name = displayName,
+                            job = {
+                                withContext(MainUIDispatcher) {
+                                    shortcutActionsHandler.execute(SharedCommands.showHideExplorer)
+                                }
+                            }
+                        ))
                     }
                     override fun canUndo(): Boolean = false
                     override suspend fun undo() {}
                     override fun pushToStack(): Boolean = false
                 },
-                keyShortcut = listOf(Key.AltLeft, Key.One)
+                keyShortcut = listOf(Key.AltLeft, Key.One),
+                keyShortcutAlreadyExists = true
             )
         },
         kotlin.run {
@@ -158,13 +174,22 @@ object MenuBarContents {
                 command = object : ICommand {
                     override fun isActive(): Boolean = true
                     override suspend fun execute(handler: JobHandler) {
-                        TODO()
+                        handler.run(ProgressObservedJob(
+                            hasTicks = false,
+                            name = displayName,
+                            job = {
+                                withContext(MainUIDispatcher) {
+                                    shortcutActionsHandler.execute(SharedCommands.showHidePropertiesView)
+                                }
+                            }
+                        ))
                     }
                     override fun canUndo(): Boolean = false
                     override suspend fun undo() {}
                     override fun pushToStack(): Boolean = false
                 },
-                keyShortcut = listOf(Key.AltLeft, Key.Two)
+                keyShortcut = listOf(Key.AltLeft, Key.Two),
+                keyShortcutAlreadyExists = true
             )
         },
         kotlin.run {
@@ -175,13 +200,22 @@ object MenuBarContents {
                 command = object : ICommand {
                     override fun isActive(): Boolean = true
                     override suspend fun execute(handler: JobHandler) {
-                        TODO()
+                        handler.run(ProgressObservedJob(
+                            hasTicks = false,
+                            name = displayName,
+                            job = {
+                                withContext(MainUIDispatcher) {
+                                    shortcutActionsHandler.execute(SharedCommands.showHidePalette)
+                                }
+                            }
+                        ))
                     }
                     override fun canUndo(): Boolean = false
                     override suspend fun undo() {}
                     override fun pushToStack(): Boolean = false
                 },
-                keyShortcut = listOf(Key.AltLeft, Key.Three)
+                keyShortcut = listOf(Key.AltLeft, Key.Three),
+                keyShortcutAlreadyExists = true
             )
         }
     )

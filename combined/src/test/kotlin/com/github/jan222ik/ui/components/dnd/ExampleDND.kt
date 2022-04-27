@@ -32,7 +32,7 @@ fun main() {
                     .fillMaxSize()
                     .drawWithContent {
                         drawContent()
-                        dnDHandler.dropTargets.forEach {
+                        dnDHandler.dropTargets.value.forEach {
                             drawRect(
                                 Color.Red,
                                 topLeft = it.first.positionInWindow(),
@@ -45,7 +45,7 @@ fun main() {
                         Column(Modifier.zIndex(1f).background(Color.Magenta)) {
                             Text(
                                 "Drag form here! ${
-                                    dnDHandler.dropTargets.joinToString(separator = "\n") { it.second.name + " " + it.first.size }
+                                    dnDHandler.dropTargets.value.joinToString(separator = "\n") { it.second.name + " " + it.first.size }
                                 }"
                             )
                             Text(

@@ -12,7 +12,8 @@ sealed class MenuContribution {
         val icon: ImageVector?,
         val displayName: String,
         val command: ICommand?,
-        val keyShortcut: List<Key>
+        val keyShortcut: List<Key>,
+        val keyShortcutAlreadyExists: Boolean
     ) : MenuContribution() {
 
         fun isActive(): Boolean = command?.isActive() ?: let { it is NestedMenuItem && it.nestedItems.isNotEmpty() }
@@ -25,20 +26,23 @@ sealed class MenuContribution {
             icon = icon,
             displayName = displayName,
             command = null,
-            keyShortcut = emptyList()
+            keyShortcut = emptyList(),
+            keyShortcutAlreadyExists = false
         )
 
         open class MenuItem(
             icon: ImageVector? = null,
             displayName: String,
             command: ICommand? = NotImplementedCommand(displayName),
-            keyShortcut: List<Key> = emptyList()
+            keyShortcut: List<Key> = emptyList(),
+            keyShortcutAlreadyExists: Boolean = false
         ) :
             Contentful(
                 icon = icon,
                 displayName = displayName,
                 command = command,
                 keyShortcut = keyShortcut,
+                keyShortcutAlreadyExists = keyShortcutAlreadyExists
             )
     }
 }
