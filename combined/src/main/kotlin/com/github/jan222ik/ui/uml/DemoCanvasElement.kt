@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.singleWindowApplication
+import com.github.jan222ik.canvas.DiagramBlockUIConfig
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler

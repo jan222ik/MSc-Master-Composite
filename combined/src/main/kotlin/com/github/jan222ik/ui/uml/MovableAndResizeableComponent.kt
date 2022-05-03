@@ -1,11 +1,9 @@
 package com.github.jan222ik.ui.uml
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
 import androidx.compose.runtime.Composable
@@ -22,6 +20,7 @@ import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.github.jan222ik.canvas.DiagramBlockUIConfig
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import mu.KLogging
 import java.awt.Cursor
@@ -31,7 +30,7 @@ abstract class MovableAndResizeableComponent(
     initUiConfig: DiagramBlockUIConfig,
     val onNextUIConfig: (self: MovableAndResizeableComponent, old: DiagramBlockUIConfig, new: DiagramBlockUIConfig) -> Unit
 ) {
-    private var uiConfig by mutableStateOf(initUiConfig)
+    val uiConfig = mutableStateOf(initUiConfig)
 
     companion object : KLogging() {
         val resizeAreaExpandSize = 5.dp
@@ -64,13 +63,13 @@ abstract class MovableAndResizeableComponent(
             modifier = Modifier
                 .defaultMinSize(minSize.width, minSize.height)
                 .size(
-                    width = uiConfig.width.plus(resizeW.dp).plus(resizeAreaExpandSize.times(2)),
-                    height = uiConfig.height.plus(resizeH.dp).plus(resizeAreaExpandSize.times(2))
+                    width = uiConfig.value.width.plus(resizeW.dp).plus(resizeAreaExpandSize.times(2)),
+                    height = uiConfig.value.height.plus(resizeH.dp).plus(resizeAreaExpandSize.times(2))
                 )
                 .offset {
                     IntOffset(
-                        x = uiConfig.x.value.plus(moveOffsetX).roundToInt(),
-                        y = uiConfig.y.value.plus(moveOffsetY).roundToInt()
+                        x = uiConfig.value.x.value.plus(moveOffsetX).roundToInt(),
+                        y = uiConfig.value.y.value.plus(moveOffsetY).roundToInt()
                     )
                 }
             //.background(Color.Magenta)
@@ -92,12 +91,12 @@ abstract class MovableAndResizeableComponent(
                             onDragEnd = {
                                 onNextUIConfig(
                                     this@MovableAndResizeableComponent,
-                                    uiConfig,
+                                    uiConfig.value,
                                     DiagramBlockUIConfig(
-                                        x = uiConfig.x + moveOffsetX.dp,
-                                        y = uiConfig.y + moveOffsetY.dp,
-                                        width = uiConfig.width + resizeW.dp,
-                                        height = uiConfig.height + resizeH.dp
+                                        x = uiConfig.value.x + moveOffsetX.dp,
+                                        y = uiConfig.value.y + moveOffsetY.dp,
+                                        width = uiConfig.value.width + resizeW.dp,
+                                        height = uiConfig.value.height + resizeH.dp
                                     )
                                 )
                             }
@@ -181,12 +180,12 @@ abstract class MovableAndResizeableComponent(
                             onDragEnd = {
                                 onNextUIConfig(
                                     this@MovableAndResizeableComponent,
-                                    uiConfig,
+                                    uiConfig.value,
                                     DiagramBlockUIConfig(
-                                        x = uiConfig.x + moveOffsetX.dp,
-                                        y = uiConfig.y + moveOffsetY.dp,
-                                        width = uiConfig.width + resizeW.dp,
-                                        height = uiConfig.height + resizeH.dp
+                                        x = uiConfig.value.x + moveOffsetX.dp,
+                                        y = uiConfig.value.y + moveOffsetY.dp,
+                                        width = uiConfig.value.width + resizeW.dp,
+                                        height = uiConfig.value.height + resizeH.dp
                                     )
                                 )
                             }
@@ -197,12 +196,12 @@ abstract class MovableAndResizeableComponent(
                             onDragEnd = {
                                 onNextUIConfig(
                                     this@MovableAndResizeableComponent,
-                                    uiConfig,
+                                    uiConfig.value,
                                     DiagramBlockUIConfig(
-                                        x = uiConfig.x + moveOffsetX.dp,
-                                        y = uiConfig.y + moveOffsetY.dp,
-                                        width = uiConfig.width + resizeW.dp,
-                                        height = uiConfig.height + resizeH.dp
+                                        x = uiConfig.value.x + moveOffsetX.dp,
+                                        y = uiConfig.value.y + moveOffsetY.dp,
+                                        width = uiConfig.value.width + resizeW.dp,
+                                        height = uiConfig.value.height + resizeH.dp
                                     )
                                 )
                             }
@@ -229,7 +228,7 @@ abstract class MovableAndResizeableComponent(
     }
 
     fun useConfig(config: DiagramBlockUIConfig) {
-        uiConfig = config
+        uiConfig.value = config
         moveOffsetX = 0f
         moveOffsetY = 0f
         resizeH = 0f

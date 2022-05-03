@@ -13,7 +13,7 @@ import com.github.jan222ik.canvas.labels.provoder.ILabelProvider
 import com.github.jan222ik.canvas.math.ILinearFunctionRenderer
 import com.github.jan222ik.canvas.series.ISeriesRenderer
 
-class ChartScopeImpl : ChartScope {
+open class ChartScopeImpl : ChartScope {
     val abscissaAxisRenderer = mutableListOf<IAbscissaIAxisRenderer>()
     val ordinateAxisRenderer = mutableListOf<IOrdinateIAxisRenderer>()
     val seriesMap: MutableMap<List<DataPoint>, ISeriesRenderer> = mutableMapOf()

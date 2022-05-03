@@ -1,5 +1,6 @@
 package com.github.jan222ik.ui.uml
 
+import com.github.jan222ik.canvas.DiagramBlockUIConfig
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand

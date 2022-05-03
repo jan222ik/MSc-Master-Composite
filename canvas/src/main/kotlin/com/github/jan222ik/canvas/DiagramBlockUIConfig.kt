@@ -1,4 +1,4 @@
-package com.github.jan222ik.ui.uml
+package com.github.jan222ik.canvas
 
 import androidx.compose.ui.unit.Dp
 
