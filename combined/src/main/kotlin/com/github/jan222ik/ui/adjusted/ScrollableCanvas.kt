@@ -116,7 +116,7 @@ fun ScrollableCanvas(elements: List<ICanvasComposable>) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .then(if (conditionalClipValue.value) { Modifier.clipToBounds() } else Modifier)
+                        .addIf(conditionalClipValue.value, Modifier.clipToBounds())
                         .pointerInput(Unit) {
                             detectTransformGestures { centroid, pan, zoom, rotation ->
                                 viewport.value = viewport.value.applyPan(pan, maxViewportSize)
@@ -180,7 +180,8 @@ fun ScrollableCanvas(elements: List<ICanvasComposable>) {
                     elements
                         .filter { it.boundingShape.isVisibleInViewport(viewport.value) }
                         .forEach {
-                            it.render(it.boundingShape.topLeft.minus(viewport.value.origin))
+                            val topLeft = remember(it.boundingShape.topLeft.value) { it.boundingShape.topLeft.value }
+                            it.render(topLeft.minus(viewport.value.origin))
                         }
                 }
             }
@@ -189,6 +190,8 @@ fun ScrollableCanvas(elements: List<ICanvasComposable>) {
         HorizontalScrollbar(adapter = hScrollAdapter, reverseLayout = true)
     }
 }
+
+private fun Modifier.addIf(condition: Boolean, other: Modifier) = if (condition) this.then(other) else this
 
 private fun DrawScope.drawSelectionPlane(rect: Pair<Offset, Size>?) {
     if (rect == null) return
@@ -374,7 +377,19 @@ class DemoComposable(
 ) : ICanvasComposable {
     @Composable
     override fun render(offset: Offset) {
-        Card(modifier = Modifier.offset(offset.x.dp, offset.y.dp)) {
+        Card(modifier = Modifier
+            .offset(offset.x.dp, offset.y.dp)
+            .size(100.dp, 300.dp)
+            .pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    boundingShape.topLeft.value += dragAmount
+                    if (boundingShape is BoundingRect) {
+                        boundingShape.width.value += dragAmount.x
+                        boundingShape.height.value += dragAmount.y
+                    }
+                }
+            }
+        ) {
             Text("Test ${boundingShape.debugName}", modifier = Modifier.padding(4.dp))
         }
     }
@@ -385,24 +400,24 @@ fun main(args: Array<String>) {
     singleWindowApplication {
         val boundingBoxes = listOf<IBoundingShape>(
             BoundingRect(
-                topLeft = Offset.Zero,
-                width = 100f,
-                height = 50f
+                initTopLeft = Offset.Zero,
+                initWidth = 100f,
+                initHeight = 50f
             ),
             BoundingRect(
-                topLeft = Offset(500f, 200f),
-                width = 200f,
-                height = 10f
+                initTopLeft = Offset(500f, 200f),
+                initWidth = 200f,
+                initHeight = 10f
             ),
             BoundingRect(
-                topLeft = Offset(600f, 900f),
-                width = 90f,
-                height = 60f
+                initTopLeft = Offset(600f, 900f),
+                initWidth = 90f,
+                initHeight = 60f
             ),
             BoundingRect(
-                topLeft = Offset(500f, 500f),
-                width = 50f,
-                height = 50f
+                initTopLeft = Offset(500f, 500f),
+                initWidth = 50f,
+                initHeight = 50f
             )
         )
         val elements: List<ICanvasComposable> = boundingBoxes.map {
@@ -421,41 +436,44 @@ fun main(args: Array<String>) {
     }
 }
 
-data class BoundingRect(
-    override val topLeft: Offset,
-    val width: Float,
-    val height: Float,
+class BoundingRect(
+    initTopLeft: Offset,
+    initWidth: Float,
+    initHeight: Float,
     override val debugName: String = Random.nextInt().toString()
 ) : IBoundingShape {
+    override val topLeft: MutableState<Offset> = mutableStateOf(initTopLeft)
+    val width: MutableState<Float> = mutableStateOf(initWidth)
+    val height: MutableState<Float> = mutableStateOf(initHeight)
     fun drawWireframe(drawScope: DrawScope, color: Color = Color.Cyan, fill: Boolean) {
         drawScope.translate(
-            left = topLeft.x,
-            top = topLeft.y
+            left = topLeft.value.x,
+            top = topLeft.value.y
         ) {
             drawRect(
                 color = color,
                 style = if (fill) Fill else Stroke(),
                 topLeft = Offset.Zero,
-                size = Size(width = width, height = height)
+                size = Size(width = width.value, height = height.value)
             )
             drawLine(
                 color = color,
                 start = Offset.Zero,
-                end = Offset(width, height)
+                end = Offset(width.value, height.value)
             )
             drawLine(
                 color = color,
-                start = Offset(0f, height),
-                end = Offset(width, 0f)
+                start = Offset(0f, height.value),
+                end = Offset(width.value, 0f)
             )
         }
     }
 
     override fun isVisibleInViewport(viewport: Viewport): Boolean {
-        val aBottomRight = topLeft.plus(Offset(width, height))
+        val aBottomRight = topLeft.value.plus(Offset(width.value, height.value))
         val viewPortBottomRight = viewport.origin.plus(viewport.size.toOffset())
-        val aTop = topLeft.y
-        val aLeft = topLeft.x
+        val aTop = topLeft.value.y
+        val aLeft = topLeft.value.x
         val aBottom = aBottomRight.y
         val aRight = aBottomRight.x
         val bTop = viewport.origin.y
