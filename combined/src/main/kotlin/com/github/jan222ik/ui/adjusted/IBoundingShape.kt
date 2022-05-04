@@ -1,4 +1,4 @@
-package com.github.jan222ik.canvas.adjusted
+package com.github.jan222ik.ui.adjusted
 
 import androidx.compose.ui.geometry.Offset
 

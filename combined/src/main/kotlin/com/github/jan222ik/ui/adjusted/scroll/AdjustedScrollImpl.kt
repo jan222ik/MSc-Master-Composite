@@ -1,4 +1,4 @@
-package com.github.jan222ik.canvas.adjusted.scroll
+package com.github.jan222ik.ui.adjusted.scroll
 
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.SpringSpec
@@ -13,12 +13,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import com.github.jan222ik.canvas.adjusted.Viewport
+import com.github.jan222ik.ui.adjusted.Viewport
 import kotlin.math.roundToInt
 
 
@@ -38,8 +34,6 @@ import kotlin.math.roundToInt
 @Stable
 class CanvasScrollState(
     initial: Int,
-    val scale: Float = 1.0f,
-    val viewport: MutableState<Viewport>,
     val maxDimensionValue: Int,
     val onScroll: (Float) -> Unit
 ) : ScrollableState {
