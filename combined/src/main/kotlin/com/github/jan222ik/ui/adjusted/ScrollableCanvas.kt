@@ -1,13 +1,19 @@
 package com.github.jan222ik.ui.adjusted
 
-import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.HorizontalScrollbar
+import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Card
 import androidx.compose.material.Surface
-import androidx.compose.material.Switch
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -16,26 +22,39 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.*
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.singleWindowApplication
+import com.github.jan222ik.ui.adjusted.arrow.Arrow
+import com.github.jan222ik.ui.adjusted.arrow.ArrowType
 import com.github.jan222ik.ui.adjusted.scroll.CanvasScrollState
-import com.github.jan222ik.ui.feature.main.menu_tool_bar.mapPair
+import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
-import kotlin.random.Random
+
+object ScrollableCanvasDefaults {
+    const val viewportSizeMaxWidth = 10_000f
+    const val viewportSizeMaxHeight = 10_000f
+}
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun ScrollableCanvas(elements: List<ICanvasComposable>) {
+fun ScrollableCanvas(elements: List<ICanvasComposable>, arrows: List<Arrow>) {
     // Debug
     val conditionalClipValue = remember { mutableStateOf(true) }
+    val showWireframeOnly = remember { mutableStateOf(false) }
+    val showWireframeName = remember { mutableStateOf(false) }
 
     // Const
-    val maxViewportSize = Size(10000f, 10000f)
+    val maxViewportSize = Size(
+        width = ScrollableCanvasDefaults.viewportSizeMaxWidth,
+        height = ScrollableCanvasDefaults.viewportSizeMaxHeight
+    )
 
     // Viewport
     val viewport = remember { mutableStateOf(Viewport()) }
@@ -103,12 +122,14 @@ fun ScrollableCanvas(elements: List<ICanvasComposable>) {
                         )
                     )
                 }
-                debugWindow(
+                DebugCanvas.debugWindow(
                     viewport = viewport,
                     maxViewportSize = maxViewportSize,
                     elements = elements,
                     selectedBoundingBoxes = selectedBoundingBoxes,
                     conditionalClipValue = conditionalClipValue,
+                    showWireframeOnly = showWireframeOnly,
+                    showWireframeName = showWireframeName,
                     dragOverRect = dragOverRect
                 )
 
@@ -166,23 +187,35 @@ fun ScrollableCanvas(elements: List<ICanvasComposable>) {
                                         .map { it.boundingShape }
                                         .forEach {
                                             if (it is BoundingRect) {
-                                                it.drawWireframe(drawScope = this, fill = false)
+                                                it.drawWireframe(
+                                                    drawScope = this,
+                                                    fill = selectedBoundingBoxes.value.contains(it),
+                                                    showText = showWireframeName.value
+                                                )
                                             }
                                         }
                                 }
+                            }
+                            arrows.forEach {
+                                with(it) { drawArrow() }
+                            }
+                            drawContent()
+                            conditionalClip(conditionalClipValue.value) {
                                 if (dragStartOffset.value != null) {
                                     drawSelectionPlane(rect = dragOverRect.value)
                                 }
                             }
-                            drawContent()
                         }
                 ) {
-                    elements
-                        .filter { it.boundingShape.isVisibleInViewport(viewport.value) }
-                        .forEach {
-                            val topLeft = remember(it.boundingShape.topLeft.value) { it.boundingShape.topLeft.value }
-                            it.render(topLeft.minus(viewport.value.origin))
-                        }
+                    if (!showWireframeOnly.value) {
+                        elements
+                            .filter { it.boundingShape.isVisibleInViewport(viewport.value) }
+                            .forEach {
+                                val topLeft =
+                                    remember(it.boundingShape.topLeft.value) { it.boundingShape.topLeft.value }
+                                it.render(ProjectTreeHandler(false), topLeft.minus(viewport.value.origin))
+                            }
+                    }
                 }
             }
             VerticalScrollbar(adapter = vScrollAdapter, reverseLayout = true)
@@ -193,39 +226,13 @@ fun ScrollableCanvas(elements: List<ICanvasComposable>) {
 
 private fun Modifier.addIf(condition: Boolean, other: Modifier) = if (condition) this.then(other) else this
 
-private fun DrawScope.drawSelectionPlane(rect: Pair<Offset, Size>?) {
+fun DrawScope.drawSelectionPlane(rect: Pair<Offset, Size>?) {
     if (rect == null) return
     drawRect(
         color = Color.Blue.copy(alpha = 0.2f),
         topLeft = rect.first,
         size = rect.second
     )
-}
-
-private class ScrollableScrollbarAdapter(
-    val scrollState: CanvasScrollState,
-    private val vertical: Boolean
-) : ScrollbarAdapter {
-    override val scrollOffset: Float get() = scrollState.value.toFloat()
-
-    override suspend fun scrollTo(containerSize: Int, scrollOffset: Float) {
-        scrollState.scrollTo(scrollOffset.roundToInt())
-    }
-
-    override fun maxScrollOffset(containerSize: Int) =
-        scrollState.maxValue.toFloat()
-
-    fun updateViewport(value: Viewport) {
-        scrollState.updateFromViewport(value, object : (Viewport) -> Int {
-            override fun invoke(p1: Viewport): Int {
-                return if (vertical) {
-                    p1.origin.y
-                } else {
-                    p1.origin.x
-                }.roundToInt()
-            }
-        })
-    }
 }
 
 private fun DrawScope.conditionalClip(doClip: Boolean, content: DrawScope.() -> Unit) {
@@ -238,7 +245,7 @@ private fun DrawScope.conditionalClip(doClip: Boolean, content: DrawScope.() -> 
     }
 }
 
-private fun DrawScope.debugDrawViewport(maxViewportSize: Size, color: Color = Color.Magenta) {
+fun DrawScope.debugDrawViewport(maxViewportSize: Size, color: Color = Color.Magenta) {
     drawRectOwn(
         size = maxViewportSize,
         topLeft = Offset.Zero,
@@ -248,157 +255,29 @@ private fun DrawScope.debugDrawViewport(maxViewportSize: Size, color: Color = Co
     drawLine(color = color, start = Offset(maxViewportSize.width, 0f), end = Offset(0f, maxViewportSize.height))
 }
 
-private fun DrawScope.drawRectOwn(size: Size, topLeft: Offset, color: Color = Color.Red) {
+fun DrawScope.drawRectOwn(size: Size, topLeft: Offset, color: Color = Color.Red) {
     drawRect(color = color, topLeft = topLeft, size = size, style = Stroke())
 }
 
-data class Viewport(
-    val origin: Offset = Offset.Zero,
-    val size: Size = Size.Zero
-) {
-    fun applyPan(pan: Offset, maxViewportSize: Size): Viewport {
-        val nX = origin.x - pan.x
-        val nY = origin.y - pan.y
-        return this.copy(
-            origin = origin.copy(
-                x = nX.coerceIn(
-                    minimumValue = 0f,
-                    maximumValue = maxViewportSize.width.minus(size.width)
-                ),
-                y = nY.coerceIn(
-                    minimumValue = 0f,
-                    maximumValue = maxViewportSize.height.minus(size.height)
-                )
-            )
-        )
-    }
-
-    fun moveTo(pos: Offset, maxViewportSize: Size): Viewport {
-        return this.copy(
-            origin = origin.copy(
-                x = pos.x.coerceIn(
-                    minimumValue = 0f,
-                    maximumValue = maxViewportSize.width.minus(size.width)
-                ),
-                y = pos.y.coerceIn(
-                    minimumValue = 0f,
-                    maximumValue = maxViewportSize.height.minus(size.height)
-                )
-            )
-        )
-    }
-}
-
-@Composable
-fun debugWindow(
-    viewport: MutableState<Viewport>,
-    maxViewportSize: Size,
-    elements: List<ICanvasComposable>,
-    selectedBoundingBoxes: MutableState<List<IBoundingShape>>,
-    conditionalClipValue: MutableState<Boolean>,
-    dragOverRect: MutableState<Pair<Offset, Size>?>
-) {
-    Window(onCloseRequest = {}, title = "Debug Canvas") {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Canvas(Modifier
-                .width(1000.dp)
-                .aspectRatio(1f)
-                .pointerInput(Unit) {
-                    detectTapGestures {
-                        viewport.value = viewport.value.moveTo(it.div(0.1f), maxViewportSize)
-                    }
-                }
-            ) {
-                clipRect {
-                    scale(0.1f) {
-                        drawLine(Color.Black, start = Offset.Zero, end = Offset(x = size.width, y = size.height))
-                        translate(
-                            left = -maxViewportSize.width.div(2).minus(center.x),
-                            top = -maxViewportSize.height.div(2).minus(center.y)
-                        ) {
-                            debugDrawViewport(maxViewportSize)
-                            drawRectOwn(viewport.value.size, viewport.value.origin)
-                            elements.map { it.boundingShape }.forEach {
-                                if (it is BoundingRect) {
-                                    val inViewport = it.isVisibleInViewport(viewport.value)
-                                    val inSelection = selectedBoundingBoxes.value.contains(it)
-                                    it.drawWireframe(
-                                        drawScope = this,
-                                        color = if (inViewport) Color.Cyan else Color.Blue,
-                                        fill = inSelection
-                                    )
-                                }
-                            }
-                            drawSelectionPlane(rect = dragOverRect.value?.mapPair(
-                                mapFirst = { it.plus(viewport.value.origin) },
-                                mapSecond = { it }
-                            ))
-                        }
-                    }
-
-                }
-            }
-            Surface(
-                modifier = Modifier.align(Alignment.TopEnd),
-            ) {
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Clip: ")
-                        Switch(
-                            checked = conditionalClipValue.value,
-                            onCheckedChange = { conditionalClipValue.value = it },
-                        )
-                    }
-                    Text("Viewport:")
-                    Text("Origin: ${viewport.value.origin}")
-                    Text("Size: ${viewport.value.size}")
-                    Text("Selected:")
-                    selectedBoundingBoxes.value.forEach {
-                        Text(text = it.debugName)
-                    }
-
-                }
-            }
-        }
-    }
-}
-
-interface ICanvasComposable {
-    val boundingShape: IBoundingShape
-
-    @Composable
-    fun render(offset: Offset)
-}
-
 class DemoComposable(
-    override val boundingShape: IBoundingShape
-) : ICanvasComposable {
-    @Composable
-    override fun render(offset: Offset) {
-        Card(modifier = Modifier
-            .offset(offset.x.dp, offset.y.dp)
-            .size(100.dp, 300.dp)
-            .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    boundingShape.topLeft.value += dragAmount
-                    if (boundingShape is BoundingRect) {
-                        boundingShape.width.value += dragAmount.x
-                        boundingShape.height.value += dragAmount.y
-                    }
-                }
-            }
-        ) {
-            Text("Test ${boundingShape.debugName}", modifier = Modifier.padding(4.dp))
-        }
+    boundingShape: BoundingRect
+) : MovableAndResizeableComponent(
+    initBoundingRect = boundingShape,
+    onNextUIConfig = { p, o, n ->
+
     }
+) {
+    @Composable
+    override fun content(projectTreeHandler: ProjectTreeHandler) {
+        Text("Test ${boundingShape.debugName}", modifier = Modifier.padding(4.dp))
+    }
+
 
 }
 
 fun main(args: Array<String>) {
     singleWindowApplication {
-        val boundingBoxes = listOf<IBoundingShape>(
+        val boundingBoxes = listOf<BoundingRect>(
             BoundingRect(
                 initTopLeft = Offset.Zero,
                 initWidth = 100f,
@@ -423,72 +302,26 @@ fun main(args: Array<String>) {
         val elements: List<ICanvasComposable> = boundingBoxes.map {
             DemoComposable(boundingShape = it)
         }
+        val arrows = listOf(
+            Arrow(
+                listOf(Offset.Zero, Offset(100f, 150f), Offset(200f, 50f)),
+                ArrowType.GENERALIZATION
+            ),
+            Arrow(
+                listOf(Offset.Zero, Offset(100f, 150f), Offset(200f, 50f)).map { it.plus(Offset(x = 50f, y = 50f)) },
+                ArrowType.ASSOCIATION_DIRECTED
+            )
+        )
         Surface(Modifier.fillMaxSize(), color = Color.LightGray) {
             Box(
                 Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Box(Modifier.size(1000.dp, 1000.dp)) {
-                    ScrollableCanvas(elements)
+                    ScrollableCanvas(elements, arrows)
                 }
             }
         }
-    }
-}
-
-class BoundingRect(
-    initTopLeft: Offset,
-    initWidth: Float,
-    initHeight: Float,
-    override val debugName: String = Random.nextInt().toString()
-) : IBoundingShape {
-    override val topLeft: MutableState<Offset> = mutableStateOf(initTopLeft)
-    val width: MutableState<Float> = mutableStateOf(initWidth)
-    val height: MutableState<Float> = mutableStateOf(initHeight)
-    fun drawWireframe(drawScope: DrawScope, color: Color = Color.Cyan, fill: Boolean) {
-        drawScope.translate(
-            left = topLeft.value.x,
-            top = topLeft.value.y
-        ) {
-            drawRect(
-                color = color,
-                style = if (fill) Fill else Stroke(),
-                topLeft = Offset.Zero,
-                size = Size(width = width.value, height = height.value)
-            )
-            drawLine(
-                color = color,
-                start = Offset.Zero,
-                end = Offset(width.value, height.value)
-            )
-            drawLine(
-                color = color,
-                start = Offset(0f, height.value),
-                end = Offset(width.value, 0f)
-            )
-        }
-    }
-
-    override fun isVisibleInViewport(viewport: Viewport): Boolean {
-        val aBottomRight = topLeft.value.plus(Offset(width.value, height.value))
-        val viewPortBottomRight = viewport.origin.plus(viewport.size.toOffset())
-        val aTop = topLeft.value.y
-        val aLeft = topLeft.value.x
-        val aBottom = aBottomRight.y
-        val aRight = aBottomRight.x
-        val bTop = viewport.origin.y
-        val bLeft = viewport.origin.x
-        val bBottom = viewPortBottomRight.y
-        val bRight = viewPortBottomRight.x
-        //Cond1. If A's left edge is to the right of the B's right edge, - then A is Totally to right Of B
-        val cond1 = aLeft >= bRight
-        //Cond2. If A's right edge is to the left of the B's left edge, - then A is Totally to left Of B
-        val cond2 = aRight <= bLeft
-        //Cond3. If A's top edge is below B's bottom edge, - then A is Totally below B
-        val cond3 = aTop >= bBottom
-        //Cond4. If A's bottom edge is above B's top edge, - then A is Totally above B
-        val cond4 = aBottom <= bTop
-        return !(cond1 || cond2 || cond3 || cond4)
     }
 }
 
