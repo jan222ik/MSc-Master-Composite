@@ -29,6 +29,7 @@ import androidx.compose.ui.window.singleWindowApplication
 import com.github.jan222ik.ui.adjusted.arrow.Arrow
 import com.github.jan222ik.ui.adjusted.arrow.ArrowType
 import com.github.jan222ik.ui.adjusted.scroll.CanvasScrollState
+import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import kotlin.math.max
 import kotlin.math.min
@@ -271,6 +272,10 @@ class DemoComposable(
     @Composable
     override fun content(projectTreeHandler: ProjectTreeHandler) {
         Text("Test ${boundingShape.debugName}", modifier = Modifier.padding(4.dp))
+    }
+
+    override fun getMenuContributions(): List<MenuContribution> {
+        return emptyList()
     }
 
 

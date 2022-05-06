@@ -1,37 +1,30 @@
 package com.github.jan222ik.ui.uml
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.isPrimaryPressed
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
 import com.github.jan222ik.ui.adjusted.BoundingRect
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
 import com.github.jan222ik.ui.components.menu.MenuContribution
-import com.github.jan222ik.ui.components.menu.MenuItemList
-import com.github.jan222ik.ui.feature.LocalCommandStackHandler
-import com.github.jan222ik.ui.feature.LocalJobHandler
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
 import com.github.jan222ik.ui.feature.main.tree.ModelTreeItem
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
-import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.util.HorizontalDivider
-import com.github.jan222ik.util.KeyHelpers
-import com.github.jan222ik.util.KeyHelpers.consumeOnKey
 import mu.KLogging
 import org.eclipse.uml2.uml.Stereotype
 import org.eclipse.uml2.uml.VisibilityKind
@@ -58,40 +51,6 @@ class UMLClass(
             } ?: false
         }
 
-        val showPopup = remember { mutableStateOf(false) }
-        if (showPopup.value) {
-            Popup(
-                onDismissRequest = { showPopup.value = false },
-                onPreviewKeyEvent = {
-                    KeyHelpers.onKeyDown(it) {
-                        consumeOnKey(Key.Escape) {
-                            showPopup.value = false
-                        }
-                    }
-                },
-                focusable = true
-            ) {
-                Card(
-                    border = BorderStroke(1.dp, EditorColors.dividerGray)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(4.dp),
-                    ) {
-                        MenuItemList(
-                            items = listOf(
-                                MenuContribution.Contentful.MenuItem(displayName = "Option 1"),
-                                MenuContribution.Contentful.MenuItem(
-                                    displayName = "Delete from Diagram",
-                                    command = deleteSelfCommand
-                                )
-                            ), jobHandler = LocalJobHandler.current, width = 400.dp
-                        )
-                    }
-                }
-            }
-        }
-
-        val commandStackHandler = LocalCommandStackHandler.current
         Column(
             modifier = Modifier.mouseCombinedClickable {
                 if (buttons.isPrimaryPressed) {
@@ -99,7 +58,7 @@ class UMLClass(
                     projectTreeHandler.setTreeSelectionByElements?.invoke(listOf(umlClass))
                 }
                 if (buttons.isSecondaryPressed) {
-                    showPopup.value = true
+                    showContextMenu.value = true
                 }
             },
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -124,6 +83,16 @@ class UMLClass(
             }
         }
 
+    }
+
+    override fun getMenuContributions(): List<MenuContribution> {
+        return listOf(
+            MenuContribution.Contentful.MenuItem(displayName = "Option 1"),
+            MenuContribution.Contentful.MenuItem(
+                displayName = "Delete from Diagram",
+                command = deleteSelfCommand
+            )
+        )
     }
 
     fun org.eclipse.uml2.uml.Class.appliedStereotypesString(): String =

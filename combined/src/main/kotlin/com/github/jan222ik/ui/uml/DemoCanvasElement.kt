@@ -13,6 +13,7 @@ import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
 import com.github.jan222ik.ui.adjusted.BoundingRect
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
+import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 
 class DemoCanvasElement(
@@ -22,6 +23,10 @@ class DemoCanvasElement(
     @Composable
     override fun content(projectTreeHandler: ProjectTreeHandler) {
         Text("Test [Selected:${this@DemoCanvasElement.selected}]")
+    }
+
+    override fun getMenuContributions(): List<MenuContribution> {
+        return emptyList()
     }
 
 }

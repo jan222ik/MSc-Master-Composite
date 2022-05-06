@@ -1,26 +1,32 @@
 package com.github.jan222ik.ui.adjusted
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import com.github.jan222ik.ui.components.menu.MenuContribution
+import com.github.jan222ik.ui.components.menu.MenuItemList
+import com.github.jan222ik.ui.feature.LocalJobHandler
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
+import com.github.jan222ik.ui.value.EditorColors
+import com.github.jan222ik.util.KeyHelpers
+import com.github.jan222ik.util.KeyHelpers.consumeOnKey
 import mu.KLogging
 import java.awt.Cursor
 import kotlin.math.roundToInt
@@ -40,6 +46,7 @@ abstract class MovableAndResizeableComponent(
     internal var selected by mutableStateOf(false)
     internal var hover by mutableStateOf(false)
     internal var preMoveOrResize by mutableStateOf<BoundingRect.State>(initBoundingRect)
+    val showContextMenu = mutableStateOf(false)
 
 
     private fun Modifier.cursorForHorizontalResize(isHorizontal: Boolean): Modifier =
@@ -50,6 +57,8 @@ abstract class MovableAndResizeableComponent(
 
     @Composable
     internal abstract fun content(projectTreeHandler: ProjectTreeHandler)
+
+    internal abstract fun getMenuContributions() : List<MenuContribution>
 
     @OptIn(ExperimentalComposeUiApi::class)
     @Composable
@@ -100,10 +109,36 @@ abstract class MovableAndResizeableComponent(
                         }
                     }
                     .onPointerEvent(PointerEventType.Enter) { hover = true }
-                    .onPointerEvent(PointerEventType.Exit) { hover = false },
+                    .onPointerEvent(PointerEventType.Exit) { hover = false }
+                ,
                 shape = RectangleShape,
                 elevation = 16.dp
             ) {
+                if (showContextMenu.value) {
+                    Popup(
+                        onDismissRequest = { showContextMenu.value = false },
+                        onPreviewKeyEvent = {
+                            KeyHelpers.onKeyDown(it) {
+                                consumeOnKey(Key.Escape) {
+                                    showContextMenu.value = false
+                                }
+                            }
+                        },
+                        focusable = true
+                    ) {
+                        Card(
+                            border = BorderStroke(1.dp, EditorColors.dividerGray)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(4.dp),
+                            ) {
+                                MenuItemList(
+                                    items = getMenuContributions(), jobHandler = LocalJobHandler.current, width = 300.dp
+                                )
+                            }
+                        }
+                    }
+                }
                 content(projectTreeHandler)
             }
             ResizeHandle(
