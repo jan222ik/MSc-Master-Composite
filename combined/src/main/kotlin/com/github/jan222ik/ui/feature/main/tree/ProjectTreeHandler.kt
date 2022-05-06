@@ -131,7 +131,7 @@ class ProjectTreeHandler(
                     border = BorderStroke(1.dp, EditorColors.dividerGray)
                 ) {
                     Column(
-                        modifier = Modifier.padding(8.dp),
+                        modifier = Modifier.padding(4.dp),
                     ) {
                         MenuItemList(items = menuContributions, jobHandler = LocalJobHandler.current, width = 400.dp)
                     }

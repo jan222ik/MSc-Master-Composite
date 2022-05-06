@@ -18,12 +18,14 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import com.github.jan222ik.ui.components.inputs.ShortcutDisplay
+import com.github.jan222ik.ui.feature.LocalCommandStackHandler
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun MenuItemList(items: List<MenuContribution>, jobHandler: JobHandler, width: Dp) {
+    val commandStackHandler = LocalCommandStackHandler.current
     val spacerMod = Modifier.height(4.dp)
     val iconSpace = 16.dp
     var showSubFor by remember { mutableStateOf(emptyList<MenuContribution>()) }
@@ -57,7 +59,13 @@ fun MenuItemList(items: List<MenuContribution>, jobHandler: JobHandler, width: D
                                             subLocation = loc
                                         }
                                         else -> item.command?.let {
-                                            scope.launch { it.execute(jobHandler) }
+                                            scope.launch {
+                                                if (it.pushToStack()) {
+                                                    commandStackHandler.add(it)
+                                                } else {
+                                                    it.execute(jobHandler)
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -118,13 +126,6 @@ fun MenuItemList(items: List<MenuContribution>, jobHandler: JobHandler, width: D
                             x = anchorBounds.topRight.x + 16.dp.value.toInt(),
                             y = subLocation?.positionInWindow()?.y?.toInt()?.minus(16.dp.value.toInt()) ?: anchorBounds.topRight.y
                         )
-                        /*
-                        return IntOffset(
-                            x = anchorBounds.topRight.x + 16.dp.value.toInt(),
-                            y = anchorBounds.topRight.y + 16.dp.value.toInt()
-                        )
-
-                         */
                     }
 
                 },
