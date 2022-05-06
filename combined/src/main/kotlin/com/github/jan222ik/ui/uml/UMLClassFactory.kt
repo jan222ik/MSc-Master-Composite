@@ -1,20 +1,20 @@
 package com.github.jan222ik.ui.uml
 
-import com.github.jan222ik.canvas.DiagramBlockUIConfig
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
+import com.github.jan222ik.ui.adjusted.BoundingRect
 
 object UMLClassFactory {
     fun createInstance(
         umlClass: org.eclipse.uml2.uml.Class,
-        initUiConfig: DiagramBlockUIConfig,
+        initBoundingRect: BoundingRect.State,
         commandStackHandler: CommandStackHandler,
         deleteCommand: (UMLClass) -> RemoveFromDiagramCommand
     ): UMLClass {
         val newObj = UMLClass(
             umlClass = umlClass,
-            initUiConfig = initUiConfig,
+            initBoundingRect = initBoundingRect,
             onNextUIConfig = { self, old, new ->
                 UMLClass.logger.debug { "NEW UI CONFIG" }
                 commandStackHandler.add(

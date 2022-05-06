@@ -1,14 +1,14 @@
 package com.github.jan222ik.model.command.commands
 
 import com.github.jan222ik.model.command.ICommand
+import com.github.jan222ik.ui.adjusted.BoundingRect
+import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
-import com.github.jan222ik.canvas.DiagramBlockUIConfig
-import com.github.jan222ik.ui.uml.MovableAndResizeableComponent
 
 class MoveOrResizeCommand(
     val target: MovableAndResizeableComponent,
-    val before: DiagramBlockUIConfig,
-    val after: DiagramBlockUIConfig
+    val before: BoundingRect.State,
+    val after: BoundingRect.State
 ) : ICommand {
     override fun isActive(): Boolean = true
     override suspend fun execute(handler: JobHandler) {

@@ -5,12 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
-import com.github.jan222ik.canvas.data.DrawPoint
-import com.github.jan222ik.canvas.viewport.Viewport
 import com.github.jan222ik.model.command.commands.AddToDiagramCommand
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
-import com.github.jan222ik.ui.uml.MovableAndResizeableComponent
+import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
+import com.github.jan222ik.ui.adjusted.Viewport
 import kotlin.random.Random
 
 class EditorTabViewModel(
@@ -19,8 +18,7 @@ class EditorTabViewModel(
 ) {
     val id = Random.nextLong()
 
-    val maxViewport = mutableStateOf(Viewport(0f, 0f, 100f, 100f))
-    val viewport = mutableStateOf(Viewport(0f, 0f, 25f, 25f))
+    val viewport = mutableStateOf(Viewport())
     val items = mutableStateOf(emptyList<MovableAndResizeableComponent>())
     var coords by mutableStateOf(Offset.Unspecified)
     var size by mutableStateOf(IntSize.Zero)

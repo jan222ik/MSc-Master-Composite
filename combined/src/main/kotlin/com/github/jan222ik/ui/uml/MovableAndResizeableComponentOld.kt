@@ -26,9 +26,9 @@ import mu.KLogging
 import java.awt.Cursor
 import kotlin.math.roundToInt
 
-abstract class MovableAndResizeableComponent(
+abstract class MovableAndResizeableComponentOld(
     initUiConfig: DiagramBlockUIConfig,
-    val onNextUIConfig: (self: MovableAndResizeableComponent, old: DiagramBlockUIConfig, new: DiagramBlockUIConfig) -> Unit
+    val onNextUIConfig: (self: MovableAndResizeableComponentOld, old: DiagramBlockUIConfig, new: DiagramBlockUIConfig) -> Unit
 ) {
     val uiConfig = mutableStateOf(initUiConfig)
 
@@ -90,7 +90,7 @@ abstract class MovableAndResizeableComponent(
                         detectDragGestures(
                             onDragEnd = {
                                 onNextUIConfig(
-                                    this@MovableAndResizeableComponent,
+                                    this@MovableAndResizeableComponentOld,
                                     uiConfig.value,
                                     DiagramBlockUIConfig(
                                         x = uiConfig.value.x + moveOffsetX.dp,
@@ -179,7 +179,7 @@ abstract class MovableAndResizeableComponent(
                             onHorizontalDrag = onDrag,
                             onDragEnd = {
                                 onNextUIConfig(
-                                    this@MovableAndResizeableComponent,
+                                    this@MovableAndResizeableComponentOld,
                                     uiConfig.value,
                                     DiagramBlockUIConfig(
                                         x = uiConfig.value.x + moveOffsetX.dp,
@@ -195,7 +195,7 @@ abstract class MovableAndResizeableComponent(
                             onVerticalDrag = onDrag,
                             onDragEnd = {
                                 onNextUIConfig(
-                                    this@MovableAndResizeableComponent,
+                                    this@MovableAndResizeableComponentOld,
                                     uiConfig.value,
                                     DiagramBlockUIConfig(
                                         x = uiConfig.value.x + moveOffsetX.dp,

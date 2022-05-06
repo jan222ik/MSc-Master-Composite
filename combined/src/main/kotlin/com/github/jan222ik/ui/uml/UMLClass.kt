@@ -16,8 +16,9 @@ import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.github.jan222ik.canvas.DiagramBlockUIConfig
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
+import com.github.jan222ik.ui.adjusted.BoundingRect
+import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
 import com.github.jan222ik.ui.feature.LocalCommandStackHandler
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
 import com.github.jan222ik.ui.feature.main.tree.ModelTreeItem
@@ -30,9 +31,9 @@ import org.eclipse.uml2.uml.VisibilityKind
 @OptIn(ExperimentalFoundationApi::class)
 class UMLClass(
     val umlClass: org.eclipse.uml2.uml.Class,
-    initUiConfig: DiagramBlockUIConfig,
-    onNextUIConfig: (MovableAndResizeableComponent, DiagramBlockUIConfig, DiagramBlockUIConfig) -> Unit,
-) : MovableAndResizeableComponent(initUiConfig, onNextUIConfig) {
+    initBoundingRect: BoundingRect.State,
+    onNextUIConfig: (MovableAndResizeableComponent, BoundingRect.State, BoundingRect.State) -> Unit,
+) : MovableAndResizeableComponent(initBoundingRect, onNextUIConfig) {
 
     companion object : KLogging()
 

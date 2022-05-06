@@ -2,17 +2,16 @@ package com.github.jan222ik.ui.feature.debug
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.nativeKeyCode
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.ui.feature.LocalDropTargetHandler
 import com.github.jan222ik.ui.feature.main.keyevent.KeyEventHandler
 import com.github.jan222ik.ui.value.AppTheme
@@ -20,7 +19,12 @@ import com.github.jan222ik.ui.value.AppTheme
 object ApplicationBaseDebugWindow {
 
     @Composable
-    fun render(isVisible: Boolean, onClose: () -> Unit, keyEventHandler: KeyEventHandler) {
+    fun render(
+        isVisible: Boolean,
+        onClose: () -> Unit,
+        keyEventHandler: KeyEventHandler,
+        commandStackHandler: CommandStackHandler
+    ) {
         val dnDHandler = LocalDropTargetHandler.current
         Window(visible = isVisible, onCloseRequest = onClose) {
             AppTheme(
@@ -68,7 +72,17 @@ object ApplicationBaseDebugWindow {
                                 }
                             }
                         }
-
+                        DebugCategory(
+                            name = "Command Stack",
+                        ) {
+                            val idx = commandStackHandler.commandStackIdx.value
+                            commandStackHandler.commandStack.value.forEachIndexed { index, iCommand ->
+                                Text(
+                                    text = "$index $iCommand",
+                                    color = Color.Unspecified.takeUnless { index == idx }
+                                        ?: MaterialTheme.colors.primary)
+                            }
+                        }
                     }
                 }
             }

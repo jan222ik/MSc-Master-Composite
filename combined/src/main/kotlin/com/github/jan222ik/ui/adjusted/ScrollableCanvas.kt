@@ -10,10 +10,7 @@ import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -44,7 +41,13 @@ object ScrollableCanvasDefaults {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun ScrollableCanvas(elements: List<ICanvasComposable>, arrows: List<Arrow>) {
+fun ScrollableCanvas(
+    viewport: MutableState<Viewport> = remember { mutableStateOf(Viewport()) },
+    canvasThenModifier: Modifier,
+    elements: List<ICanvasComposable>,
+    arrows: List<Arrow>,
+    projectTreeHandler: ProjectTreeHandler
+) {
     // Debug
     val conditionalClipValue = remember { mutableStateOf(true) }
     val showWireframeOnly = remember { mutableStateOf(false) }
@@ -55,9 +58,6 @@ fun ScrollableCanvas(elements: List<ICanvasComposable>, arrows: List<Arrow>) {
         width = ScrollableCanvasDefaults.viewportSizeMaxWidth,
         height = ScrollableCanvasDefaults.viewportSizeMaxHeight
     )
-
-    // Viewport
-    val viewport = remember { mutableStateOf(Viewport()) }
 
     // Select by dragging
     val dragStartOffset = remember { mutableStateOf<Offset?>(null) }
@@ -206,6 +206,7 @@ fun ScrollableCanvas(elements: List<ICanvasComposable>, arrows: List<Arrow>) {
                                 }
                             }
                         }
+                        .then(canvasThenModifier)
                 ) {
                     if (!showWireframeOnly.value) {
                         elements
@@ -213,7 +214,7 @@ fun ScrollableCanvas(elements: List<ICanvasComposable>, arrows: List<Arrow>) {
                             .forEach {
                                 val topLeft =
                                     remember(it.boundingShape.topLeft.value) { it.boundingShape.topLeft.value }
-                                it.render(ProjectTreeHandler(false), topLeft.minus(viewport.value.origin))
+                                it.render(projectTreeHandler = projectTreeHandler, topLeft.minus(viewport.value.origin))
                             }
                     }
                 }
@@ -260,7 +261,7 @@ fun DrawScope.drawRectOwn(size: Size, topLeft: Offset, color: Color = Color.Red)
 }
 
 class DemoComposable(
-    boundingShape: BoundingRect
+    boundingShape: BoundingRect.State
 ) : MovableAndResizeableComponent(
     initBoundingRect = boundingShape,
     onNextUIConfig = { p, o, n ->
@@ -300,7 +301,7 @@ fun main(args: Array<String>) {
             )
         )
         val elements: List<ICanvasComposable> = boundingBoxes.map {
-            DemoComposable(boundingShape = it)
+            DemoComposable(boundingShape = it.toState())
         }
         val arrows = listOf(
             Arrow(
@@ -318,7 +319,12 @@ fun main(args: Array<String>) {
                 contentAlignment = Alignment.Center
             ) {
                 Box(Modifier.size(1000.dp, 1000.dp)) {
-                    ScrollableCanvas(elements, arrows)
+                    ScrollableCanvas(
+                        canvasThenModifier = Modifier,
+                        elements = elements,
+                        arrows = arrows,
+                        projectTreeHandler = ProjectTreeHandler(false)
+                    )
                 }
             }
         }

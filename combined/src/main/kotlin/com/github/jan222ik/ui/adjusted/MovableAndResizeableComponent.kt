@@ -20,17 +20,17 @@ import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.github.jan222ik.canvas.DiagramBlockUIConfig
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import mu.KLogging
 import java.awt.Cursor
 import kotlin.math.roundToInt
 
 abstract class MovableAndResizeableComponent(
-    initBoundingRect: BoundingRect,
-    val onNextUIConfig: (self: MovableAndResizeableComponent, old: DiagramBlockUIConfig, new: DiagramBlockUIConfig) -> Unit
+    initBoundingRect: BoundingRect.State,
+    val onNextUIConfig: (self: MovableAndResizeableComponent, old: BoundingRect.State, new: BoundingRect.State) -> Unit
 ) : ICanvasComposable {
-    override val boundingShape: BoundingRect = initBoundingRect
+    override val boundingShape: BoundingRect =
+        BoundingRect(initBoundingRect.topLeft, initBoundingRect.width, initBoundingRect.height)
 
     companion object : KLogging() {
         val resizeAreaExpandSize = 5.dp
@@ -39,6 +39,7 @@ abstract class MovableAndResizeableComponent(
 
     internal var selected by mutableStateOf(false)
     internal var hover by mutableStateOf(false)
+    internal var preMoveOrResize by mutableStateOf<BoundingRect.State>(initBoundingRect)
 
 
     private fun Modifier.cursorForHorizontalResize(isHorizontal: Boolean): Modifier =
@@ -82,21 +83,15 @@ abstract class MovableAndResizeableComponent(
                     )
                     .pointerInput(Unit) {
                         detectDragGestures(
+                            onDragStart = {
+                                preMoveOrResize = boundingShape.toState()
+                            },
                             onDragEnd = {
-                                // TODO Create a command to undo this action
-                                /*
                                 onNextUIConfig(
                                     this@MovableAndResizeableComponent,
-                                    uiConfig.value,
-                                    DiagramBlockUIConfig(
-                                        x = uiConfig.value.x + moveOffsetX.dp,
-                                        y = uiConfig.value.y + moveOffsetY.dp,
-                                        width = uiConfig.value.width + resizeW.dp,
-                                        height = uiConfig.value.height + resizeH.dp
-                                    )
+                                    preMoveOrResize,
+                                    boundingShape.toState()
                                 )
-
-                                 */
                             }
                         ) { change, dragAmount ->
                             change.consumeAllChanges()
@@ -117,12 +112,18 @@ abstract class MovableAndResizeableComponent(
                 onDrag = { _, drag ->
                     boundingShape.addHeight(-drag); boundingShape.addY(drag)
                 })
-            ResizeHandle(alignment = Alignment.BottomEnd, isHorizontal = false, onDrag = { _, drag ->  boundingShape.addHeight(drag) })
+            ResizeHandle(
+                alignment = Alignment.BottomEnd,
+                isHorizontal = false,
+                onDrag = { _, drag -> boundingShape.addHeight(drag) })
             ResizeHandle(
                 alignment = Alignment.CenterStart,
                 isHorizontal = true,
                 onDrag = { _, drag -> boundingShape.addWidth(-drag); boundingShape.addX(drag) })
-            ResizeHandle(alignment = Alignment.CenterEnd, isHorizontal = true, onDrag = { _, drag ->  boundingShape.addWidth(drag) })
+            ResizeHandle(
+                alignment = Alignment.CenterEnd,
+                isHorizontal = true,
+                onDrag = { _, drag -> boundingShape.addWidth(drag) })
             DiagonalResizeHandle(
                 alignment = Alignment.TopStart,
                 onDrag = { _, drag ->
@@ -176,39 +177,29 @@ abstract class MovableAndResizeableComponent(
                     if (isHorizontal) {
                         detectHorizontalDragGestures(
                             onHorizontalDrag = onDrag,
+                            onDragStart = {
+                                preMoveOrResize = boundingShape.toState()
+                            },
                             onDragEnd = {
-                                /*
                                 onNextUIConfig(
                                     this@MovableAndResizeableComponent,
-                                    uiConfig.value,
-                                    DiagramBlockUIConfig(
-                                        x = uiConfig.value.x + moveOffsetX.dp,
-                                        y = uiConfig.value.y + moveOffsetY.dp,
-                                        width = uiConfig.value.width + resizeW.dp,
-                                        height = uiConfig.value.height + resizeH.dp
-                                    )
+                                    preMoveOrResize,
+                                    boundingShape.toState()
                                 )
-
-                                 */
                             }
                         )
                     } else {
                         detectVerticalDragGestures(
                             onVerticalDrag = onDrag,
+                            onDragStart = {
+                                preMoveOrResize = boundingShape.toState()
+                            },
                             onDragEnd = {
-                                /*
                                 onNextUIConfig(
                                     this@MovableAndResizeableComponent,
-                                    uiConfig.value,
-                                    DiagramBlockUIConfig(
-                                        x = uiConfig.value.x + moveOffsetX.dp,
-                                        y = uiConfig.value.y + moveOffsetY.dp,
-                                        width = uiConfig.value.width + resizeW.dp,
-                                        height = uiConfig.value.height + resizeH.dp
-                                    )
+                                    preMoveOrResize,
+                                    boundingShape.toState()
                                 )
-
-                                 */
                             }
                         )
                     }
@@ -232,10 +223,10 @@ abstract class MovableAndResizeableComponent(
         )
     }
 
-    fun useConfig(config: BoundingRect) {
-        boundingShape.topLeft.value = config.topLeft.value
-        boundingShape.width.value = config.width.value
-        boundingShape.height.value = config.height.value
+    fun useConfig(config: BoundingRect.State) {
+        boundingShape.topLeft.value = config.topLeft
+        boundingShape.width.value = config.width
+        boundingShape.height.value = config.height
     }
 
 }

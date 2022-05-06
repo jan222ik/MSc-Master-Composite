@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.nativeCanvas
 import org.jetbrains.skia.Font
+import org.jetbrains.skia.FontWidth
 import org.jetbrains.skia.TextLine
 import kotlin.random.Random
 
@@ -111,4 +112,14 @@ class BoundingRect(
         coerceAtLeast: Float = 0f,
         coerceAtMost: Float = ScrollableCanvasDefaults.viewportSizeMaxHeight
     ) = this.copy(y = (this.y + amount).coerceIn(coerceAtLeast, coerceAtMost))
+
+    fun toState() : BoundingRect.State {
+        return BoundingRect.State(topLeft.value.copy(), width.value, height.value)
+    }
+
+    data class State(
+        val topLeft: Offset,
+        val width: Float,
+        val height: Float
+    )
 }

@@ -146,7 +146,7 @@ class MainActivity : Activity() {
                             .render()
                     }
                     var open by remember { mutableStateOf(true) }
-                    ApplicationBaseDebugWindow.render(open, onClose = { open = false}, keyEventHandler)
+                    ApplicationBaseDebugWindow.render(open, onClose = { open = false}, keyEventHandler, commandStackHandler)
                 }
             }
 
