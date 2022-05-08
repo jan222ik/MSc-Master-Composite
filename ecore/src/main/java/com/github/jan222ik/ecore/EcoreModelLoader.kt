@@ -1,17 +1,15 @@
 package com.github.jan222ik.ecore
 
 import org.eclipse.emfcloud.modelserver.client.v2.ModelServerClientV2
-import com.github.jan222ik.ecore.UMLPackageConfiguration
-import com.github.jan222ik.ecore.ProjectClientPerModel
 
-object DiagramLoader {
+object EcoreModelLoader {
     private val clientV2 = ModelServerClientV2("http://localhost:8081/api/v2/", UMLPackageConfiguration())
 
-    fun open(name: String?): ProjectClientPerModel {
+    fun open(name: String?): EcoreClientPerModel {
         val existingModels = clientV2.modelUris.get().body().also { println(it) }
         val find = existingModels.find { it == name }
         if (find != null) {
-            return ProjectClientPerModel(
+            return EcoreClientPerModel(
                 generalClient = clientV2,
                 modelId = find
             )

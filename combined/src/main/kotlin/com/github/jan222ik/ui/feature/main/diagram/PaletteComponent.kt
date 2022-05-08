@@ -41,7 +41,7 @@ class PaletteComponent(
                 Box(Modifier.fillMaxWidth()) {
                     ShowMoreLess(isMinimized = isMinimized, onToggle)
                 }
-                LocalActiveEditorTab.current.value?.let { PaletteView(activeEditorTab = it) } ?: Text("No editor selected")
+                EditorManager.activeEditorTab.value?.let { PaletteView(activeEditorTab = it) } ?: Text("No editor selected")
             }
         }
     }

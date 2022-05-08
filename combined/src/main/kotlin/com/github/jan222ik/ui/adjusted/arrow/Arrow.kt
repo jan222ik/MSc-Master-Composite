@@ -6,6 +6,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotateRad
 import androidx.compose.ui.graphics.drawscope.translate
+import org.eclipse.uml2.uml.DirectedRelationship
+import org.eclipse.uml2.uml.Generalization
 import javax.annotation.meta.Exhaustive
 import kotlin.math.acos
 import kotlin.math.pow
@@ -13,7 +15,8 @@ import kotlin.math.sqrt
 
 class Arrow(
     initOffsetPath: List<Offset>,
-    initArrowType: ArrowType
+    initArrowType: ArrowType,
+    val data: DirectedRelationship
 ) {
     init {
         require(initOffsetPath.size > 1) { "Path requires at least a start and end point. Only one point was provided" }
@@ -42,7 +45,6 @@ class Arrow(
                                     ).toDouble()
                             )
                     )
-                    println("angle = ${angle}")
                     translate(
                         left = end.x,
                         top = end.y
@@ -58,4 +60,14 @@ class Arrow(
                 }
             }
     }
+
+    fun applyPath(path: List<Offset>) {
+        offsetPath.value = path
+    }
+
+    override fun toString(): String {
+        return "Arrow(offsetPath=$offsetPath, arrowType=$arrowType)"
+    }
+
+
 }

@@ -4,8 +4,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.github.jan222ik.ecore.ProjectClientPerModel
 import org.eclipse.uml2.uml.Element
+import org.eclipse.uml2.uml.NamedElement
 import java.io.File
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -34,27 +34,44 @@ object FileTree {
         }
     }
 
-    fun modelFilesToModelTreeRoot(clientPerModel: ProjectClientPerModel, parent: FileTreeItem) {
-        val it = clientPerModel.model
+    fun modelFilesToModelTreeRoot(projectData: ProjectData, parent: FileTreeItem) {
+        val model = projectData.ecore.model
         val packageItem = ModelTreeItem.PackageItem(
             level = parent.level.inc(),
-            displayName = it.name,
-            canExpand = it.eContents().isNotEmpty(),
-            umlPackage = it as org.eclipse.uml2.uml.Package
+            displayName = model.name,
+            canExpand = model.eContents().isNotEmpty() || projectData.diagrams.any { it.location == model.name },
+            umlPackage = model as org.eclipse.uml2.uml.Package,
+            allDiagrams = projectData.diagrams
         )
         parent.addChild(packageItem)
     }
 
 
     fun eContentsToModelTreeItem(element: Element, parent: ModelTreeItem) {
+        val level = parent.level.inc()
+        if (element is NamedElement) {
+            parent.allDiagrams
+                .filter { it.location.also { print("Location: $it") } == element.qualifiedName.also { println(" Qualified: $it") } }
+                .forEach {
+                    val diagram = ModelTreeItem.Diagram(
+                        level = level,
+                        diagram = it
+                    )
+                    parent.addChild(diagram)
+                }
+        }
         element.eContents().forEach {
-            val mapped = ModelTreeItem.parseItem(parent.level.inc(), it)
+            val mapped = ModelTreeItem.parseItem(
+                level = level,
+                element = it,
+                allDiagrams = parent.allDiagrams
+            )
             if (mapped != null) {
                 parent.addChild(mapped)
             }
         }
     }
 
-    val loadedClients = mutableMapOf<String, ProjectClientPerModel>()
+    val loadedClients = mutableMapOf<String, ProjectData>()
 
 }

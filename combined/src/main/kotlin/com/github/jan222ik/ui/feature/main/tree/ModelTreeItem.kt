@@ -13,17 +13,24 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.PopupPositionProvider
 import com.github.jan222ik.ui.components.menu.MenuContribution
-import com.github.jan222ik.ui.feature.main.menu_tool_bar.MenuBarContents
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
+import com.github.jan222ik.ui.feature.main.diagram.canvas.DiagramType
+import com.github.jan222ik.ui.uml.DiagramHolder
 import mu.KLogging
 import org.eclipse.emf.common.notify.Notifier
+import org.eclipse.uml2.uml.Element
 import org.eclipse.uml2.uml.Model
+import org.eclipse.uml2.uml.Package
+import java.io.InvalidClassException
+import javax.annotation.meta.Exhaustive
 import kotlin.math.roundToInt
 
 @ExperimentalFoundationApi
 sealed class ModelTreeItem(
     override val level: Int,
     override val displayName: String,
-    override val canExpand: Boolean
+    override val canExpand: Boolean,
+    val allDiagrams: List<DiagramHolder>
 ) : TreeDisplayableItem(level = level) {
 
     override val icon: @Composable ((modifier: Modifier) -> Unit)?
@@ -32,25 +39,29 @@ sealed class ModelTreeItem(
     companion object : KLogging() {
         fun parseItem(
             level: Int,
-            element: Notifier
+            element: Notifier,
+            allDiagrams: List<DiagramHolder>
         ): TreeDisplayableItem? {
             return when (element) {
                 is org.eclipse.uml2.uml.Package -> {
-                    logger.debug { "Package" }
+                    logger.debug { "Package ${element.uri}" }
+
                     PackageItem(
                         level = level,
                         displayName = "Package" + element.name,
                         canExpand = element.ownedElements.isNotEmpty(),
-                        umlPackage = element
+                        umlPackage = element,
+                        allDiagrams = allDiagrams
                     )
                 }
                 is org.eclipse.uml2.uml.Class -> {
-                    logger.debug { "Class" }
+                    logger.debug { "Class ${element.qualifiedName}" }
                     ClassItem(
                         level = level,
                         displayName = element.name,
                         canExpand = element.ownedElements.isNotEmpty(),
-                        umlClass = element
+                        umlClass = element,
+                        allDiagrams = allDiagrams
                     )
                 }
                 is org.eclipse.uml2.uml.PackageImport -> {
@@ -59,7 +70,8 @@ sealed class ModelTreeItem(
                         level = level,
                         displayName = element.importingNamespace.name,
                         canExpand = element.ownedElements.isNotEmpty(),
-                        umlImport = element
+                        umlImport = element,
+                        allDiagrams = allDiagrams
                     )
                 }
                 is org.eclipse.uml2.uml.Property -> {
@@ -68,7 +80,8 @@ sealed class ModelTreeItem(
                         level = level,
                         displayName = element.name,
                         canExpand = element.ownedElements.isNotEmpty(),
-                        umlProperty = element
+                        umlProperty = element,
+                        allDiagrams = allDiagrams
                     )
                 }
                 is org.eclipse.uml2.uml.ValueSpecification -> {
@@ -77,7 +90,8 @@ sealed class ModelTreeItem(
                         level = level,
                         displayName = "Val:" + element.name,
                         canExpand = element.ownedElements.isNotEmpty(),
-                        umlValue = element
+                        umlValue = element,
+                        allDiagrams = allDiagrams
                     )
                 }
                 is org.eclipse.uml2.uml.Generalization -> {
@@ -86,7 +100,8 @@ sealed class ModelTreeItem(
                         level = level,
                         displayName = element.general.name,
                         canExpand = element.ownedElements.isNotEmpty(),
-                        umlGeneralization = element
+                        umlGeneralization = element,
+                        allDiagrams = allDiagrams
                     )
                 }
                 else -> {
@@ -145,11 +160,13 @@ sealed class ModelTreeItem(
         level: Int,
         displayName: String,
         canExpand: Boolean,
-        val umlPackage: org.eclipse.uml2.uml.Package
+        val umlPackage: Package,
+        allDiagrams: List<DiagramHolder>
     ) : ModelTreeItem(
         level = level,
         displayName = displayName,
-        canExpand = canExpand
+        canExpand = canExpand,
+        allDiagrams = allDiagrams
     ) {
         override fun getElement() = umlPackage
 
@@ -171,11 +188,13 @@ sealed class ModelTreeItem(
         level: Int,
         displayName: String,
         canExpand: Boolean,
-        val umlClass: org.eclipse.uml2.uml.Class
+        val umlClass: org.eclipse.uml2.uml.Class,
+        allDiagrams: List<DiagramHolder>
     ) : ModelTreeItem(
         level = level,
         displayName = displayName,
-        canExpand = canExpand
+        canExpand = canExpand,
+        allDiagrams
     ) {
         override fun getElement() = umlClass
         override val icon: (@Composable (modifier: Modifier) -> Unit)
@@ -192,11 +211,13 @@ sealed class ModelTreeItem(
         level: Int,
         displayName: String,
         canExpand: Boolean,
-        val umlImport: org.eclipse.uml2.uml.PackageImport
+        val umlImport: org.eclipse.uml2.uml.PackageImport,
+        allDiagrams: List<DiagramHolder>
     ) : ModelTreeItem(
         level = level,
         displayName = displayName,
-        canExpand = canExpand
+        canExpand = canExpand,
+        allDiagrams
     ) {
         override fun getElement() = umlImport
 
@@ -215,11 +236,13 @@ sealed class ModelTreeItem(
         level: Int,
         displayName: String,
         canExpand: Boolean,
-        val umlProperty: org.eclipse.uml2.uml.Property
+        val umlProperty: org.eclipse.uml2.uml.Property,
+        allDiagrams: List<DiagramHolder>
     ) : ModelTreeItem(
         level = level,
         displayName = displayName,
-        canExpand = canExpand
+        canExpand = canExpand,
+        allDiagrams
     ) {
         override fun getElement() = umlProperty
 
@@ -237,11 +260,13 @@ sealed class ModelTreeItem(
         level: Int,
         displayName: String,
         canExpand: Boolean,
-        val umlValue: org.eclipse.uml2.uml.ValueSpecification
+        val umlValue: org.eclipse.uml2.uml.ValueSpecification,
+        allDiagrams: List<DiagramHolder>
     ) : ModelTreeItem(
         level = level,
         displayName = displayName,
-        canExpand = canExpand
+        canExpand = canExpand,
+        allDiagrams
     ) {
         override fun getElement() = umlValue
 
@@ -251,11 +276,13 @@ sealed class ModelTreeItem(
         level: Int,
         displayName: String,
         canExpand: Boolean,
-        val umlGeneralization: org.eclipse.uml2.uml.Generalization
+        val umlGeneralization: org.eclipse.uml2.uml.Generalization,
+        allDiagrams: List<DiagramHolder>
     ) : ModelTreeItem(
         level = level,
         displayName = displayName,
-        canExpand = canExpand
+        canExpand = canExpand,
+        allDiagrams
     ) {
         override fun getElement() = umlGeneralization
         override val icon: (@Composable (modifier: Modifier) -> Unit)
@@ -268,5 +295,37 @@ sealed class ModelTreeItem(
             }
     }
 
+    class Diagram(
+        level: Int,
+        val diagram: DiagramHolder
+    ) : ModelTreeItem(
+        level = level,
+        displayName = diagram.name,
+        canExpand = false,
+        allDiagrams = emptyList()
+    ) {
+        override val onDoublePrimaryAction: MouseClickScope.() -> Unit
+            get() = {
+                EditorManager.moveToOrOpenDiagram(diagram)
+            }
+        override fun getElement(): Element { throw InvalidClassException("Diagram has no uml element") }
+        override val icon: (@Composable (modifier: Modifier) -> Unit)
+            get() = @Composable {
+                Image(
+                    painter = kotlin.run {
+                        @Exhaustive
+                        when (diagram.diagramType) {
+                            DiagramType.PACKAGE -> painterResource("drawables/uml_icons/Diagram_SysML_Package.gif")
+                            DiagramType.PARAMETRIC -> painterResource("drawables/uml_icons/Diagram_Parametric.png")
+                            DiagramType.BLOCK_DEFINITION -> painterResource("drawables/uml_icons/Diagram_BlockDefinition.gif")
+                        }
+                    },
+                    contentDescription = null,
+                    modifier = it
+                )
+
+            }
+
+    }
 }
 

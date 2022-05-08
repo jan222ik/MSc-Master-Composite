@@ -39,51 +39,23 @@ class DiagramCanvasComponent(
 
     @Composable
     fun render() {
-        val tabs = remember { mutableStateOf(
-            listOf(
-                EditorTabViewModel(name = "First diagram", DiagramType.PACKAGE),
-                EditorTabViewModel(name = "block diagram", DiagramType.BLOCK_DEFINITION),
-                //EditorTabViewModel(name = "parametric diagram", DiagramType.PARAMETRIC),
-                //EditorTabViewModel(name = "First diagram", DiagramType.PACKAGE),
-                //EditorTabViewModel(name = "a", DiagramType.BLOCK_DEFINITION),
-                //EditorTabViewModel(name = "parametric diagram", DiagramType.PARAMETRIC),
-                //EditorTabViewModel(name = "First diagram", DiagramType.PACKAGE),
-                //EditorTabViewModel(name = "block diagram", DiagramType.BLOCK_DEFINITION),
-                //EditorTabViewModel(name = "parametric diagram", DiagramType.PARAMETRIC),
-                //EditorTabViewModel(name = "First diagram", DiagramType.PACKAGE),
-                //EditorTabViewModel(name = "block diagram", DiagramType.BLOCK_DEFINITION),
-                //EditorTabViewModel(name = "parametric diagram", DiagramType.PARAMETRIC),
-            )
-        ) }
-        val activeEditorTab = LocalActiveEditorTab.current
         LaunchedEffect(Unit) {
-            activeEditorTab.value = tabs.value.firstOrNull()
+            EditorManager.activeEditorTab.value = EditorManager.openTabs.value.firstOrNull()
         }
 
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            var selectedIdx by remember { mutableStateOf(0) }
+
             DiagramTabRow(
-                selectedIdx = selectedIdx,
-                editorTabs = tabs.value,
-                onEditorSwitch = { nextIdx ->
-                    selectedIdx = nextIdx
-                    activeEditorTab.value = tabs.value[nextIdx]
-                },
-                onEditorClose = { closeIdx ->
-                    tabs.value = tabs.value.toMutableList().apply { removeAt(closeIdx) }
-                    if (closeIdx == selectedIdx) {
-                        if (tabs.value.isNotEmpty()) {
-                            selectedIdx = closeIdx.dec()
-                            activeEditorTab.value = tabs.value.getOrNull(selectedIdx)
-                        }
-                    }
-                }
+                selectedIdx = EditorManager.selectedIdx.value,
+                editorTabs = EditorManager.openTabs.value,
+                onEditorSwitch = EditorManager::onEditorSwitch,
+                onEditorClose = EditorManager::onEditorClose
             )
             HorizontalDivider(modifier = Modifier.fillMaxWidth(), color = EditorColors.dividerGray)
-            LocalActiveEditorTab.current.value?.let {
+            EditorManager.activeEditorTab.value?.let {
                 EditorTabComponent(
                     state = it,
                     projectTreeHandler = parent.projectTreeHandler

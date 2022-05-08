@@ -7,7 +7,10 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -28,12 +31,13 @@ import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.util.KeyHelpers
 import com.github.jan222ik.util.KeyHelpers.consumeOnKey
 import mu.KLogging
+import org.eclipse.uml2.uml.Element
 import java.awt.Cursor
 import kotlin.math.roundToInt
 
 abstract class MovableAndResizeableComponent(
-    initBoundingRect: BoundingRect.State,
-    val onNextUIConfig: (self: MovableAndResizeableComponent, old: BoundingRect.State, new: BoundingRect.State) -> Unit
+    initBoundingRect: BoundingRectState,
+    val onNextUIConfig: (self: MovableAndResizeableComponent, old: BoundingRectState, new: BoundingRectState) -> Unit
 ) : ICanvasComposable {
     override val boundingShape: BoundingRect =
         BoundingRect(initBoundingRect.topLeft, initBoundingRect.width, initBoundingRect.height)
@@ -45,7 +49,7 @@ abstract class MovableAndResizeableComponent(
 
     internal var selected by mutableStateOf(false)
     internal var hover by mutableStateOf(false)
-    internal var preMoveOrResize by mutableStateOf<BoundingRect.State>(initBoundingRect)
+    internal var preMoveOrResize by mutableStateOf<BoundingRectState>(initBoundingRect)
     val showContextMenu = mutableStateOf(false)
 
 
@@ -58,7 +62,7 @@ abstract class MovableAndResizeableComponent(
     @Composable
     internal abstract fun content(projectTreeHandler: ProjectTreeHandler)
 
-    internal abstract fun getMenuContributions() : List<MenuContribution>
+    internal abstract fun getMenuContributions(): List<MenuContribution>
 
     @OptIn(ExperimentalComposeUiApi::class)
     @Composable
@@ -109,8 +113,7 @@ abstract class MovableAndResizeableComponent(
                         }
                     }
                     .onPointerEvent(PointerEventType.Enter) { hover = true }
-                    .onPointerEvent(PointerEventType.Exit) { hover = false }
-                ,
+                    .onPointerEvent(PointerEventType.Exit) { hover = false },
                 shape = RectangleShape,
                 elevation = 16.dp
             ) {
@@ -258,11 +261,13 @@ abstract class MovableAndResizeableComponent(
         )
     }
 
-    fun useConfig(config: BoundingRect.State) {
+    fun useConfig(config: BoundingRectState) {
         boundingShape.topLeft.value = config.topLeft
         boundingShape.width.value = config.width
         boundingShape.height.value = config.height
     }
+
+    abstract fun showsElement(element: Element?): Boolean
 
 }
 

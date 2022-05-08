@@ -56,7 +56,7 @@ fun MainScreen(
     val project = LocalProjectSwitcher.current.first
     LaunchedEffect(project) {
         if (project == null) {
-            FileTree.setRoot("C:\\Users\\jan\\Documents\\master-dependencies\\")
+            FileTree.setRoot("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite\\appworkspace")
         } else {
             FileTree.setRoot(project.root.absolutePath)
         }
@@ -180,20 +180,19 @@ fun BoxScope.ShowMoreLess(
     hSplitter: SplitPaneState,
     isMinimized: Boolean
 ) {
-    Layout(modifier = Modifier.align(Alignment.CenterEnd), content = {
+    Layout(modifier = Modifier.align(Alignment.TopEnd).clickable(
+        onClick = {
+            if (isMinimized) {
+                hSplitter.setToDpFromFirst(400.dp)
+            } else {
+                hSplitter.setToMin()
+            }
+
+        }
+    ), content = {
         Row(
             modifier = Modifier
-                .rotate(90f)
-                .clickable(
-                    onClick = {
-                        if (isMinimized) {
-                            hSplitter.setToDpFromFirst(400.dp)
-                        } else {
-                            hSplitter.setToMin()
-                        }
-
-                    }
-                ),
+                .rotate(90f),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {

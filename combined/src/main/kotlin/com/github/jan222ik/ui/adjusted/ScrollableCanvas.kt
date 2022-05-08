@@ -8,10 +8,8 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -25,12 +23,11 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.singleWindowApplication
 import com.github.jan222ik.ui.adjusted.arrow.Arrow
-import com.github.jan222ik.ui.adjusted.arrow.ArrowType
 import com.github.jan222ik.ui.adjusted.scroll.CanvasScrollState
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
+import org.eclipse.uml2.uml.Element
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -262,7 +259,7 @@ fun DrawScope.drawRectOwn(size: Size, topLeft: Offset, color: Color = Color.Red)
 }
 
 class DemoComposable(
-    boundingShape: BoundingRect.State
+    boundingShape: BoundingRectState
 ) : MovableAndResizeableComponent(
     initBoundingRect = boundingShape,
     onNextUIConfig = { p, o, n ->
@@ -278,9 +275,13 @@ class DemoComposable(
         return emptyList()
     }
 
+    override fun showsElement(element: Element?): Boolean = false
+
+
 
 }
 
+/*
 fun main(args: Array<String>) {
     singleWindowApplication {
         val boundingBoxes = listOf<BoundingRect>(
@@ -311,7 +312,8 @@ fun main(args: Array<String>) {
         val arrows = listOf(
             Arrow(
                 listOf(Offset.Zero, Offset(100f, 150f), Offset(200f, 50f)),
-                ArrowType.GENERALIZATION
+                ArrowType.GENERALIZATION,
+                data = GeneralizationSetImpl()
             ),
             Arrow(
                 listOf(Offset.Zero, Offset(100f, 150f), Offset(200f, 50f)).map { it.plus(Offset(x = 50f, y = 50f)) },
@@ -335,6 +337,7 @@ fun main(args: Array<String>) {
         }
     }
 }
+ */
 
 fun Size.toOffset() = Offset(this.width, this.height)
 fun Offset.toSize() = Size(this.x, this.y)

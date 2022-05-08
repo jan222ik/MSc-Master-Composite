@@ -59,6 +59,11 @@ dependencies {
     implementation("de.comahe.i18n4k:i18n4k-core:0.3.0")
     implementation("de.comahe.i18n4k:i18n4k-core-jvm:0.3.0")
 
+    // jackson
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.module/jackson-module-kotlin
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.2")
+
+
 
     /**
      * Testing Dependencies

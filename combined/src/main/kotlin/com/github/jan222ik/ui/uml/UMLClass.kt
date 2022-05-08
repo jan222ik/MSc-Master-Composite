@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
 import com.github.jan222ik.ui.adjusted.BoundingRect
+import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
@@ -26,14 +27,15 @@ import com.github.jan222ik.ui.feature.main.tree.ModelTreeItem
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.util.HorizontalDivider
 import mu.KLogging
+import org.eclipse.uml2.uml.Element
 import org.eclipse.uml2.uml.Stereotype
 import org.eclipse.uml2.uml.VisibilityKind
 
 @OptIn(ExperimentalFoundationApi::class)
 class UMLClass(
     val umlClass: org.eclipse.uml2.uml.Class,
-    initBoundingRect: BoundingRect.State,
-    onNextUIConfig: (MovableAndResizeableComponent, BoundingRect.State, BoundingRect.State) -> Unit,
+    initBoundingRect: BoundingRectState,
+    onNextUIConfig: (MovableAndResizeableComponent, BoundingRectState, BoundingRectState) -> Unit,
 ) : MovableAndResizeableComponent(initBoundingRect, onNextUIConfig) {
 
     companion object : KLogging()
@@ -93,6 +95,10 @@ class UMLClass(
                 command = deleteSelfCommand
             )
         )
+    }
+
+    override fun showsElement(element: Element?): Boolean {
+        return umlClass == element
     }
 
     fun org.eclipse.uml2.uml.Class.appliedStereotypesString(): String =

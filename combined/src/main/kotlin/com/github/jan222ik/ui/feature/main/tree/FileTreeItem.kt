@@ -9,11 +9,7 @@ import androidx.compose.material.icons.filled.FileCopy
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.github.jan222ik.ecore.DiagramLoader
-import com.github.jan222ik.ecore.ProjectClientPerModel
 import mu.KLogging
-import org.eclipse.emf.ecore.resource.ResourceSet
 import java.io.File
 
 @ExperimentalFoundationApi
@@ -48,12 +44,13 @@ data class FileTreeItem(
                     children = emptyList()
                 } else {
                     if (file.listFiles() != null) {
-                        file.listFiles()!!.forEach { file ->
+                        val listFiles = file.listFiles()!!
+                        listFiles.forEach { file ->
                             if (file.name.contains(".uml")) {
-                                val res: ProjectClientPerModel = FileTree.loadedClients.computeIfAbsent(
+                                val res = FileTree.loadedClients.computeIfAbsent(
                                     file.name
                                 ) {
-                                    DiagramLoader.open("testuml.uml") // TODO Change
+                                    ProjectData("testuml", listFiles) // TODO Change
                                 }
                                 FileTree.modelFilesToModelTreeRoot(res, this@FileTreeItem)
                             } else {

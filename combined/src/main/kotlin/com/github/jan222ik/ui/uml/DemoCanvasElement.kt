@@ -8,17 +8,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.util.packFloats
 import androidx.compose.ui.window.singleWindowApplication
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
-import com.github.jan222ik.ui.adjusted.BoundingRect
+import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
+import org.eclipse.uml2.uml.Element
 
 class DemoCanvasElement(
-    uiConfig: BoundingRect.State,
-    onNextUIConfig: (self: MovableAndResizeableComponent, old: BoundingRect.State, new: BoundingRect.State) -> Unit
+    uiConfig: BoundingRectState,
+    onNextUIConfig: (self: MovableAndResizeableComponent, old: BoundingRectState, new: BoundingRectState) -> Unit
 ) : MovableAndResizeableComponent(uiConfig, onNextUIConfig) {
     @Composable
     override fun content(projectTreeHandler: ProjectTreeHandler) {
@@ -28,6 +30,8 @@ class DemoCanvasElement(
     override fun getMenuContributions(): List<MenuContribution> {
         return emptyList()
     }
+
+    override fun showsElement(element: Element?): Boolean = false
 
 }
 
@@ -63,10 +67,10 @@ fun main() {
 
         val movableAndResizeableComponent = remember {
             DemoCanvasElement(
-                uiConfig = BoundingRect.State(
-                    Offset(
-                        x = 100f,
-                        y = 45f
+                uiConfig = BoundingRectState(
+                    topLeftPacked = packFloats(
+                        100f,
+                        45f
                     ),
                     width = 100f,
                     height = 200f

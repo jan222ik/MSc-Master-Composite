@@ -153,130 +153,133 @@ class ProjectTreeHandler(
             }
         }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .focusRequester(focusRequester)
-                .onFocusChanged {
-                    println("TreeFocus = ${it}")
-                    focus = it
-                }.apply {
-                    if (focus?.hasFocus == true) {
-                        this.border(4.dp, Color.White)
-                    }
-                }
-                .focusTarget()
-                .pointerInput(Unit) {
-                    detectTapGestures {
-                        focusRequester.requestFocus()
-                    }
-                },
-            state = lazyListState
-        ) {
-            items(items.size) { itemIdx ->
-                val item = items[itemIdx]
-                val isSelected = remember(itemIdx, treeSelection) {
-                    treeSelection.contains(itemIdx)
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .then(
-                            when {
-                                isSelected -> {
-                                    Modifier.background(
-                                        color = EditorColors.focusActive.takeIf { focus?.hasFocus == true }
-                                            ?: EditorColors.focusInactive
-                                    )
-                                }
-                                else -> Modifier
-                            }
-                        )
-                        .padding(start = item.level.times(16).dp)
-                        .drawBehind { drawLine(Color.Black, Offset.Zero, Offset.Zero.copy(y = this.size.height)) }
-                        .then(
-                            when (val actual = item.actual) {
-                                is ModelTreeItem -> Modifier.dndDraggable(
-                                    handler = LocalDropTargetHandler.current,
-                                    dataProvider = { actual.getElement() },
-                                    onDragCancel = Function0<Unit>::invoke,
-                                    onDragFinished = { _, snapback -> snapback.invoke() }
-                                )
-                                else -> Modifier
-                            }
-                        ),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (item.canExpand) {
-                            if (item.children.isNotEmpty()) {
-                                Icon(
-                                    modifier = Modifier.mouseClickable {
-                                        if (buttons.isPrimaryPressed) {
-                                            item.onDoublePrimaryAction.invoke(this)
-                                            selectItem(
-                                                idx = itemIdx,
-                                                singleSelect = true,
-                                                keepSelect = this.keyboardModifiers.isCtrlPressed
-                                            )
-                                        }
-                                    },
-                                    imageVector = Icons.Filled.ExpandMore,
-                                    contentDescription = "Close Item"
-                                )
-                            } else {
-                                Icon(
-                                    modifier = Modifier.mouseClickable {
-                                        if (buttons.isPrimaryPressed) {
-                                            item.onDoublePrimaryAction.invoke(this)
-                                            selectItem(
-                                                idx = itemIdx,
-                                                singleSelect = true,
-                                                keepSelect = this.keyboardModifiers.isCtrlPressed
-                                            )
-                                        }
-                                    },
-                                    imageVector = Icons.Filled.ChevronRight,
-                                    contentDescription = "Expand Item"
-                                )
-                            }
+        Box {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .focusRequester(focusRequester)
+                    .onFocusChanged {
+                        println("TreeFocus = ${it}")
+                        focus = it
+                    }.apply {
+                        if (focus?.hasFocus == true) {
+                            this.border(4.dp, Color.White)
                         }
                     }
-                    item.icon?.invoke(Modifier.size(16.dp))
-                    Text(
+                    .focusTarget()
+                    .pointerInput(Unit) {
+                        detectTapGestures {
+                            focusRequester.requestFocus()
+                        }
+                    },
+                state = lazyListState
+            ) {
+                items(items.size) { itemIdx ->
+                    val item = items[itemIdx]
+                    val isSelected = remember(itemIdx, treeSelection) {
+                        treeSelection.contains(itemIdx)
+                    }
+                    Row(
                         modifier = Modifier
-                            .mouseCombinedClickable(
-                                onClick = {
-                                    with(buttons) {
-                                        when {
-                                            isPrimaryPressed -> item.onPrimaryAction.invoke(
-                                                this@mouseCombinedClickable,
-                                                itemIdx
-                                            )
-                                            isSecondaryPressed -> item.onSecondaryAction.invoke(
-                                                this@mouseCombinedClickable,
-                                                lazyListState,
-                                                items.indexOf(item),
-                                                this@ProjectTreeHandler as ITreeContextFor
-                                            )
-                                        }
+                            .fillMaxWidth()
+                            .then(
+                                when {
+                                    isSelected -> {
+                                        Modifier.background(
+                                            color = EditorColors.focusActive.takeIf { focus?.hasFocus == true }
+                                                ?: EditorColors.focusInactive
+                                        )
                                     }
-                                },
-                                onDoubleClick = {
-                                    if (buttons.isPrimaryPressed) {
-                                        item.onDoublePrimaryAction.invoke(this@mouseCombinedClickable)
-                                    }
+                                    else -> Modifier
+                                }
+                            )
+                            .padding(start = item.level.times(16).dp)
+                            .drawBehind { drawLine(Color.Black, Offset.Zero, Offset.Zero.copy(y = this.size.height)) }
+                            .then(
+                                when (val actual = item.actual) {
+                                    is ModelTreeItem -> Modifier.dndDraggable(
+                                        handler = LocalDropTargetHandler.current,
+                                        dataProvider = { actual.getElement() },
+                                        onDragCancel = Function0<Unit>::invoke,
+                                        onDragFinished = { _, snapback -> snapback.invoke() }
+                                    )
+                                    else -> Modifier
                                 }
                             ),
-                        text = item.name
-                    )
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (item.canExpand) {
+                                if (item.children.isNotEmpty()) {
+                                    Icon(
+                                        modifier = Modifier.mouseClickable {
+                                            if (buttons.isPrimaryPressed) {
+                                                item.onDoublePrimaryAction.invoke(this)
+                                                selectItem(
+                                                    idx = itemIdx,
+                                                    singleSelect = true,
+                                                    keepSelect = this.keyboardModifiers.isCtrlPressed
+                                                )
+                                            }
+                                        },
+                                        imageVector = Icons.Filled.ExpandMore,
+                                        contentDescription = "Close Item"
+                                    )
+                                } else {
+                                    Icon(
+                                        modifier = Modifier.mouseClickable {
+                                            if (buttons.isPrimaryPressed) {
+                                                item.onDoublePrimaryAction.invoke(this)
+                                                selectItem(
+                                                    idx = itemIdx,
+                                                    singleSelect = true,
+                                                    keepSelect = this.keyboardModifiers.isCtrlPressed
+                                                )
+                                            }
+                                        },
+                                        imageVector = Icons.Filled.ChevronRight,
+                                        contentDescription = "Expand Item"
+                                    )
+                                }
+                            }
+                        }
+                        item.icon?.invoke(Modifier.size(16.dp))
+                        Text(
+                            modifier = Modifier
+                                .mouseCombinedClickable(
+                                    onClick = {
+                                        with(buttons) {
+                                            when {
+                                                isPrimaryPressed -> item.onPrimaryAction.invoke(
+                                                    this@mouseCombinedClickable,
+                                                    itemIdx
+                                                )
+                                                isSecondaryPressed -> item.onSecondaryAction.invoke(
+                                                    this@mouseCombinedClickable,
+                                                    lazyListState,
+                                                    items.indexOf(item),
+                                                    this@ProjectTreeHandler as ITreeContextFor
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onDoubleClick = {
+                                        if (buttons.isPrimaryPressed) {
+                                            item.onDoublePrimaryAction.invoke(this@mouseCombinedClickable)
+                                        }
+                                    }
+                                ),
+                            text = item.name
+                        )
+                    }
                 }
             }
+            VerticalScrollbar(adapter = scrollbarAdapter, modifier = Modifier.align(Alignment.TopEnd))
         }
     }
 
