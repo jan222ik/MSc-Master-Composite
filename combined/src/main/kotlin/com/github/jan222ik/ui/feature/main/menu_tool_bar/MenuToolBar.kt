@@ -10,15 +10,17 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Maximize
 import androidx.compose.material.icons.filled.Minimize
+import androidx.compose.material.icons.outlined.CheckBoxOutlineBlank
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.WindowPlacement
 import com.github.jan222ik.model.command.ICommand
 import com.github.jan222ik.ui.components.menu.ActionButton
 import com.github.jan222ik.ui.components.menu.MenuButton
@@ -30,6 +32,7 @@ import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.wizard.CreateProjectWizard
 import com.github.jan222ik.ui.feature.wizard.Project
 import com.github.jan222ik.ui.value.EditorColors
+import com.github.jan222ik.ui.value.Space
 import com.github.jan222ik.util.HorizontalDivider
 import kotlinx.coroutines.launch
 import javax.swing.JFileChooser
@@ -91,7 +94,7 @@ fun MenuToolBarComponent(
                                         f.showSaveDialog(null)
                                         val root = f.selectedFile?.absoluteFile
                                         if (root != null) {
-                                            switchProject(Project.load(root))
+                                            Project.load(root)?.let { switchProject(it) }
                                         }
                                     }
 
@@ -122,7 +125,7 @@ fun MenuToolBarComponent(
                             popupContent = { MenuItemList(viewMenu, jobHandler, 350.dp) }
                         )
                         Spacer(Modifier.width(16.dp))
-                        Text(text = project?.name ?: "No project open", style = MaterialTheme.typography.overline)
+                        Text(text = project.name, style = MaterialTheme.typography.overline)
                     }
                     Row(
                         Modifier.align(Alignment.CenterEnd)
@@ -132,6 +135,7 @@ fun MenuToolBarComponent(
                             onClick = windowActions::minimize
                         ) {
                             Icon(
+                                modifier = Modifier.size(Space.dp16),
                                 imageVector = Icons.Filled.Minimize,
                                 contentDescription = "Minimize Application"
                             )
@@ -139,18 +143,33 @@ fun MenuToolBarComponent(
                         ActionButton(
                             onClick = windowActions::maximize
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.Maximize,
-                                contentDescription = "Maximize Application"
-                            )
+                            val windowState = LocalWindowState.current
+                            if (windowState.placement != WindowPlacement.Floating) {
+                                Icon(
+                                    modifier = Modifier.size(Space.dp16),
+                                    imageVector =  Icons.FloatingWindowIcon,
+                                    contentDescription = "Maximize Application"
+                                )
+                            } else {
+                                Icon(
+                                    modifier = Modifier.size(Space.dp16),
+                                    imageVector = Icons.Outlined.CheckBoxOutlineBlank,
+                                    contentDescription = "Change to floating application window"
+                                )
+                            }
                         }
                         ActionButton(
                             onClick = windowActions::exitApplication,
-                            isClose = true
-                        ) {
+                            isCloseBtn = true
+                        ) { isHover ->
                             Icon(
+                                modifier = Modifier.size(Space.dp16),
                                 imageVector = Icons.Filled.Close,
-                                contentDescription = "Close Application"
+                                contentDescription = "Close Application",
+                                tint = when{
+                                    isHover -> Color.White
+                                    else -> Color.Black
+                                }
                             )
                         }
                     }

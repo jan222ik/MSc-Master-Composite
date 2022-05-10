@@ -13,6 +13,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Properties
+import java.util.prefs.Preferences
 
 class Project private constructor(
     val root: File,
@@ -44,6 +45,8 @@ class Project private constructor(
             return if (projectFile.exists()) {
                 Project(root = root, projectFile = projectFile).apply {
                     loadProperties()
+                }.also {
+                    Preferences.userRoot().node("com.github.jan222ik.msc.modeller").put("lastProjects", root.absolutePath)
                 }
             } else null
         }

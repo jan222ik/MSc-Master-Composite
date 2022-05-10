@@ -84,7 +84,7 @@ val LocalThemeSwitcher = compositionLocalOf<Pair<Boolean, (Boolean) -> Unit>> { 
 /**
  * LocalProjectSwitcher is a [ProvidableCompositionLocal] that provides a [Pair] with the project for the current window [Project] and a setter to change it.
  */
-val LocalProjectSwitcher = compositionLocalOf<Pair<Project?, (Project?) -> Unit>> { error("No value for LocalProjectSwitcher in composition tree!") }
+val LocalProjectSwitcher = compositionLocalOf<Pair<Project, (Project) -> Unit>> { error("No value for LocalProjectSwitcher in composition tree!") }
 
 /**
  * LocalPointerOverrideService is a [ProvidableCompositionLocal] that provides a [MutableState] that can be used to change the icon of the mouse.

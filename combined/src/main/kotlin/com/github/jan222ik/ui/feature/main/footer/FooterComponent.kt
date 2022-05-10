@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.github.jan222ik.ui.feature.main.footer.progress.BackgroundJobComponent
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
+import com.github.jan222ik.ui.value.EditorColors
 import javax.inject.Inject
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -23,7 +24,7 @@ class FooterComponent @Inject constructor(
     fun render(modifier: Modifier) {
         Box(
             modifier = modifier
-                .background(Color.Cyan),
+                .background(EditorColors.backgroundGray),
             contentAlignment = Alignment.Center
         ) {
             Text("Footer")

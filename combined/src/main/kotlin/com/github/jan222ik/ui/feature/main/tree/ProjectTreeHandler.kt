@@ -44,10 +44,12 @@ import org.eclipse.uml2.uml.Element
 
 @OptIn(ExperimentalFoundationApi::class)
 class ProjectTreeHandler(
-    private val showRoot: Boolean
+    private val showRoot: Boolean,
+    private val root: FileTreeItem
 ) : ITreeContextFor {
 
     companion object : KLogging()
+
 
     private var items by mutableStateOf(emptyList<TreeItem>())
 
@@ -92,9 +94,7 @@ class ProjectTreeHandler(
 
 
     @Composable
-    fun render(
-        root: TreeDisplayableItem,
-    ) {
+    fun render() {
         val shortcutActionsHandler = LocalShortcutActionHandler.current
         root.toItems().let {
             if (it.size != items.size) {

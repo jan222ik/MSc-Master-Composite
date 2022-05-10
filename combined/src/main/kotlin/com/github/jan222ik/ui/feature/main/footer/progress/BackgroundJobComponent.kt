@@ -47,7 +47,10 @@ class BackgroundJobComponent @Inject constructor(
                             }
                         }
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
                             ProgressBarForJob(monitor = monitor)
                         }
                     }

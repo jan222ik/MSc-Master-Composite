@@ -44,4 +44,5 @@ class MockBackgroundJobs : ICommand {
 
     override fun canUndo(): Boolean = false
     override suspend fun undo() = error("Can't be undone.")
+    override fun pushToStack(): Boolean = false
 }

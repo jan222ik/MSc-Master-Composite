@@ -35,7 +35,6 @@ import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.MenuToolBarComponent
 import com.github.jan222ik.ui.feature.main.tree.FileTree
-import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import org.jetbrains.compose.splitpane.SplitPaneState
@@ -55,21 +54,12 @@ fun MainScreen(
 ) {
     val project = LocalProjectSwitcher.current.first
     LaunchedEffect(project) {
-        if (project == null) {
-            FileTree.setRoot("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite\\appworkspace")
-        } else {
-            FileTree.setRoot(project.root.absolutePath)
-        }
+        FileTree.setRoot(project.root.absolutePath)
     }
 
-    val projectTreeHandler = remember(FileTree.root) {
-        ProjectTreeHandler(
-            showRoot = true
-        )
-    }
 
-    val diagramAreaComponent = remember(projectTreeHandler) {
-        DiagramAreaComponent(projectTreeHandler)
+    val diagramAreaComponent = remember(FileTree.treeHandler.value) {
+        FileTree.treeHandler.value?.let { DiagramAreaComponent(it) }
     }
     MainScreenScaffold(
         menuToolBar = {
@@ -132,9 +122,7 @@ fun MainScreen(
                         Column(Modifier.padding(end = 20.dp)) {
                             ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
                                 Text("File Tree")
-                                FileTree.root?.let {
-                                    projectTreeHandler.render(root = it)
-                                }
+                                FileTree.treeHandler.value?.render()
                             }
                         }
 
@@ -144,7 +132,7 @@ fun MainScreen(
                 second(50.dp) {
                     Box(Modifier.zIndex(1f)) {
                         ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
-                            diagramAreaComponent.render()
+                            diagramAreaComponent?.render()
                         }
                     }
                 }

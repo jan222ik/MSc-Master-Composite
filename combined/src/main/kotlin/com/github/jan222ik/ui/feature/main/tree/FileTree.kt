@@ -10,15 +10,18 @@ import java.io.File
 
 @OptIn(ExperimentalFoundationApi::class)
 object FileTree {
-    var root by mutableStateOf<FileTreeItem?>(null)
+    val treeHandler = mutableStateOf<ProjectTreeHandler?>(null)
 
     fun setRoot(path: String) {
         val file = File(path)
-        root = FileTreeItem(
-            level = 0,
-            displayName = file.name,
-            canExpand = file.isDirectory && file.listFiles()?.isNotEmpty() == true,
-            file = file
+        treeHandler.value = ProjectTreeHandler(
+            showRoot = false,
+            root = FileTreeItem(
+                level = 0,
+                displayName = file.name,
+                canExpand = file.isDirectory && file.listFiles()?.isNotEmpty() == true,
+                file = file
+            )
         )
     }
 
@@ -51,7 +54,7 @@ object FileTree {
         val level = parent.level.inc()
         if (element is NamedElement) {
             parent.allDiagrams
-                .filter { it.location.also { print("Location: $it") } == element.qualifiedName.also { println(" Qualified: $it") } }
+                .filter { it.location == element.qualifiedName }
                 .forEach {
                     val diagram = ModelTreeItem.Diagram(
                         level = level,
