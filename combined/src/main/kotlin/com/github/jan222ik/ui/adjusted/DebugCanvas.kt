@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import com.github.jan222ik.ui.adjusted.arrow.Arrow
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.mapPair
 
 object DebugCanvas {
@@ -27,11 +28,13 @@ object DebugCanvas {
         viewport: MutableState<Viewport>,
         maxViewportSize: Size,
         elements: List<ICanvasComposable>,
+        arrows: List<Arrow>,
         selectedBoundingBoxes: MutableState<List<IBoundingShape>>,
         conditionalClipValue: MutableState<Boolean>,
         dragOverRect: MutableState<Pair<Offset, Size>?>,
         showWireframeOnly: MutableState<Boolean>,
-        showWireframeName: MutableState<Boolean>
+        showWireframeName: MutableState<Boolean>,
+        showPathOffsetPoints: MutableState<Boolean>
     ) {
         Window(onCloseRequest = {}, title = "Debug Canvas") {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -64,6 +67,9 @@ object DebugCanvas {
                                             showText = showWireframeName.value
                                         )
                                     }
+                                }
+                                arrows.forEach {
+                                    it.apply { drawArrow() }
                                 }
                                 drawSelectionPlane(rect = dragOverRect.value?.mapPair(
                                     mapFirst = { it.plus(viewport.value.origin) },
@@ -105,6 +111,15 @@ object DebugCanvas {
                                 onCheckedChange = { showWireframeName.value = it },
                             )
                         }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Arrow Show Offset Points: ")
+                            Switch(
+                                checked = showPathOffsetPoints.value,
+                                onCheckedChange = { showPathOffsetPoints.value = it },
+                            )
+                        }
                         Text("Viewport:")
                         Text("Origin: ${viewport.value.origin}")
                         Text("Size: ${viewport.value.size}")
@@ -112,7 +127,14 @@ object DebugCanvas {
                         selectedBoundingBoxes.value.forEach {
                             Text(text = it.debugName)
                         }
-
+                        Text("Elements:")
+                        elements.forEach {
+                            Text(text = it.toString())
+                        }
+                        Text("Arrows:")
+                        arrows.forEach {
+                            Text(text = it.toString())
+                        }
                     }
                 }
             }

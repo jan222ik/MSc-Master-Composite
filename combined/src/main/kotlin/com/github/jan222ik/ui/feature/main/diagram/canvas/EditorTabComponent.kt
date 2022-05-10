@@ -13,7 +13,6 @@ import androidx.compose.ui.unit.toOffset
 import androidx.compose.ui.util.packFloats
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.commands.CompoundCommand
-import com.github.jan222ik.model.command.commands.UpdateArrowPathCommand
 import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.ScrollableCanvas
 import com.github.jan222ik.ui.adjusted.arrow.Arrow
@@ -23,9 +22,12 @@ import com.github.jan222ik.ui.components.dnd.dndDropTarget
 import com.github.jan222ik.ui.feature.LocalCommandStackHandler
 import com.github.jan222ik.ui.feature.LocalDropTargetHandler
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
+import com.github.jan222ik.ui.uml.Anchor
+import com.github.jan222ik.ui.uml.AnchorSide
 import com.github.jan222ik.ui.uml.UMLClass
 import com.github.jan222ik.ui.uml.UMLClassFactory
 import mu.KLogger
+import mu.KLogging
 import mu.NamedKLogging
 import org.eclipse.uml2.uml.Class
 import org.eclipse.uml2.uml.Generalization
@@ -52,9 +54,14 @@ fun EditorTabComponent(state: EditorTabViewModel, projectTreeHandler: ProjectTre
         }
          */
         ScrollableCanvas(
-            viewport = state.viewport, canvasThenModifier = Modifier.dndDropTarget(
-                handler = dropHandler, dropActions = dndActions
-            ), elements = state.items.value, arrows = state.arrows.value, projectTreeHandler = projectTreeHandler
+            viewport = state.viewport,
+            canvasThenModifier = Modifier.dndDropTarget(
+                handler = dropHandler,
+                dropActions = dndActions
+            ),
+            elements = state.observableDiagram.elements.value,
+            arrows = state.observableDiagram.arrows.value,
+            projectTreeHandler = projectTreeHandler
         )
         /*
         DiagramChart(
@@ -124,13 +131,25 @@ class DNDEditorActions(
             commandStackHandler.add(addCommand)
             true
         } else if (data is Generalization) {
-            val general = state.items.value.firstOrNull { it.showsElement(data.general) }
-            val special = state.items.value.firstOrNull { it.showsElement(data.specific) }
+            logger.debug { "Accept drop for state name: ${state.id} Item data: -> $data" }
+            val general = state.observableDiagram.elements.value.firstOrNull { it.showsElement(data.general) }
+            val special = state.observableDiagram.elements.value.firstOrNull { it.showsElement(data.specific) }
             if (special != null && general != null) {
+                val initSourceAnchor = Anchor(AnchorSide.N, 0.5f)
+                val initTargetAnchor = Anchor(AnchorSide.S, 0.5f)
                 val arrow = Arrow(
-                    initOffsetPath = listOf(special.boundingShape.topLeft.value, general.boundingShape.topLeft.value),
+                    initOffsetPath = Arrow.fourPointArrowOffsetPath(
+                        sourceBoundingShape = special.boundingShape,
+                        targetBoundingShape = general.boundingShape,
+                        sourceAnchor = initSourceAnchor,
+                        targetAnchor = initTargetAnchor
+                    ),
                     initArrowType = ArrowType.GENERALIZATION,
-                    data = data
+                    data = data,
+                    initSourceAnchor = initSourceAnchor,
+                    initTargetAnchor = initSourceAnchor,
+                    initSourceBoundingShape = special.boundingShape,
+                    initTargetBoundingShape = general.boundingShape
                 )
                 val addCommand = state.getAddCommandForArrow(arrow)
                 println("arrow = ${arrow}")
@@ -141,7 +160,7 @@ class DNDEditorActions(
     }
 }
 
-object DNDCreation {
+object DNDCreation : KLogging() {
     fun dropClass(
         data: Class, dataPoint: Offset, commandStackHandler: CommandStackHandler, state: EditorTabViewModel
     ): UMLClass {
@@ -151,27 +170,12 @@ object DNDCreation {
                 topLeftPacked = packFloats(dataPoint.x, dataPoint.y), width = 255f, height = 300f
             ),
             onMoveOrResize = { moveResizeCommand ->
-                val filteredSources = state.arrows.value.filter { it.data.sources.contains(data) }
-                val filteredTargets = state.arrows.value.filter { it.data.targets.contains(data) }
-                if (filteredSources.isEmpty() && filteredTargets.isEmpty()) {
+                logger.debug { "Update Arrows after UMLClass movement" }
+                val updateArrowPathCommands = state.observableDiagram.updateArrows(moveResizeCommand, data)
+                if (updateArrowPathCommands.isEmpty()) {
                     commandStackHandler.add(moveResizeCommand)
                 } else {
-                    val sourceOffsets = filteredSources.map { it to it.offsetPath.value.toMutableList().apply {
-                        removeFirst()
-                        add(0, moveResizeCommand.after.topLeft)
-                    } }
-                    val targetOffsets = filteredTargets.map { it to it.offsetPath.value.toMutableList().apply {
-                        removeLast()
-                        add(moveResizeCommand.after.topLeft)
-                    } }
-                    val commands = sourceOffsets.plus(targetOffsets).map {
-                        UpdateArrowPathCommand(
-                            target = it.first,
-                            before = it.first.offsetPath.value,
-                            after = it.second
-                        )
-                    }
-                    commandStackHandler.add(CompoundCommand(commands + moveResizeCommand))
+                    commandStackHandler.add(CompoundCommand(updateArrowPathCommands + moveResizeCommand))
                 }
             },
             deleteCommand = state::getRemoveCommandFor

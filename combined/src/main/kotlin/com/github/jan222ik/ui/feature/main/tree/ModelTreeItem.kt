@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.PopupPositionProvider
+import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.feature.main.diagram.canvas.DiagramType
@@ -306,7 +307,7 @@ sealed class ModelTreeItem(
     ) {
         override val onDoublePrimaryAction: MouseClickScope.() -> Unit
             get() = {
-                EditorManager.moveToOrOpenDiagram(diagram)
+                EditorManager.moveToOrOpenDiagram(diagram, CommandStackHandler.INSTANCE)
             }
         override fun getElement(): Element { throw InvalidClassException("Diagram has no uml element") }
         override val icon: (@Composable (modifier: Modifier) -> Unit)

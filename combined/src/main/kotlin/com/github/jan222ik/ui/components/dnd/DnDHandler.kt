@@ -14,11 +14,13 @@ class DnDHandler {
     internal val activeTarget = mutableStateOf<Pair<LayoutCoordinates, DnDAction>?>(null)
 
     fun updateActiveTarget(offset: IntOffset, data: Any?) {
-        val filter = dropTargets.value.filter { (coord, _) ->
-            val pos = coord.positionInWindow()
-            (pos.x..(pos.x + coord.size.width)).contains(offset.x.toFloat()) &&
-                    (pos.y..(pos.y + coord.size.height)).contains(offset.y.toFloat())
-        }
+        val filter = dropTargets.value
+            .filter { it.first.isAttached }
+            .filter { (coord, _) ->
+                val pos = coord.positionInWindow()
+                (pos.x..(pos.x + coord.size.width)).contains(offset.x.toFloat()) &&
+                        (pos.y..(pos.y + coord.size.height)).contains(offset.y.toFloat())
+            }
         val nActive = filter.maxByOrNull {
             it.first.positionInWindow().getDistanceSquared()
         }

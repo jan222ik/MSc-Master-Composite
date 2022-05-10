@@ -4,44 +4,44 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.unit.IntSize
 import com.github.jan222ik.model.command.commands.AddToDiagramCommand
-import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
 import com.github.jan222ik.ui.adjusted.Viewport
 import com.github.jan222ik.ui.adjusted.arrow.Arrow
+import com.github.jan222ik.ui.uml.DiagramHolderObservable
 import kotlin.random.Random
 
 class EditorTabViewModel(
-    val name: String,
-    val type: DiagramType,
     initialViewport: Viewport = Viewport(),
-    initialItems: List<MovableAndResizeableComponent> = emptyList(),
-    initialArrows: List<Arrow> = emptyList()
+    val observableDiagram: DiagramHolderObservable
 ) {
     val id = Random.nextLong()
 
     val viewport = mutableStateOf(initialViewport)
-    val items = mutableStateOf(initialItems)
-    val arrows = mutableStateOf(initialArrows)
     var coords by mutableStateOf(Offset.Unspecified)
 
+    val name: String
+        get() = observableDiagram.diagramName.tfv.text
+
+    val type: DiagramType
+        get() = observableDiagram.diagramType
+
     fun addItem(item: MovableAndResizeableComponent) {
-        items.value += item
+        observableDiagram.elements.value += item
     }
 
     fun removeItem(item: MovableAndResizeableComponent) {
-        items.value -= item
+        observableDiagram.elements.value -= item
     }
 
     fun addArrow(item: Arrow) {
-        arrows.value += item
+        observableDiagram.arrows.value += item
     }
 
     fun removeArrow(item: Arrow) {
-        arrows.value -= item
+        observableDiagram.arrows.value -= item
     }
 
     fun getRemoveCommandFor(item: MovableAndResizeableComponent): RemoveFromDiagramCommand {
@@ -85,34 +85,4 @@ class EditorTabViewModel(
             }
         }
     }
-
-    fun toState() : State {
-        return State(
-            name = name,
-            type = type,
-            viewport = viewport.value,
-            items = items.value,
-            arrows = arrows.value
-        )
-    }
-
-    companion object {
-        fun fromState(state: State): EditorTabViewModel {
-            return EditorTabViewModel(
-                name = state.name,
-                type = state.type,
-                initialViewport = state.viewport,
-                initialItems = state.items,
-                initialArrows = state.arrows
-            )
-        }
-    }
-
-    data class State(
-        val name: String,
-        val type: DiagramType,
-        val viewport: Viewport,
-        val items: List<MovableAndResizeableComponent>,
-        val arrows: List<Arrow>
-    )
 }

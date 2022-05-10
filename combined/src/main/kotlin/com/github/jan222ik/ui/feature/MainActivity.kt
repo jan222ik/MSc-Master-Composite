@@ -99,7 +99,7 @@ class MainActivity : Activity() {
                 project = newProject
             }
             val scope = rememberCoroutineScope()
-            val commandStackHandler = remember { CommandStackHandler(scope = scope) }
+            val commandStackHandler = remember { CommandStackHandler.INSTANCE }
             DisposableEffect(compoundCollector) {
                 onDispose {
                     compoundCollector.save()

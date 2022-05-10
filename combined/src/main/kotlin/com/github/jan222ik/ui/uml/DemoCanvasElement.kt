@@ -41,7 +41,7 @@ fun main() {
             Thread.currentThread().name = "AWT-EQ-0"
         }
         val scope = rememberCoroutineScope()
-        val commandStack = remember { CommandStackHandler(scope = scope) }
+        val commandStack = remember { CommandStackHandler.INSTANCE }
         Row {
             Button(
                 enabled = commandStack.hasUndo,

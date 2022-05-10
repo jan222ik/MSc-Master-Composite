@@ -1,1 +1,63 @@
-[{"name":"First diagram","diagramType":"BLOCK_DEFINITION","location":"testuml","content":[{"type":"UMLRef.Class","referencedQualifiedName":"testuml::TestClass","shape":{"topLeftPacked":4898227545847627776,"width":300.0,"height":400.0},"filters":[]},{"type":"UMLRef.Class","referencedQualifiedName":"testuml::TestClassWithProperties","shape":{"topLeftPacked":4898227545864404992,"width":300.0,"height":400.0},"filters":[]},{"type":"UMLRef.Arrow","referencedQualifiedName":""}]}]
+[ {
+  "name" : "First diagram",
+  "diagramType" : "BLOCK_DEFINITION",
+  "location" : "testuml",
+  "content" : [ {
+    "type" : "UMLRef.Class",
+    "referencedQualifiedName" : "testuml::TestClass",
+    "shape" : {
+      "topLeftPacked" : 4898227545847627776,
+      "width" : 280.0,
+      "height" : 300.0
+    },
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.Class",
+    "referencedQualifiedName" : "testuml::TestClassWithProperties",
+    "shape" : {
+      "topLeftPacked" : 4898227545864404992,
+      "width" : 280.0,
+      "height" : 300.0
+    },
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.Arrow",
+    "sourceReferencedQualifierName" : "testuml::TestClassWithProperties",
+    "targetReferencedQualifierName" : "testuml::TestClass",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    }
+  }, {
+    "type" : "UMLRef.Arrow",
+    "sourceReferencedQualifierName" : "testuml::TestClassWithProperties",
+    "targetReferencedQualifierName" : "testuml::TestClass",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.25
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.25
+    }
+  }, {
+    "type" : "UMLRef.Arrow",
+    "sourceReferencedQualifierName" : "testuml::TestClassWithProperties",
+    "targetReferencedQualifierName" : "testuml::TestClass",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.25
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.75
+    }
+  } ]
+} ]

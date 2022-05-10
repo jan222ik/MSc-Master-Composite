@@ -36,41 +36,51 @@ object ArrowsHeads {
     fun DrawScope.AssociationDirectedHead(color: Color = Color.Black, arrowBaseWidth: Float = 30f) {
         val height = arrowBaseWidth * cos(Math.PI / 6).toFloat()
         val path = Path().apply {
-            moveTo(x = 0f, y = 0f)
-            lineTo(x = 0f, y = height)
+            moveTo(x = 0f, y = height)
+            lineTo(x = 0f, y = 0f)
             moveTo(x = -arrowBaseWidth.div(3), y = arrowBaseWidth.div(4))
-            lineTo(x = 0f, y = height)
+            lineTo(x = 0f, y = 0f)
             lineTo(x = arrowBaseWidth.div(3), y = arrowBaseWidth.div(4))
         }
         rotate(
             degrees = 180f,
             pivot = Offset(
-                x = 0f,
-                y = arrowBaseWidth.div(4) * cos(Math.PI / 6).toFloat().div(2)
+                x = arrowBaseWidth.div(3),
+                y = maxOf(arrowBaseWidth * cos(Math.PI / 6).toFloat(), height).div(2)
             )
         ) {
-            drawPath(path, color, style = Stroke())
+
         }
+        drawPath(path, color, style = Stroke())
     }
 }
 
 /*
 fun main() {
-    val listOf = listOf(
-        Arrow(
-            listOf(Offset.Zero, Offset(100f, 150f), Offset(200f, 50f)),
-            ArrowType.GENERALIZATION
-        ),
-        Arrow(
-            listOf(Offset.Zero, Offset(100f, 150f), Offset(200f, 50f)).map { it.plus(Offset(x = 50f, y = 50f)) },
-            ArrowType.ASSOCIATION_DIRECTED
-        )
-    )
+
     singleWindowApplication {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Canvas(modifier = Modifier.size(500.dp)) {
-                listOf.forEach {
-                    with(it) { drawArrow() }
+        val rotation = remember { mutableStateOf(0f) }
+        LaunchedEffect(Unit) {
+            launch {
+                fixedRateTimer(period = 50) {
+                    rotation.value = rotation.value.inc().rem(360f)
+                }
+
+            }
+        }
+        Box(modifier = Modifier.fillMaxSize().background(Color.Gray), contentAlignment = Alignment.Center) {
+            Canvas(modifier = Modifier.size(500.dp).background(Color.White)) {
+                translate(
+                    center.x,
+                    center.y
+                ) {
+                    rotate(
+                        degrees = rotation.value,
+                        pivot = Offset.Zero
+                    ) {
+                        ArrowsHeads.apply { AssociationDirectedHead() }
+                    }
+                    drawCircle(Color.Red, radius = 2f, center = Offset.Zero)
                 }
             }
         }

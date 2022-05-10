@@ -48,8 +48,9 @@ fun ScrollableCanvas(
 ) {
     // Debug
     val conditionalClipValue = remember { mutableStateOf(true) }
-    val showWireframeOnly = remember { mutableStateOf(false) }
+    val showWireframeOnly = remember { mutableStateOf(true) }
     val showWireframeName = remember { mutableStateOf(false) }
+    val showPathOffsetPoints = remember { mutableStateOf(false) }
 
     // Const
     val maxViewportSize = Size(
@@ -124,11 +125,13 @@ fun ScrollableCanvas(
                     viewport = viewport,
                     maxViewportSize = maxViewportSize,
                     elements = elements,
+                    arrows = arrows,
                     selectedBoundingBoxes = selectedBoundingBoxes,
                     conditionalClipValue = conditionalClipValue,
                     showWireframeOnly = showWireframeOnly,
                     showWireframeName = showWireframeName,
-                    dragOverRect = dragOverRect
+                    dragOverRect = dragOverRect,
+                    showPathOffsetPoints = showPathOffsetPoints
                 )
 
 
@@ -192,10 +195,14 @@ fun ScrollableCanvas(
                                                 )
                                             }
                                         }
+                                    arrows
+                                        .filter {
+                                            it.offsetPath.value.any { BoundingRect(initTopLeft = it, 0f, 0f).isVisibleInViewport(viewport.value) }
+                                        }
+                                        .forEach {
+                                            with(it) { drawArrow(drawDebugPoints = showPathOffsetPoints.value) }
+                                        }
                                 }
-                            }
-                            arrows.forEach {
-                                with(it) { drawArrow() }
                             }
                             drawContent()
                             conditionalClip(conditionalClipValue.value) {
@@ -276,7 +283,6 @@ class DemoComposable(
     }
 
     override fun showsElement(element: Element?): Boolean = false
-
 
 
 }

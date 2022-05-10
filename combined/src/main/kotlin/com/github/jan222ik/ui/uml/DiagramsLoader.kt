@@ -29,6 +29,6 @@ class DiagramsLoader(
             file.parentFile.mkdirs()
             file.createNewFile()
         }
-        mapper.writeValue(file, data)
+        mapper.writerWithDefaultPrettyPrinter().writeValue(file, data)
     }
 }

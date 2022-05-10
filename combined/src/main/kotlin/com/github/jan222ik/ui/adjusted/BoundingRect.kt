@@ -116,5 +116,12 @@ class BoundingRect(
     fun toState() : BoundingRectState {
         return BoundingRectState(topLeft.value.let { packFloats(it.x, it.y) }, width.value, height.value)
     }
+
+    fun updateFromState(state: BoundingRectState): BoundingRect {
+        topLeft.value = state.topLeft
+        width.value = state.width
+        height.value = state.height
+        return this
+    }
 }
 

@@ -1,28 +1,17 @@
 package com.github.jan222ik.ui.feature.main.diagram
 
 import androidx.compose.runtime.mutableStateOf
-import com.github.jan222ik.ui.feature.main.diagram.canvas.DiagramType
+import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
 import com.github.jan222ik.ui.uml.DiagramHolder
+import org.eclipse.uml2.uml.Element
+import org.eclipse.uml2.uml.NamedElement
 
 object EditorManager {
+    val allUML = mutableStateOf<List<Element>>(emptyList())
     val diagrams = mutableStateOf(emptyList<DiagramHolder>())
-    val openTabs = mutableStateOf(
-        listOf(
-            EditorTabViewModel(name = "First diagram", DiagramType.PACKAGE),
-            EditorTabViewModel(name = "block diagram", DiagramType.BLOCK_DEFINITION),
-            //EditorTabViewModel(name = "parametric diagram", DiagramType.PARAMETRIC),
-            //EditorTabViewModel(name = "First diagram", DiagramType.PACKAGE),
-            //EditorTabViewModel(name = "a", DiagramType.BLOCK_DEFINITION),
-            //EditorTabViewModel(name = "parametric diagram", DiagramType.PARAMETRIC),
-            //EditorTabViewModel(name = "First diagram", DiagramType.PACKAGE),
-            //EditorTabViewModel(name = "block diagram", DiagramType.BLOCK_DEFINITION),
-            //EditorTabViewModel(name = "parametric diagram", DiagramType.PARAMETRIC),
-            //EditorTabViewModel(name = "First diagram", DiagramType.PACKAGE),
-            //EditorTabViewModel(name = "block diagram", DiagramType.BLOCK_DEFINITION),
-            //EditorTabViewModel(name = "parametric diagram", DiagramType.PARAMETRIC),
-        )
-    )
+
+    val openTabs = mutableStateOf(emptyList<EditorTabViewModel>())
 
     var selectedIdx = mutableStateOf(0)
     val activeEditorTab = mutableStateOf<EditorTabViewModel?>(null)
@@ -42,18 +31,22 @@ object EditorManager {
                 selectedIdx.value = closeIdx.dec().coerceIn(minimumValue = 0, maximumValue = openTabs.value.lastIndex)
                 activeEditorTab.value = openTabs.value.getOrNull(selectedIdx.value)
             }
+        } else {
+            selectedIdx.value = selectedIdx.value.coerceIn(minimumValue = 0, maximumValue = openTabs.value.lastIndex)
+            activeEditorTab.value = openTabs.value.getOrNull(selectedIdx.value)
         }
         if (openTabs.value.isEmpty()) {
             activeEditorTab.value = null
         }
     }
 
-    fun moveToOrOpenDiagram(diagram: DiagramHolder) {
-        val firstIdx = openTabs.value.indexOfFirst { it.name == diagram.name }
+    fun moveToOrOpenDiagram(diagram: DiagramHolder, commandStackHandler: CommandStackHandler) {
+        val firstIdx = openTabs.value.indexOfFirst { it.observableDiagram.diagramName.tfv.text == diagram.name }
         if (firstIdx != -1) {
             onEditorSwitch(firstIdx)
         } else {
-            openTabs.value = openTabs.value + EditorTabViewModel(name = diagram.name, type = diagram.diagramType)
+            val toObservable = diagram.toObservable(allUML.value, commandStackHandler)
+            openTabs.value = openTabs.value + EditorTabViewModel(observableDiagram = toObservable)
             onEditorSwitch(openTabs.value.lastIndex)
         }
     }

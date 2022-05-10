@@ -6,14 +6,18 @@ import androidx.compose.runtime.setValue
 import com.github.jan222ik.model.command.commands.AddToDiagramCommand
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import mu.KLogging
 
-class CommandStackHandler(
+
+class CommandStackHandler private constructor(
     val stackSize: Int = 60,
     val scope: CoroutineScope
 ) {
-    companion object : KLogging()
+    companion object : KLogging() {
+        val INSTANCE = CommandStackHandler(scope = CoroutineScope(SupervisorJob()))
+    }
 
     private val jobHandler = JobHandler(scope)
      val commandStack = mutableStateOf(emptyList<ICommand>())
