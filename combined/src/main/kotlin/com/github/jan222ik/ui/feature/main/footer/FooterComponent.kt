@@ -33,8 +33,8 @@ class FooterComponent @Inject constructor(
     }
 
     @Composable
-    fun BoxScope.BackgroundJobIntegration() {
+    fun BackgroundJobIntegration() {
         val component = remember(jobHandler) { BackgroundJobComponent(jobHandler) }
-        component.render(this)
+        component.render()
     }
 }

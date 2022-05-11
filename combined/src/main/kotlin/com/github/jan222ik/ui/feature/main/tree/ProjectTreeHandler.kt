@@ -45,7 +45,7 @@ import org.eclipse.uml2.uml.Element
 @OptIn(ExperimentalFoundationApi::class)
 class ProjectTreeHandler(
     private val showRoot: Boolean,
-    private val root: FileTreeItem
+    val root: FileTreeItem
 ) : ITreeContextFor {
 
     companion object : KLogging()

@@ -11,15 +11,14 @@ import androidx.compose.material.TabRowDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.github.jan222ik.ui.feature.main.diagram.canvas.DiagramType
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabComponent
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
 import com.github.jan222ik.ui.value.EditorColors
@@ -100,11 +99,7 @@ class DiagramCanvasComponent(
                     ) {
 
                         Image(
-                            painter = when (it.type) {
-                                DiagramType.PACKAGE -> painterResource("drawables/uml_icons/Diagram_SysML_Package.gif")
-                                DiagramType.PARAMETRIC -> painterResource("drawables/uml_icons/Diagram_Parametric.png")
-                                DiagramType.BLOCK_DEFINITION -> painterResource("drawables/uml_icons/Diagram_BlockDefinition.gif")
-                            },
+                            painter = it.type.iconAsPainter(),
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )

@@ -34,6 +34,7 @@ import com.github.jan222ik.ui.feature.main.footer.FooterComponent
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.MenuToolBarComponent
+import com.github.jan222ik.ui.feature.main.menu_tool_bar.ToolBarComponent
 import com.github.jan222ik.ui.feature.main.tree.FileTree
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
@@ -64,15 +65,25 @@ fun MainScreen(
     MainScreenScaffold(
         menuToolBar = {
             ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
-                MenuToolBarComponent(
-                    modifier = Modifier
-                        .height(MainScreenScaffoldConstants.menuToolBarHeight)
-                        .fillMaxWidth(),
-                    jobHandler = jobHandler
-                )
+                Column {
+                    MenuToolBarComponent(
+                        modifier = Modifier
+                            .height(MainScreenScaffoldConstants.menuToolBarHeight)
+                            .fillMaxWidth(),
+                        jobHandler = jobHandler
+                    )
+                    ToolBarComponent(
+                        modifier = Modifier
+                            .height(MainScreenScaffoldConstants.menuToolBarHeight)
+                            .fillMaxWidth(),
+                        jobHandler = jobHandler
+                    )
+                }
             }
         },
         footer = {
+                 Box(Modifier.size(0.dp))
+            /*
             ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
                 val component = remember(jobHandler) { FooterComponent(jobHandler) }
                 component.render(
@@ -81,6 +92,8 @@ fun MainScreen(
                         .fillMaxWidth()
                 )
             }
+
+             */
         },
         content = {
             val hSplitter = rememberSplitPaneState()

@@ -28,6 +28,7 @@ import com.github.jan222ik.ui.components.menu.MenuButton
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.components.menu.MenuItemList
 import com.github.jan222ik.ui.feature.*
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.wizard.CreateProjectWizard
@@ -126,7 +127,11 @@ fun MenuToolBarComponent(
                             popupContent = { MenuItemList(viewMenu, jobHandler, 350.dp) }
                         )
                         Spacer(Modifier.width(16.dp))
-                        Text(text = project.name, style = MaterialTheme.typography.overline)
+                        val currfileAdditon = EditorManager.activeEditorTab.value?.let {
+                            " - ${it.name}"
+                        } ?: ""
+
+                        Text(text = "${project.name}$currfileAdditon", style = MaterialTheme.typography.overline)
                     }
                     Row(
                         Modifier.align(Alignment.CenterEnd)

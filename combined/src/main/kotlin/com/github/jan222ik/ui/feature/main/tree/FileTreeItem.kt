@@ -47,10 +47,13 @@ data class FileTreeItem(
                         val listFiles = file.listFiles()!!
                         listFiles.forEach { file ->
                             if (file.name.contains(".uml")) {
-                                val res = FileTree.loadedClients.computeIfAbsent(
-                                    file.name
-                                ) {
-                                    ProjectData("testuml", listFiles) // TODO Change
+                                val map = FileTree.loadedClients.value
+                                val res = if (map.contains(file.name)) {
+                                    map[file.name]!!
+                                } else {
+                                    val projectData = ProjectData("testuml", listFiles)
+                                    FileTree.loadedClients.value = map.toMutableMap().apply { put(file.name, projectData) }
+                                    projectData // TODO Change
                                 }
                                 FileTree.modelFilesToModelTreeRoot(res, this@FileTreeItem)
                             } else {

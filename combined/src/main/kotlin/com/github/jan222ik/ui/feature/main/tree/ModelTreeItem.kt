@@ -313,14 +313,7 @@ sealed class ModelTreeItem(
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
                 Image(
-                    painter = kotlin.run {
-                        @Exhaustive
-                        when (diagram.diagramType) {
-                            DiagramType.PACKAGE -> painterResource("drawables/uml_icons/Diagram_SysML_Package.gif")
-                            DiagramType.PARAMETRIC -> painterResource("drawables/uml_icons/Diagram_Parametric.png")
-                            DiagramType.BLOCK_DEFINITION -> painterResource("drawables/uml_icons/Diagram_BlockDefinition.gif")
-                        }
-                    },
+                    painter = diagram.diagramType.iconAsPainter(),
                     contentDescription = null,
                     modifier = it
                 )

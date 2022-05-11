@@ -8,6 +8,7 @@ import androidx.compose.material.Switch
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -23,6 +24,13 @@ import com.github.jan222ik.ui.adjusted.arrow.Arrow
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.mapPair
 
 object DebugCanvas {
+    val debugCanvasVisible = mutableStateOf(false)
+
+    val conditionalClipValue = mutableStateOf(true)
+    val showWireframeOnly = mutableStateOf(false)
+    val showWireframeName = mutableStateOf(false)
+    val showPathOffsetPoints = mutableStateOf(false)
+
     @Composable
     fun debugWindow(
         viewport: MutableState<Viewport>,
@@ -30,13 +38,13 @@ object DebugCanvas {
         elements: List<ICanvasComposable>,
         arrows: List<Arrow>,
         selectedBoundingBoxes: MutableState<List<IBoundingShape>>,
-        conditionalClipValue: MutableState<Boolean>,
         dragOverRect: MutableState<Pair<Offset, Size>?>,
-        showWireframeOnly: MutableState<Boolean>,
-        showWireframeName: MutableState<Boolean>,
-        showPathOffsetPoints: MutableState<Boolean>
     ) {
-        Window(onCloseRequest = {}, title = "Debug Canvas") {
+        Window(
+            visible = debugCanvasVisible.value,
+            onCloseRequest = {
+                debugCanvasVisible.value = false
+            }, title = "Debug Canvas") {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Canvas(Modifier
                     .width(1000.dp)

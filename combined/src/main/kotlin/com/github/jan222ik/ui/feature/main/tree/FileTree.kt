@@ -75,6 +75,6 @@ object FileTree {
         }
     }
 
-    val loadedClients = mutableMapOf<String, ProjectData>()
+    val loadedClients = mutableStateOf<Map<String, ProjectData>>(emptyMap())
 
 }

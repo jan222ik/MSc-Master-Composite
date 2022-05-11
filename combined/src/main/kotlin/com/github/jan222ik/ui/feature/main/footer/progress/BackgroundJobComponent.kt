@@ -22,40 +22,39 @@ class BackgroundJobComponent @Inject constructor(
 
     @Composable
     @ExperimentalFoundationApi
-    fun render(box: BoxScope) {
+    fun render() {
         var expanded by remember { mutableStateOf(false) }
-        with(box) {
-            AnimatedVisibility(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd),
-                visible = jobHandler.jobs.isNotEmpty()
-            ) {
-                if (jobHandler.jobs.isNotEmpty()) {
-                    val monitor = jobHandler.jobs.first()
-                    TooltipArea(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .clickable { expanded = !expanded },
-                        tooltip = {
-                            Card(modifier = Modifier.padding(4.dp)) {
-                                Text(
-                                    "Background Job" + when (jobHandler.jobs.size) {
-                                        1 -> " - ${monitor.name}"
-                                        else -> "s (${jobHandler.jobs.size})"
-                                    }
-                                )
-                            }
+        AnimatedVisibility(
+            modifier = Modifier,
+            visible = jobHandler.jobs.isNotEmpty()
+        ) {
+            if (jobHandler.jobs.isNotEmpty()) {
+                val monitor = jobHandler.jobs.first()
+                TooltipArea(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .clickable { expanded = !expanded },
+                    tooltip = {
+                        Card(modifier = Modifier.padding(4.dp)) {
+                            Text(
+                                "Background Job" + when (jobHandler.jobs.size) {
+                                    1 -> " - ${monitor.name}"
+                                    else -> "s (${jobHandler.jobs.size})"
+                                }
+                            )
                         }
+                    }
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            ProgressBarForJob(monitor = monitor)
-                        }
+                        ProgressBarForJob(monitor = monitor)
                     }
                 }
             }
+        }
+        Box(Modifier.size(0.dp)) {
             if (expanded) {
                 ExpandedActiveJobPlane(onDismissRequest = {
                     expanded = false

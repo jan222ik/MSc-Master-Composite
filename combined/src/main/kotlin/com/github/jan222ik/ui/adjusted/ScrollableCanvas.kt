@@ -46,12 +46,6 @@ fun ScrollableCanvas(
     arrows: List<Arrow>,
     projectTreeHandler: ProjectTreeHandler
 ) {
-    // Debug
-    val conditionalClipValue = remember { mutableStateOf(true) }
-    val showWireframeOnly = remember { mutableStateOf(true) }
-    val showWireframeName = remember { mutableStateOf(false) }
-    val showPathOffsetPoints = remember { mutableStateOf(false) }
-
     // Const
     val maxViewportSize = Size(
         width = ScrollableCanvasDefaults.viewportSizeMaxWidth,
@@ -127,18 +121,14 @@ fun ScrollableCanvas(
                     elements = elements,
                     arrows = arrows,
                     selectedBoundingBoxes = selectedBoundingBoxes,
-                    conditionalClipValue = conditionalClipValue,
-                    showWireframeOnly = showWireframeOnly,
-                    showWireframeName = showWireframeName,
                     dragOverRect = dragOverRect,
-                    showPathOffsetPoints = showPathOffsetPoints
                 )
 
 
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .addIf(conditionalClipValue.value, Modifier.clipToBounds())
+                        .addIf(DebugCanvas.conditionalClipValue.value, Modifier.clipToBounds())
                         .pointerInput(Unit) {
                             detectTransformGestures { centroid, pan, zoom, rotation ->
                                 viewport.value = viewport.value.applyPan(pan, maxViewportSize)
@@ -178,7 +168,7 @@ fun ScrollableCanvas(
                         .scrollable(state = vScrollAdapter.scrollState, orientation = Orientation.Vertical)
                         .scrollable(state = hScrollAdapter.scrollState, orientation = Orientation.Horizontal)
                         .drawWithContent {
-                            conditionalClip(conditionalClipValue.value) {
+                            conditionalClip(DebugCanvas.conditionalClipValue.value) {
                                 translate(
                                     left = -viewport.value.origin.x,
                                     top = -viewport.value.origin.y
@@ -191,7 +181,7 @@ fun ScrollableCanvas(
                                                 it.drawWireframe(
                                                     drawScope = this,
                                                     fill = selectedBoundingBoxes.value.contains(it),
-                                                    showText = showWireframeName.value
+                                                    showText = DebugCanvas.showWireframeName.value
                                                 )
                                             }
                                         }
@@ -200,12 +190,12 @@ fun ScrollableCanvas(
                                             it.offsetPath.value.any { BoundingRect(initTopLeft = it, 0f, 0f).isVisibleInViewport(viewport.value) }
                                         }
                                         .forEach {
-                                            with(it) { drawArrow(drawDebugPoints = showPathOffsetPoints.value) }
+                                            with(it) { drawArrow(drawDebugPoints = DebugCanvas.showPathOffsetPoints.value) }
                                         }
                                 }
                             }
                             drawContent()
-                            conditionalClip(conditionalClipValue.value) {
+                            conditionalClip(DebugCanvas.conditionalClipValue.value) {
                                 if (dragStartOffset.value != null) {
                                     drawSelectionPlane(rect = dragOverRect.value)
                                 }
@@ -213,7 +203,7 @@ fun ScrollableCanvas(
                         }
                         .then(canvasThenModifier)
                 ) {
-                    if (!showWireframeOnly.value) {
+                    if (!DebugCanvas.showWireframeOnly.value) {
                         elements
                             .filter { it.boundingShape.isVisibleInViewport(viewport.value) }
                             .forEach {
