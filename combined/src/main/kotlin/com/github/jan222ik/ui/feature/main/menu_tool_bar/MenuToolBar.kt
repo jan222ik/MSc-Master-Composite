@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.res.painterResource
@@ -142,14 +143,27 @@ fun MenuToolBarComponent(
                         }
                         ActionButton(
                             onClick = windowActions::maximize
-                        ) {
+                        ) { isHover ->
                             val windowState = LocalWindowState.current
                             if (windowState.placement != WindowPlacement.Floating) {
-                                Icon(
-                                    modifier = Modifier.size(Space.dp16),
-                                    imageVector =  Icons.FloatingWindowIcon,
-                                    contentDescription = "Maximize Application"
-                                )
+                                Box(Modifier.size(Space.dp16).clipToBounds()) {
+                                    Icon(
+                                        modifier = Modifier
+                                            .size(14.dp)
+                                            .offset(2.dp, (-2).dp),
+                                        imageVector = Icons.FloatingWindowIcon,
+                                        contentDescription = "Maximize Application"
+                                    )
+                                    Icon(
+                                        modifier = Modifier
+                                            .size(14.dp)
+                                            .offset((-2).dp, 2.dp)
+                                            .background(EditorColors.backgroundGray.takeUnless { isHover }
+                                                ?: EditorColors.dividerGray),
+                                        imageVector = Icons.FloatingWindowIcon,
+                                        contentDescription = "Maximize Application"
+                                    )
+                                }
                             } else {
                                 Icon(
                                     modifier = Modifier.size(Space.dp16),
@@ -166,7 +180,7 @@ fun MenuToolBarComponent(
                                 modifier = Modifier.size(Space.dp16),
                                 imageVector = Icons.Filled.Close,
                                 contentDescription = "Close Application",
-                                tint = when{
+                                tint = when {
                                     isHover -> Color.White
                                     else -> Color.Black
                                 }
@@ -188,11 +202,11 @@ fun extractMenuItems(menus: List<MenuContribution>): List<MenuContribution.Conte
         .partition { it is MenuContribution.Contentful.MenuItem }
         .mapPair(
             mapFirst = { it.filterIsInstance<MenuContribution.Contentful.MenuItem>() },
-            mapSecond = { it.filterIsInstance<MenuContribution.Contentful.NestedMenuItem>()}
+            mapSecond = { it.filterIsInstance<MenuContribution.Contentful.NestedMenuItem>() }
         )
         .mapPair(
             mapFirst = { it },
-            mapSecond = { nested -> nested.map { it.nestedItems }.flatten()}
+            mapSecond = { nested -> nested.map { it.nestedItems }.flatten() }
         )
     return menuItems + extractMenuItems(nested)
 }
@@ -200,7 +214,7 @@ fun extractMenuItems(menus: List<MenuContribution>): List<MenuContribution.Conte
 fun <E, ER, F, FR> Pair<E, F>.mapPair(
     mapFirst: (E) -> ER,
     mapSecond: (F) -> FR
-) : Pair<ER, FR> {
+): Pair<ER, FR> {
     return Pair(
         first = mapFirst(first),
         second = mapSecond(second),
