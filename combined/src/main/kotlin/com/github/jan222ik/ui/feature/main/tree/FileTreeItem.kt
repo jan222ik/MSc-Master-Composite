@@ -8,19 +8,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileCopy
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
+import com.github.jan222ik.model.TMM
 import mu.KLogging
-import java.io.File
 
 @ExperimentalFoundationApi
 data class FileTreeItem(
     override val level: Int,
-    override val displayName: String,
-    override val canExpand: Boolean,
-    val file: File
+    val tmmElement: TMM.FS
 ) : TreeDisplayableItem(level = level) {
 
     companion object : KLogging()
+
+    override val children: SnapshotStateList<TreeDisplayableItem> = mutableStateListOf()
 
     override val icon: @Composable ((modifier: Modifier) -> Unit)
         get() = @Composable { modifier ->
@@ -39,27 +41,13 @@ data class FileTreeItem(
 
     override val onDoublePrimaryAction: MouseClickScope.() -> Unit
         get() = {
+            logger.error { "Double Click $canExpand" }
             if (canExpand) {
                 if (children.isNotEmpty()) {
-                    children = emptyList()
+                    children.clear()
                 } else {
-                    if (file.listFiles() != null) {
-                        val listFiles = file.listFiles()!!
-                        listFiles.forEach { file ->
-                            if (file.name.contains(".uml")) {
-                                val map = FileTree.loadedClients.value
-                                val res = if (map.contains(file.name)) {
-                                    map[file.name]!!
-                                } else {
-                                    val projectData = ProjectData("testuml", listFiles)
-                                    FileTree.loadedClients.value = map.toMutableMap().apply { put(file.name, projectData) }
-                                    projectData // TODO Change
-                                }
-                                FileTree.modelFilesToModelTreeRoot(res, this@FileTreeItem)
-                            } else {
-                                FileTree.fileToFileTreeItem(file, this@FileTreeItem)
-                            }
-                        }
+                    if (tmmElement is TMM.IHasChildren<*>) {
+                        children.addAll(tmmElement.children.mapNotNull { it.toViewTreeElement(level = level.inc()) })
                     }
                 }
             }
@@ -69,4 +57,16 @@ data class FileTreeItem(
         get() = { state, idx, treeContextProvider ->
             logger.debug { "TODO: Secondary Action" }
         }
+    override val displayName: String
+        get() = tmmElement.file.name
+
+    override val canExpand: Boolean
+        get() = tmmElement !is TMM.FS.TreeFile
+
+
+    override fun toString(): String {
+        return "FileTreeItem(level=$level, tmmElement=$tmmElement, children=$children)"
+    }
+
+
 }

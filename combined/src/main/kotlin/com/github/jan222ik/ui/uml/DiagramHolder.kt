@@ -6,7 +6,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.util.packFloats
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.commands.CompoundCommand
 import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
@@ -26,6 +25,7 @@ import java.io.File
 
 data class DiagramHolder(
     val name: String,
+    val upwardsDiagramLink: String?,
     val diagramType: DiagramType,
     val location: String,
     val content: List<DiagramStateHolders.UMLRef>
@@ -37,6 +37,7 @@ data class DiagramHolder(
         return DiagramHolderObservable(
             initName = name,
             diagramType = diagramType,
+            upwardsDiagramLink = upwardsDiagramLink,
             location = location,
             initContent = content,
             allUML = allUml,
@@ -90,7 +91,8 @@ class DiagramHolderObservable(
     val location: String,
     initContent: List<DiagramStateHolders.UMLRef>,
     allUML: List<Element>,
-    commandStackHandler: CommandStackHandler
+    commandStackHandler: CommandStackHandler,
+    val upwardsDiagramLink: String?
 ) {
     val diagramName = ValidatedTextState(initial = initName, NonTransformer())
 
@@ -254,7 +256,8 @@ class Anchor(val side: AnchorSide, val fromTopLeftOffsetPercentage: Float) {
 
 fun main() {
 
-    val diagram = DiagramHolder(
+
+    val diagram1 = DiagramHolder(
         name = "First diagram",
         diagramType = DiagramType.BLOCK_DEFINITION,
         location = "testuml",
@@ -283,28 +286,64 @@ fun main() {
                 index = 0,
                 sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.5f),
                 targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.5f)
+            )
+        ),
+        upwardsDiagramLink = null
+    )
+
+    val diagram2 = DiagramHolder(
+        name = "second diagram",
+        diagramType = DiagramType.BLOCK_DEFINITION,
+        location = "testuml",
+        content = listOf(
+            DiagramStateHolders.UMLRef.ClassRef(
+                referencedQualifiedName = "testuml::TestClass",
+                filters = emptyList(),
+                shape = BoundingRectState(
+                    topLeftPacked = packFloats(500f, 200f),
+                    width = 280f,
+                    height = 200f,
+                )
+            ),
+            DiagramStateHolders.UMLRef.ClassRef(
+                referencedQualifiedName = "testuml::TestClassWithProperties",
+                filters = emptyList(),
+                shape = BoundingRectState(
+                    topLeftPacked = packFloats(500f, 800f),
+                    width = 280f,
+                    height = 200f,
+                )
+            ),
+            DiagramStateHolders.UMLRef.ClassRef(
+                referencedQualifiedName = "testuml::AnotherClass",
+                filters = emptyList(),
+                shape = BoundingRectState(
+                    topLeftPacked = packFloats(700f, 500f),
+                    width = 280f,
+                    height = 200f,
+                )
             ),
             DiagramStateHolders.UMLRef.ArrowRef(
                 sourceReferencedQualifierName = "testuml::TestClassWithProperties",
+                targetReferencedQualifierName = "testuml::TestClass",
+                index = 0,
+                sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.5f),
+                targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.5f)
+            ),
+            DiagramStateHolders.UMLRef.ArrowRef(
+                sourceReferencedQualifierName = "testuml::AnotherClass",
                 targetReferencedQualifierName = "testuml::TestClass",
                 index = 0,
                 sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.25f),
                 targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.25f)
-            ),
-            DiagramStateHolders.UMLRef.ArrowRef(
-                sourceReferencedQualifierName = "testuml::TestClassWithProperties",
-                targetReferencedQualifierName = "testuml::TestClass",
-                index = 0,
-                sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.25f),
-                targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.75f)
             )
-        )
+        ),
+        upwardsDiagramLink = "testuml::First diagram"
     )
 
-    jacksonObjectMapper().writeValueAsString(diagram).also { println("diagramJson = $it") }
-    //val diagramsLoader = DiagramsLoader(File("C:\\Users\\jan\\Desktop\\test\\testuml.diagrams"))
+
     val diagramsLoader =
         DiagramsLoader(File("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite\\appworkspace\\testuml.diagrams"))
-    diagramsLoader.writeToFile(listOf(diagram))
+    diagramsLoader.writeToFile(listOf(diagram1, diagram2))
     diagramsLoader.loadFromFile().tap { println(it) }.tapInvalid { println(it.e) }
 }

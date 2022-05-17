@@ -5,6 +5,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.MouseClickScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
@@ -12,108 +14,87 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.PopupPositionProvider
+import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
-import com.github.jan222ik.ui.feature.main.diagram.canvas.DiagramType
-import com.github.jan222ik.ui.uml.DiagramHolder
 import mu.KLogging
-import org.eclipse.emf.common.notify.Notifier
-import org.eclipse.uml2.uml.Element
-import org.eclipse.uml2.uml.Model
-import org.eclipse.uml2.uml.Package
-import java.io.InvalidClassException
-import javax.annotation.meta.Exhaustive
+import org.eclipse.uml2.uml.ValueSpecification
 import kotlin.math.roundToInt
 
 @ExperimentalFoundationApi
 sealed class ModelTreeItem(
     override val level: Int,
-    override val displayName: String,
-    override val canExpand: Boolean,
-    val allDiagrams: List<DiagramHolder>
+    val tmmModelItem: TMM.ModelTree.Ecore
 ) : TreeDisplayableItem(level = level) {
 
     override val icon: @Composable ((modifier: Modifier) -> Unit)?
         get() = null
 
+    override val canExpand: Boolean
+        get() = tmmModelItem.ownedElements.isNotEmpty()
+
+    override val children: SnapshotStateList<TreeDisplayableItem> = emptyList<TreeDisplayableItem>().toMutableStateList()
+
     companion object : KLogging() {
         fun parseItem(
             level: Int,
-            element: Notifier,
-            allDiagrams: List<DiagramHolder>
+            tmmModelItem: TMM.ModelTree.Ecore
         ): TreeDisplayableItem? {
-            return when (element) {
-                is org.eclipse.uml2.uml.Package -> {
-                    logger.debug { "Package ${element.uri}" }
-
-                    PackageItem(
-                        level = level,
-                        displayName = "Package" + element.name,
-                        canExpand = element.ownedElements.isNotEmpty(),
-                        umlPackage = element,
-                        allDiagrams = allDiagrams
-                    )
-                }
-                is org.eclipse.uml2.uml.Class -> {
-                    logger.debug { "Class ${element.qualifiedName}" }
-                    ClassItem(
-                        level = level,
-                        displayName = element.name,
-                        canExpand = element.ownedElements.isNotEmpty(),
-                        umlClass = element,
-                        allDiagrams = allDiagrams
-                    )
-                }
-                is org.eclipse.uml2.uml.PackageImport -> {
-                    logger.debug { "PackageImport" }
-                    ImportItem(
-                        level = level,
-                        displayName = element.importingNamespace.name,
-                        canExpand = element.ownedElements.isNotEmpty(),
-                        umlImport = element,
-                        allDiagrams = allDiagrams
-                    )
-                }
-                is org.eclipse.uml2.uml.Property -> {
-                    logger.debug { "Property" }
-                    PropertyItem(
-                        level = level,
-                        displayName = element.name,
-                        canExpand = element.ownedElements.isNotEmpty(),
-                        umlProperty = element,
-                        allDiagrams = allDiagrams
-                    )
-                }
-                is org.eclipse.uml2.uml.ValueSpecification -> {
+            return when (tmmModelItem) {
+                is ValueSpecification -> {
                     logger.debug { "ValueSpec" }
                     ValueItem(
                         level = level,
-                        displayName = "Val:" + element.name,
-                        canExpand = element.ownedElements.isNotEmpty(),
-                        umlValue = element,
-                        allDiagrams = allDiagrams
+                        umlValue = tmmModelItem
                     )
                 }
-                is org.eclipse.uml2.uml.Generalization -> {
+                is TMM.ModelTree.Ecore.TClass -> {
+                    logger.debug { "Class ${tmmModelItem.umlClass.qualifiedName}" }
+                    ClassItem(
+                        level = level,
+                        tmmTClass = tmmModelItem
+                    )
+                }
+                is TMM.ModelTree.Ecore.TGeneralisation -> {
                     logger.debug { "Generalization" }
                     GeneralizationItem(
                         level = level,
-                        displayName = element.general.name,
-                        canExpand = element.ownedElements.isNotEmpty(),
-                        umlGeneralization = element,
-                        allDiagrams = allDiagrams
+                        tmmTGeneralisation = tmmModelItem
+                    )
+                }
+                is TMM.ModelTree.Ecore.TPackage -> {
+                    logger.debug { "Package ${tmmModelItem.umlPackage.uri}" }
+                    PackageItem(
+                        level = level,
+                        tmmTPackage = tmmModelItem
+                    )
+                }
+                is TMM.ModelTree.Ecore.TProperty -> {
+                    logger.debug { "Property" }
+                    PropertyItem(
+                        level = level,
+                        tmmTProperty = tmmModelItem
+                    )
+                }
+                is TMM.ModelTree.Ecore.TPackageImport -> {
+                    logger.debug { "PackageImport" }
+                    ImportItem(
+                        level = level,
+                        tmmTPackageImport = tmmModelItem
                     )
                 }
                 else -> {
-                    logger.debug { "Item can not be converted to a element in the tree. ${element.javaClass}" }
+                    logger.debug { "Item can not be converted to a element in the tree. ${tmmModelItem.javaClass}" }
                     null
                 }
             }
         }
     }
 
-    abstract fun getElement(): org.eclipse.uml2.uml.Element
+    fun getElement(): org.eclipse.uml2.uml.Element {
+        return tmmModelItem.element
+    }
 
     override val onPrimaryAction: (MouseClickScope.(idx: Int) -> Unit)? = null
 
@@ -121,9 +102,10 @@ sealed class ModelTreeItem(
         get() = {
             if (canExpand) {
                 if (children.isNotEmpty()) {
-                    children = emptyList()
+                    children.clear()
                 } else {
-                    FileTree.eContentsToModelTreeItem(getElement(), this@ModelTreeItem)
+                    children.clear()
+                    children.addAll(tmmModelItem.ownedElements.mapNotNull { it.toViewTreeElement(level.inc()) })
                 }
             }
         }
@@ -159,22 +141,16 @@ sealed class ModelTreeItem(
 
     class PackageItem(
         level: Int,
-        displayName: String,
-        canExpand: Boolean,
-        val umlPackage: Package,
-        allDiagrams: List<DiagramHolder>
+        val tmmTPackage: TMM.ModelTree.Ecore.TPackage
     ) : ModelTreeItem(
         level = level,
-        displayName = displayName,
-        canExpand = canExpand,
-        allDiagrams = allDiagrams
+        tmmModelItem = tmmTPackage
     ) {
-        override fun getElement() = umlPackage
 
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
                 Image(
-                    if (umlPackage is Model) {
+                    if (tmmTPackage is TMM.ModelTree.Ecore.TModel) {
                         painterResource("drawables/uml_icons/Model.gif")
                     } else {
                         painterResource("drawables/uml_icons/Package.gif")
@@ -183,21 +159,18 @@ sealed class ModelTreeItem(
                     modifier = it
                 )
             }
+
+        override val displayName: String
+            get() = tmmTPackage.umlPackage.name
     }
 
     class ClassItem(
         level: Int,
-        displayName: String,
-        canExpand: Boolean,
-        val umlClass: org.eclipse.uml2.uml.Class,
-        allDiagrams: List<DiagramHolder>
+        val tmmTClass: TMM.ModelTree.Ecore.TClass
     ) : ModelTreeItem(
         level = level,
-        displayName = displayName,
-        canExpand = canExpand,
-        allDiagrams
+        tmmModelItem = tmmTClass
     ) {
-        override fun getElement() = umlClass
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
                 Image(
@@ -206,21 +179,20 @@ sealed class ModelTreeItem(
                     modifier = it
                 )
             }
+
+        override val displayName: String
+            get() = tmmTClass.umlClass.name
     }
 
     class ImportItem(
         level: Int,
-        displayName: String,
-        canExpand: Boolean,
-        val umlImport: org.eclipse.uml2.uml.PackageImport,
-        allDiagrams: List<DiagramHolder>
+        val tmmTPackageImport: TMM.ModelTree.Ecore.TPackageImport
     ) : ModelTreeItem(
         level = level,
-        displayName = displayName,
-        canExpand = canExpand,
-        allDiagrams
+        tmmModelItem = tmmTPackageImport
     ) {
-        override fun getElement() = umlImport
+        override val displayName: String
+            get() = tmmTPackageImport.packageImport.importingNamespace.name
 
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
@@ -235,18 +207,13 @@ sealed class ModelTreeItem(
 
     class PropertyItem(
         level: Int,
-        displayName: String,
-        canExpand: Boolean,
-        val umlProperty: org.eclipse.uml2.uml.Property,
-        allDiagrams: List<DiagramHolder>
+        val tmmTProperty: TMM.ModelTree.Ecore.TProperty
     ) : ModelTreeItem(
         level = level,
-        displayName = displayName,
-        canExpand = canExpand,
-        allDiagrams
+        tmmModelItem = tmmTProperty
     ) {
-        override fun getElement() = umlProperty
-
+        override val displayName: String
+            get() = tmmTProperty.property.name
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
                 Image(
@@ -259,33 +226,22 @@ sealed class ModelTreeItem(
 
     class ValueItem(
         level: Int,
-        displayName: String,
-        canExpand: Boolean,
         val umlValue: org.eclipse.uml2.uml.ValueSpecification,
-        allDiagrams: List<DiagramHolder>
     ) : ModelTreeItem(
         level = level,
-        displayName = displayName,
-        canExpand = canExpand,
-        allDiagrams
+        tmmModelItem = TODO()
     ) {
-        override fun getElement() = umlValue
-
+        override val displayName: String
+            get() = "TODO ValueSpecification"
     }
 
     class GeneralizationItem(
         level: Int,
-        displayName: String,
-        canExpand: Boolean,
-        val umlGeneralization: org.eclipse.uml2.uml.Generalization,
-        allDiagrams: List<DiagramHolder>
+        val tmmTGeneralisation: TMM.ModelTree.Ecore.TGeneralisation
     ) : ModelTreeItem(
         level = level,
-        displayName = displayName,
-        canExpand = canExpand,
-        allDiagrams
+        tmmModelItem = tmmTGeneralisation
     ) {
-        override fun getElement() = umlGeneralization
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
                 Image(
@@ -294,32 +250,51 @@ sealed class ModelTreeItem(
                     modifier = it
                 )
             }
+
+        override val displayName: String
+            get() = "Generalization: ${tmmTGeneralisation.generalization.general}"
     }
 
-    class Diagram(
-        level: Int,
-        val diagram: DiagramHolder
-    ) : ModelTreeItem(
-        level = level,
-        displayName = diagram.name,
-        canExpand = false,
-        allDiagrams = emptyList()
-    ) {
-        override val onDoublePrimaryAction: MouseClickScope.() -> Unit
-            get() = {
-                EditorManager.moveToOrOpenDiagram(diagram, CommandStackHandler.INSTANCE)
-            }
-        override fun getElement(): Element { throw InvalidClassException("Diagram has no uml element") }
-        override val icon: (@Composable (modifier: Modifier) -> Unit)
-            get() = @Composable {
-                Image(
-                    painter = diagram.diagramType.iconAsPainter(),
-                    contentDescription = null,
-                    modifier = it
-                )
+}
 
-            }
+@OptIn(ExperimentalFoundationApi::class)
+class DiagramTreeItem(
+    level: Int,
+    val diagram: TMM.ModelTree.Diagram,
+) : TreeDisplayableItem(
+    level = level,
+) {
+    companion object : KLogging()
 
-    }
+    override val displayName: String
+        get() = diagram.initDiagram.name
+
+    override val canExpand: Boolean
+        get() = false
+
+    override val onPrimaryAction: (MouseClickScope.(idx: Int) -> Unit)?
+        get() = null
+
+    override val onSecondaryAction: MouseClickScope.(LazyListState, Int, ITreeContextFor) -> Unit
+        get() = { listState, idx, action ->
+            logger.debug { "TODO Context menu for ${this@DiagramTreeItem}" }
+        }
+
+    override val onDoublePrimaryAction: MouseClickScope.() -> Unit
+        get() = {
+            EditorManager.moveToOrOpenDiagram(diagram, CommandStackHandler.INSTANCE)
+        }
+
+    override val children: SnapshotStateList<TreeDisplayableItem> = emptyList<TreeDisplayableItem>().toMutableStateList()
+
+    override val icon: (@Composable (modifier: Modifier) -> Unit)
+        get() = @Composable {
+            Image(
+                painter = diagram.initDiagram.diagramType.iconAsPainter(),
+                contentDescription = null,
+                modifier = it
+            )
+        }
+
 }
 

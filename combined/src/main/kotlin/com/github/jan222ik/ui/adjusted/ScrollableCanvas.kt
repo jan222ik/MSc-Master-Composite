@@ -40,12 +40,14 @@ object ScrollableCanvasDefaults {
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ScrollableCanvas(
-    viewport: MutableState<Viewport> = remember { mutableStateOf(Viewport()) },
+    id: Long,
+    viewportState: MutableState<Viewport>,
     canvasThenModifier: Modifier,
     elements: List<ICanvasComposable>,
     arrows: List<Arrow>,
     projectTreeHandler: ProjectTreeHandler
 ) {
+    val viewport = remember(viewportState) { viewportState }
     // Const
     val maxViewportSize = Size(
         width = ScrollableCanvasDefaults.viewportSizeMaxWidth,
@@ -106,7 +108,7 @@ fun ScrollableCanvas(
                     .background(Color.White)
                     .weight(1f)
             ) {
-                LaunchedEffect(this.maxWidth, this.maxHeight) {
+                LaunchedEffect(id, this.maxWidth, this.maxHeight) {
                     val box = this@BoxWithConstraints
                     viewport.value = viewport.value.copy(
                         size = Size(

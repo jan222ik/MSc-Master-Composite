@@ -1,5 +1,6 @@
 [ {
   "name" : "First diagram",
+  "upwardsDiagramLink" : null,
   "diagramType" : "BLOCK_DEFINITION",
   "location" : "testuml",
   "content" : [ {
@@ -33,6 +34,39 @@
       "side" : "S",
       "fromTopLeftOffsetPercentage" : 0.5
     }
+  } ]
+}, {
+  "name" : "second diagram",
+  "upwardsDiagramLink" : "testuml::First diagram",
+  "diagramType" : "BLOCK_DEFINITION",
+  "location" : "testuml",
+  "content" : [ {
+    "type" : "UMLRef.Class",
+    "referencedQualifiedName" : "testuml::TestClass",
+    "shape" : {
+      "topLeftPacked" : 4898227545847627776,
+      "width" : 280.0,
+      "height" : 200.0
+    },
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.Class",
+    "referencedQualifiedName" : "testuml::TestClassWithProperties",
+    "shape" : {
+      "topLeftPacked" : 4898227545864404992,
+      "width" : 280.0,
+      "height" : 200.0
+    },
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.Class",
+    "referencedQualifiedName" : "testuml::AnotherClass",
+    "shape" : {
+      "topLeftPacked" : 4913145719624957952,
+      "width" : 280.0,
+      "height" : 200.0
+    },
+    "filters" : [ ]
   }, {
     "type" : "UMLRef.Arrow",
     "sourceReferencedQualifierName" : "testuml::TestClassWithProperties",
@@ -40,15 +74,15 @@
     "index" : 0,
     "sourceAnchor" : {
       "side" : "N",
-      "fromTopLeftOffsetPercentage" : 0.25
+      "fromTopLeftOffsetPercentage" : 0.5
     },
     "targetAnchor" : {
       "side" : "S",
-      "fromTopLeftOffsetPercentage" : 0.25
+      "fromTopLeftOffsetPercentage" : 0.5
     }
   }, {
     "type" : "UMLRef.Arrow",
-    "sourceReferencedQualifierName" : "testuml::TestClassWithProperties",
+    "sourceReferencedQualifierName" : "testuml::AnotherClass",
     "targetReferencedQualifierName" : "testuml::TestClass",
     "index" : 0,
     "sourceAnchor" : {
@@ -57,7 +91,7 @@
     },
     "targetAnchor" : {
       "side" : "S",
-      "fromTopLeftOffsetPercentage" : 0.75
+      "fromTopLeftOffsetPercentage" : 0.25
     }
   } ]
 } ]

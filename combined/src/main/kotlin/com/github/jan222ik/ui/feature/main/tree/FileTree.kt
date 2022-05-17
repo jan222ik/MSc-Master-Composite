@@ -1,9 +1,8 @@
 package com.github.jan222ik.ui.feature.main.tree
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import com.github.jan222ik.model.convertToTreeItem
 import org.eclipse.uml2.uml.Element
 import org.eclipse.uml2.uml.NamedElement
 import java.io.File
@@ -14,17 +13,14 @@ object FileTree {
 
     fun setRoot(path: String) {
         val file = File(path)
+        val tmm = file.convertToTreeItem()
         treeHandler.value = ProjectTreeHandler(
             showRoot = false,
-            root = FileTreeItem(
-                level = 0,
-                displayName = file.name,
-                canExpand = file.isDirectory && file.listFiles()?.isNotEmpty() == true,
-                file = file
-            )
+            metamodelRoot = tmm
         )
     }
 
+    /*
     fun fileToFileTreeItem(file: File, parent: FileTreeItem) {
         if (file.exists()) {
             val item = FileTreeItem(
@@ -74,6 +70,8 @@ object FileTree {
             }
         }
     }
+
+     */
 
     val loadedClients = mutableStateOf<Map<String, ProjectData>>(emptyMap())
 

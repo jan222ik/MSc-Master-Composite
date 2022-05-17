@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
+import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.command.commands.AddToDiagramCommand
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
@@ -15,7 +16,8 @@ import kotlin.random.Random
 
 class EditorTabViewModel(
     initialViewport: Viewport = Viewport(),
-    val observableDiagram: DiagramHolderObservable
+    val observableDiagram: DiagramHolderObservable,
+    val tmmDiagram: TMM.ModelTree.Diagram
 ) {
     val id = Random.nextLong()
 

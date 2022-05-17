@@ -1,6 +1,7 @@
 package com.github.jan222ik.ui.feature.main.diagram.canvas
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -24,9 +25,9 @@ import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.ui.value.Space
 
 @Composable
-fun NavigateDiagramUPButton(modifier: Modifier) {
+fun NavigateDiagramUPButton(modifier: Modifier, text: String, onClick: () -> Unit) {
     Surface(
-        modifier = modifier,
+        modifier = modifier.clickable(onClick = onClick),
         color = EditorColors.backgroundGray,
         shape = object : Shape {
             override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
@@ -55,7 +56,7 @@ fun NavigateDiagramUPButton(modifier: Modifier) {
                 imageVector = Icons.Filled.ArrowUpward,
                 contentDescription = null
             )
-            Text(text = "<Diagram name>")
+            Text(text = text)
         }
     }
 }

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -27,6 +28,7 @@ import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
+import com.github.jan222ik.model.TMM
 import com.github.jan222ik.ui.components.dnd.dndDraggable
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.components.menu.MenuItemList
@@ -40,12 +42,13 @@ import com.github.jan222ik.util.KeyHelpers
 import com.github.jan222ik.util.KeyHelpers.consumeOnKey
 import mu.KLogging
 import org.eclipse.uml2.uml.Element
+import java.io.InvalidClassException
 
 
 @OptIn(ExperimentalFoundationApi::class)
 class ProjectTreeHandler(
     private val showRoot: Boolean,
-    val root: FileTreeItem
+    val metamodelRoot: TMM.FS
 ) : ITreeContextFor {
 
     companion object : KLogging()
@@ -96,25 +99,34 @@ class ProjectTreeHandler(
     @Composable
     fun render() {
         val shortcutActionsHandler = LocalShortcutActionHandler.current
-        root.toItems().let {
-            if (it.size != items.size) {
-                items = it
-                treeSelection = emptyList()
-                singleSelectedItem = null
-                if (it.size == 1) {
-                    it.first().onDoublePrimaryAction.invoke(com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext)
-                }
-                setTreeSelectionByElements = { elements: List<Element> ->
-                    logger.debug { "setTreeSelectionByElements elements:${elements.size} items:${items.size}" }
-                    treeSelection = items.mapIndexed { index, treeItem ->
-                        logger.debug { "treeItem = ${treeItem.actual}" }
-                        if (treeItem.actual is ModelTreeItem && elements.contains(treeItem.actual.getElement())) {
-                            index
-                        } else null
-                    }.filterNotNull()
+
+        /*
+        metamodelRoot.toViewTreeElement(level = 0)
+            .also {
+                logger.warn { "Root $it" }
+            }
+            ?.toItems()
+            ?.let {
+                if (it.size != items.size) {
+                    items = it
+                    treeSelection = emptyList()
+                    singleSelectedItem = null
+                    if (it.size == 1) {
+                        it.first().onDoublePrimaryAction.invoke(com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext)
+                    }
+                    setTreeSelectionByElements = { elements: List<Element> ->
+                        logger.debug { "setTreeSelectionByElements elements:${elements.size} items:${items.size}" }
+                        treeSelection = items.mapIndexed { index, treeItem ->
+                            logger.debug { "treeItem = ${treeItem.actual}" }
+                            if (treeItem.actual is ModelTreeItem && elements.contains(treeItem.actual.getElement())) {
+                                index
+                            } else null
+                        }.filterNotNull()
+                    }
                 }
             }
-        }
+
+         */
         val lazyListState = rememberLazyListState()
         val scrollbarAdapter = rememberScrollbarAdapter(scrollState = lazyListState)
 
@@ -122,7 +134,7 @@ class ProjectTreeHandler(
         contextMenuFor?.let {
             val (popupPosProvider, menuContributions) = it
             Popup(
-                popupPositionProvider = popupPosProvider ,
+                popupPositionProvider = popupPosProvider,
                 onDismissRequest = { contextMenuFor = null },
                 onPreviewKeyEvent = { KeyHelpers.onKeyDown(it) { consumeOnKey(Key.Escape) { contextMenuFor = null } } },
                 focusable = true
@@ -154,6 +166,8 @@ class ProjectTreeHandler(
         }
 
         Box {
+            var count = 0
+            val viewTreeElementRoot = remember(metamodelRoot) { metamodelRoot.toViewTreeElement(0) }
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -174,112 +188,128 @@ class ProjectTreeHandler(
                     },
                 state = lazyListState
             ) {
-                items(items.size) { itemIdx ->
-                    val item = items[itemIdx]
-                    val isSelected = remember(itemIdx, treeSelection) {
-                        treeSelection.contains(itemIdx)
+                fun renderRecursive(item: TreeDisplayableItem) {
+                    val treeItem = TreeItem(actual = item, treeHandler = this@ProjectTreeHandler)
+                    item {
+                        TreeItemRow(itemIdx = count.also { count += 1 }, item = treeItem, lazyListState)
                     }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .then(
-                                when {
-                                    isSelected -> {
-                                        Modifier.background(
-                                            color = EditorColors.focusActive.takeIf { focus?.hasFocus == true }
-                                                ?: EditorColors.focusInactive
-                                        )
-                                    }
-                                    else -> Modifier
-                                }
+                    treeItem.children.forEach(::renderRecursive)
+                }
+                viewTreeElementRoot?.let(::renderRecursive)
+            }
+            VerticalScrollbar(adapter = scrollbarAdapter, modifier = Modifier.align(Alignment.TopEnd))
+        }
+    }
+
+
+    @Composable
+    internal fun TreeItemRow(itemIdx: Int, item: TreeItem, lazyListState: LazyListState) {
+        val isSelected = remember(itemIdx, treeSelection) {
+            treeSelection.contains(itemIdx)
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    when {
+                        isSelected -> {
+                            Modifier.background(
+                                color = EditorColors.focusActive.takeIf { focus?.hasFocus == true }
+                                    ?: EditorColors.focusInactive
                             )
-                            .padding(start = item.level.times(16).dp)
-                            .drawBehind { drawLine(Color.Black, Offset.Zero, Offset.Zero.copy(y = this.size.height)) }
-                            .then(
-                                when (val actual = item.actual) {
-                                    is ModelTreeItem -> Modifier.dndDraggable(
-                                        handler = LocalDropTargetHandler.current,
-                                        dataProvider = { actual.getElement() },
-                                        onDragCancel = Function0<Unit>::invoke,
-                                        onDragFinished = { _, snapback -> snapback.invoke() }
-                                    )
-                                    else -> Modifier
-                                }
-                            ),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (item.canExpand) {
-                                if (item.children.isNotEmpty()) {
-                                    Icon(
-                                        modifier = Modifier.mouseClickable {
-                                            if (buttons.isPrimaryPressed) {
-                                                item.onDoublePrimaryAction.invoke(this)
-                                                selectItem(
-                                                    idx = itemIdx,
-                                                    singleSelect = true,
-                                                    keepSelect = this.keyboardModifiers.isCtrlPressed
-                                                )
-                                            }
-                                        },
-                                        imageVector = Icons.Filled.ExpandMore,
-                                        contentDescription = "Close Item"
-                                    )
-                                } else {
-                                    Icon(
-                                        modifier = Modifier.mouseClickable {
-                                            if (buttons.isPrimaryPressed) {
-                                                item.onDoublePrimaryAction.invoke(this)
-                                                selectItem(
-                                                    idx = itemIdx,
-                                                    singleSelect = true,
-                                                    keepSelect = this.keyboardModifiers.isCtrlPressed
-                                                )
-                                            }
-                                        },
-                                        imageVector = Icons.Filled.ChevronRight,
-                                        contentDescription = "Expand Item"
-                                    )
-                                }
-                            }
                         }
-                        item.icon?.invoke(Modifier.size(16.dp))
-                        Text(
-                            modifier = Modifier
-                                .mouseCombinedClickable(
-                                    onClick = {
-                                        with(buttons) {
-                                            when {
-                                                isPrimaryPressed -> item.onPrimaryAction.invoke(
-                                                    this@mouseCombinedClickable,
-                                                    itemIdx
-                                                )
-                                                isSecondaryPressed -> item.onSecondaryAction.invoke(
-                                                    this@mouseCombinedClickable,
-                                                    lazyListState,
-                                                    items.indexOf(item),
-                                                    this@ProjectTreeHandler as ITreeContextFor
-                                                )
-                                            }
-                                        }
-                                    },
-                                    onDoubleClick = {
-                                        if (buttons.isPrimaryPressed) {
-                                            item.onDoublePrimaryAction.invoke(this@mouseCombinedClickable)
-                                        }
-                                    }
-                                ),
-                            text = item.name
+                        else -> Modifier
+                    }
+                )
+                .padding(start = item.level.times(16).dp)
+                .drawBehind { drawLine(Color.Black, Offset.Zero, Offset.Zero.copy(y = this.size.height)) }
+                .then(
+                    when (val actual = item.actual) {
+                        is ModelTreeItem -> Modifier.dndDraggable(
+                            handler = LocalDropTargetHandler.current,
+                            dataProvider = {
+                                try {
+                                    actual.getElement()
+                                } catch (e: InvalidClassException) {
+                                    null
+                                }
+                            },
+                            onDragCancel = Function0<Unit>::invoke,
+                            onDragFinished = { _, snapback -> snapback.invoke() }
+                        )
+                        else -> Modifier
+                    }
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (item.canExpand) {
+                    if (item.children.isNotEmpty()) {
+                        Icon(
+                            modifier = Modifier.mouseClickable {
+                                if (buttons.isPrimaryPressed) {
+                                    item.onDoublePrimaryAction.invoke(this)
+                                    selectItem(
+                                        idx = itemIdx,
+                                        singleSelect = true,
+                                        keepSelect = this.keyboardModifiers.isCtrlPressed
+                                    )
+                                }
+                            },
+                            imageVector = Icons.Filled.ExpandMore,
+                            contentDescription = "Close Item"
+                        )
+                    } else {
+                        Icon(
+                            modifier = Modifier.mouseClickable {
+                                if (buttons.isPrimaryPressed) {
+                                    item.onDoublePrimaryAction.invoke(this)
+                                    selectItem(
+                                        idx = itemIdx,
+                                        singleSelect = true,
+                                        keepSelect = this.keyboardModifiers.isCtrlPressed
+                                    )
+                                }
+                            },
+                            imageVector = Icons.Filled.ChevronRight,
+                            contentDescription = "Expand Item"
                         )
                     }
                 }
             }
-            VerticalScrollbar(adapter = scrollbarAdapter, modifier = Modifier.align(Alignment.TopEnd))
+            item.icon?.invoke(Modifier.size(16.dp))
+            Text(
+                modifier = Modifier
+                    .mouseCombinedClickable(
+                        onClick = {
+                            with(buttons) {
+                                when {
+                                    isPrimaryPressed -> item.onPrimaryAction.invoke(
+                                        this@mouseCombinedClickable,
+                                        itemIdx
+                                    )
+                                    isSecondaryPressed -> item.onSecondaryAction.invoke(
+                                        this@mouseCombinedClickable,
+                                        lazyListState,
+                                        items.indexOf(item),
+                                        this@ProjectTreeHandler as ITreeContextFor
+                                    )
+                                }
+                            }
+                        },
+                        onDoubleClick = {
+                            if (buttons.isPrimaryPressed) {
+                                item.onDoublePrimaryAction.invoke(this@mouseCombinedClickable)
+                            }
+                        }
+                    ),
+                text = item.name
+            )
         }
     }
 
@@ -287,7 +317,8 @@ class ProjectTreeHandler(
     internal class TreeItem(
         internal val actual: TreeDisplayableItem,
         private val treeHandler: ProjectTreeHandler
-    ) {
+    )
+    {
         val icon: @Composable ((modifier: Modifier) -> Unit)?
             get() = actual.icon
         val name: String
@@ -316,7 +347,7 @@ class ProjectTreeHandler(
                 actual.onSecondaryAction.invoke(this, state, idx, contextFor)
             }
 
-        val children: List<TreeDisplayableItem>
+        val children: SnapshotStateList<TreeDisplayableItem>
             get() = actual.children
 
         private fun selectItem(idx: Int, singleSelect: Boolean, keepSelect: Boolean) {
@@ -350,7 +381,7 @@ class ProjectTreeHandler(
         }
     }
 
-
+    @Composable
     private fun TreeDisplayableItem.toItems(): List<TreeItem> {
         fun TreeDisplayableItem.addTo(list: MutableList<TreeItem>) {
             list.add(TreeItem(actual = this, treeHandler = this@ProjectTreeHandler))
@@ -365,4 +396,21 @@ class ProjectTreeHandler(
     }
 
 }
+
+
+@OptIn(ExperimentalFoundationApi::class)
+fun TMM.toViewTreeElement(level: Int): TreeDisplayableItem? {
+    return when (this) {
+        is TMM.FS -> {
+            FileTreeItem(level, this)
+        }
+        is TMM.ModelTree.Diagram -> {
+            DiagramTreeItem(level, this)
+        }
+        is TMM.ModelTree.Ecore -> {
+            ModelTreeItem.parseItem(level, this)
+        }
+    }
+}
+
 

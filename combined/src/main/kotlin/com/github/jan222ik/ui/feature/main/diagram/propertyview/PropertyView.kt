@@ -45,14 +45,14 @@ fun PropertyView(
             Text(text = "Current Element:$selectedElement")
             if (selectedElement is ModelTreeItem) {
                 when (selectedElement) {
-                    is ModelTreeItem.ClassItem -> renderConfig(selectedElement.umlClass, PropertyViewConfigs.pvForClass)
+                    is ModelTreeItem.ClassItem -> renderConfig(selectedElement.tmmTClass.umlClass, PropertyViewConfigs.pvForClass)
                     is ModelTreeItem.ImportItem -> Text("Does not exist yet")
                     is ModelTreeItem.PackageItem -> renderConfig(
-                        selectedElement.umlPackage,
+                        selectedElement.tmmTPackage.umlPackage,
                         PropertyViewConfigs.pvForPackage
                     )
                     is ModelTreeItem.PropertyItem -> renderConfig(
-                        selectedElement.umlProperty,
+                        selectedElement.tmmTProperty.property,
                         PropertyViewConfigs.pvForProperty
                     )
                     is ModelTreeItem.ValueItem -> Text("Does not exist yet")

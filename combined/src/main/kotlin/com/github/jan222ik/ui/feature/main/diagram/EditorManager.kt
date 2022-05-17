@@ -1,11 +1,11 @@
 package com.github.jan222ik.ui.feature.main.diagram
 
 import androidx.compose.runtime.mutableStateOf
+import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
 import com.github.jan222ik.ui.uml.DiagramHolder
 import org.eclipse.uml2.uml.Element
-import org.eclipse.uml2.uml.NamedElement
 
 object EditorManager {
     val allUML = mutableStateOf<List<Element>>(emptyList())
@@ -40,13 +40,13 @@ object EditorManager {
         }
     }
 
-    fun moveToOrOpenDiagram(diagram: DiagramHolder, commandStackHandler: CommandStackHandler) {
-        val firstIdx = openTabs.value.indexOfFirst { it.observableDiagram.diagramName.tfv.text == diagram.name }
+    fun moveToOrOpenDiagram(tmmDiagram: TMM.ModelTree.Diagram, commandStackHandler: CommandStackHandler) {
+        val firstIdx = openTabs.value.indexOfFirst { it.observableDiagram.diagramName.tfv.text == tmmDiagram.initDiagram.name }
         if (firstIdx != -1) {
             onEditorSwitch(firstIdx)
         } else {
-            val toObservable = diagram.toObservable(allUML.value, commandStackHandler)
-            openTabs.value = openTabs.value + EditorTabViewModel(observableDiagram = toObservable)
+            val toObservable = tmmDiagram.initDiagram.toObservable(allUML.value, commandStackHandler)
+            openTabs.value = openTabs.value + EditorTabViewModel(tmmDiagram = tmmDiagram, observableDiagram = toObservable)
             onEditorSwitch(openTabs.value.lastIndex)
         }
     }

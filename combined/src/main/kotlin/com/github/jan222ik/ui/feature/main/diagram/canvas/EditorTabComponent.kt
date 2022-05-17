@@ -3,6 +3,8 @@ package com.github.jan222ik.ui.feature.main.diagram.canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.currentComposer
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -22,6 +24,8 @@ import com.github.jan222ik.ui.components.dnd.DnDAction
 import com.github.jan222ik.ui.components.dnd.dndDropTarget
 import com.github.jan222ik.ui.feature.LocalCommandStackHandler
 import com.github.jan222ik.ui.feature.LocalDropTargetHandler
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
+import com.github.jan222ik.ui.feature.main.tree.FileTree
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.ui.uml.Anchor
 import com.github.jan222ik.ui.uml.AnchorSide
@@ -34,87 +38,55 @@ import org.eclipse.uml2.uml.Class
 import org.eclipse.uml2.uml.Generalization
 
 @Composable
-fun EditorTabComponent(state: EditorTabViewModel, projectTreeHandler: ProjectTreeHandler) {
-    val logger = NamedKLogging("com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabComponent").logger
+fun EditorTabComponent(stateOut: EditorTabViewModel, projectTreeHandler: ProjectTreeHandler) {
+    val state = remember(stateOut.id) { stateOut }
+    val logger = remember { NamedKLogging("com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabComponent").logger }
     val commandStackHandler = LocalCommandStackHandler.current
 
-    Box(modifier = Modifier.fillMaxSize().onGloballyPositioned {
-        state.coords = it.positionInWindow()
-    }.clipToBounds()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .onGloballyPositioned {
+                state.coords = it.positionInWindow()
+            }
+            .clipToBounds()
+    ) {
         val dropHandler = LocalDropTargetHandler.current
         val dndActions = DNDEditorActions(
             state, logger, commandStackHandler, projectTreeHandler
         )
-        /*
-        DisposableEffect(dndActions, dropHandler) {
-            logger.debug { "dropActions = ${dndActions.name}" }
-            onDispose {
-                dropHandler.dropTargets.value.toMutableList().filterNot { it.second == dndActions }
-                logger.debug { "dispose dropActions = ${dndActions.name}" }
-            }
-        }
-         */
-        ScrollableCanvas(
-            viewport = state.viewport,
-            canvasThenModifier = Modifier.dndDropTarget(
-                handler = dropHandler,
-                dropActions = dndActions
-            ),
-            elements = state.observableDiagram.elements.value,
-            arrows = state.observableDiagram.arrows.value,
-            projectTreeHandler = projectTreeHandler
-        )
-        NavigateDiagramUPButton(
-            modifier = Modifier.align(Alignment.TopStart)
-        )
-        /*
-        DiagramChart(
-            modifier = Modifier
-                .fillMaxSize()
-                .dndDropTarget(
+
+        val observableDiagram = remember(state, state.id, state.observableDiagram) { state.observableDiagram }
+        val arrows = remember(observableDiagram) { observableDiagram.arrows.value }
+        val elements = remember(observableDiagram) { observableDiagram.elements.value }
+        state.id.let { id ->
+            ScrollableCanvas(
+                id = id,
+                viewportState = state.viewport,
+                canvasThenModifier = Modifier.dndDropTarget(
                     handler = dropHandler,
                     dropActions = dndActions
                 ),
-            viewport = state.viewport,
-            maxViewport = state.maxViewport.value,
-            enableZoom = true,
-            graphScopeImpl = diagramChartImpl
-        ) {
-            grid(intGridRenderer(stepAbscissa = 20, stepOrdinate = 20))
-            linearFunction(
-                linearFunctionRenderer(
-                    lineDrawer = simpleAxisLineDrawer(brush = SolidColor(Color.White)),
-                    linearFunctionPointProvider = linearFunctionPointProvider { it }
-                )
+                elements = elements,
+                arrows = arrows,
+                projectTreeHandler = projectTreeHandler
             )
-            state.items.value.forEach { component ->
-                component.uiConfig.let {
-                    anchoredComposable(it) {
-                        Box(modifier = Modifier.offset { IntOffset(
-                            this@anchoredComposable.offset.second.x.roundToInt(),
-                            this@anchoredComposable.offset.second.y.roundToInt()
-                        ) })
-                        component.render(projectTreeHandler)
+        }
+        NavigateDiagramUPButton(
+            modifier = Modifier.align(Alignment.TopStart),
+            text = observableDiagram.upwardsDiagramLink ?: "<Diagram name>",
+            onClick = {
+                logger.debug { "TODO: Navigate to '${observableDiagram.upwardsDiagramLink}'" }
+                observableDiagram.upwardsDiagramLink?.let { location ->
+                    FileTree.treeHandler.value?.metamodelRoot?.findDiagramElementByLocation(location)?.target?.let {
+                        EditorManager.moveToOrOpenDiagram(
+                            tmmDiagram = it,
+                            commandStackHandler = commandStackHandler
+                        )
                     }
                 }
             }
-        }
-        Surface(
-            modifier = Modifier.align(Alignment.TopEnd)
-        ) {
-            Column {
-                Text(
-                    text = "Id:${state.id}"
-                )
-                Text(
-                    text = state.viewport.value.let { "(${it.minX} ${it.minY})(${it.maxX} ${it.maxY})" },
-                )
-                Text(
-                    text = "Items: ${state.items.value.size}"
-                )
-            }
-        }
-         */
+        )
     }
 }
 

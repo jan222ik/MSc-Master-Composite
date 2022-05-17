@@ -2,10 +2,7 @@ package com.github.jan222ik.ui.components.breadcrumbs
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.runtime.Composable
@@ -13,123 +10,201 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.singleWindowApplication
-import com.github.jan222ik.ui.feature.main.diagram.canvas.DiagramType
+import androidx.compose.ui.unit.sp
+import com.github.jan222ik.model.TMM
+import com.github.jan222ik.model.TMMPath
 import com.github.jan222ik.ui.value.Space
-import kotlin.random.Random
 
 @Composable
 fun BreadcrumbsRow(
     modifier: Modifier = Modifier,
-    activePath: Array<String>,
-    root: BreadCrumbItem
+    activePath: TMMPath<*>,
 ) {
+    val changedPath = remember(activePath) { mutableStateOf(activePath) }
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.dp8)
+        horizontalArrangement = Arrangement.spacedBy(Space.dp4)
     ) {
-        Text("Diagrams:")
-        var parent = root
-        for (pathPart in activePath) {
-            val find = parent.children.find { it.name == pathPart } ?: break
+
+        @Composable
+        fun BreadCrumbItem(parent: TMM.IHasChildren<*>?, pathIndex: Int) {
             val showPopup = remember { mutableStateOf(false) }
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                DropdownMenu(
-                    expanded = showPopup.value,
+            val showArrowPopup = remember { mutableStateOf(false) }
+            val activeItem = remember(pathIndex, parent, activePath, changedPath.value) { changedPath.value.nodes[pathIndex] }
+            Text(
+                text = activeItem.displayName,
+                modifier = Modifier.clickable {
+                    showPopup.value = true
+                }
+            )
+            parent?.let {
+                BreadCrumbDropDown(
+                    visible = showPopup.value,
+                    options = it.children.filter { it is TMM.IBreadCrumbDisplayableMarker },
                     onDismissRequest = { showPopup.value = false },
-                    focusable = true,
+                    onSelectionChanged = {
+                        changedPath.value = TMMPath(nodes = activePath.nodes.subList(0, pathIndex) + it, it)
+                    }
+                )
+            }
+            if (activeItem is TMM.IHasChildren<*> && activeItem.children.isNotEmpty()) {
+                Icon(
+                    imageVector = Icons.Filled.ChevronRight,
+                    contentDescription = null,
+                    modifier = Modifier.clickable {
+                        showArrowPopup.value = true
+                    }
+                )
+                BreadCrumbDropDown(
+                    visible = showArrowPopup.value,
+                    options = activeItem.children.filter { it is TMM.IBreadCrumbDisplayableMarker },
+                    onDismissRequest = { showArrowPopup.value = false },
+                    onSelectionChanged = {
+
+                    }
+                )
+                BreadCrumbItem(
+                    parent = activeItem,
+                    pathIndex = pathIndex.inc()
+                )
+            }
+        }
+        Text("Diagrams:")
+
+        BreadCrumbItem(
+            parent = null,
+            pathIndex = 0
+        )
+
+        /*
+        if (root !is TMM.ITMMHasChildren<*>) {
+
+        } else {
+            var parent: TMM.ITMMHasChildren<*> = root
+            for (pathPart in activePath.nodes) {
+                val find = parent.children.find { it == pathPart } ?: break
+                val showPopup = remember { mutableStateOf(false) }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    parent.children.forEach {
-                        DropdownMenuItem(
-                            modifier = Modifier.scale(0.75f),
-                            onClick = {
-                                // TODO
-                            },
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text(it.name)
+                    BreadCrumbDropDown(
+                        visible = showPopup.value,
+                        options = parent.children,
+                        onDismissRequest = { showPopup.value = false },
+                        onSelectionChanged = {
+
+                        }
+                    )
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Space.dp8)
+                    ) {
+                        if (find is TMM.ModelTree.Diagram) {
+                            Icon(
+                                painter = find.initDiagram.diagramType.iconAsPainter(),
+                                contentDescription = null,
+                                tint = Color.Unspecified
+                            )
+                        }
+                        Text(find.toString(), modifier = Modifier.clickable {
+                            showPopup.value = true
+                        })
+                        if (find is TMM.ITMMHasChildren<*> && (activePath.target != pathPart || find.children.isNotEmpty())) {
+                            Spacer(Modifier.width(Space.dp8))
+                            val next = remember { mutableStateOf(false) }
+                            Icon(
+                                imageVector = Icons.Filled.ChevronRight,
+                                contentDescription = null, modifier = Modifier.clickable {
+                                    next.value = true
+                                })
+                            BreadCrumbDropDown(
+                                options = find.children,
+                                visible = next.value,
+                                onDismissRequest = { next.value = false },
+                                onSelectionChanged = {}
+                            )
                         }
                     }
                 }
+                parent = find
+            }
+        }
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Space.dp8)
-                ) {
-                    if (find is BreadCrumbItem.Diagram && find.type != null) {
-                        Icon(
-                            painter = find.type.iconAsPainter(),
-                            contentDescription = null,
-                            tint = Color.Unspecified
-                        )
+         */
+    }
+}
+
+@Composable
+fun BreadCrumbDropDown(
+    visible: Boolean,
+    options: List<TMM>,
+    onDismissRequest: () -> Unit,
+    onSelectionChanged: (TMM) -> Unit
+) {
+    Box(Modifier.size(0.dp)) {
+        DropdownMenu(
+            expanded = visible,
+            onDismissRequest = onDismissRequest,
+            focusable = true,
+        ) {
+            ProvideTextStyle(TextStyle(fontSize = 12.sp)) {
+                Column() {
+                    options.forEach {
+                        DropdownMenuItem(
+                            onClick = {
+                                onSelectionChanged.invoke(it)
+                            },
+                            contentPadding = PaddingValues(horizontal = Space.dp8)
+                        ) {
+                            ProvideTextStyle(TextStyle(fontSize = 12.sp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(Space.dp8)
+                                ) {
+                                    BreadCrumbIcon(it)
+                                    Text(it.displayName)
+                                }
+                            }
+                        }
                     }
-                    Text(find.name, modifier = Modifier.clickable {
-                        showPopup.value = true
-                    })
-                }
-                if (activePath.last() != pathPart) {
-                    Spacer(Modifier.width(Space.dp8))
-                    Icon(imageVector = Icons.Filled.ChevronRight, contentDescription = null)
                 }
             }
-            parent = find
         }
     }
 }
 
-sealed class BreadCrumbItem(
-    val name: String,
-    val children: List<BreadCrumbItem>
-) {
-    class Diagram(
-        name: String = Random.nextInt().toString(),
-        val type: DiagramType? = null,
-    ) : BreadCrumbItem(
-        name = name,
-        children = emptyList()
-    )
-
-    class Package(
-        name: String = Random.nextInt().toString(),
-        children: List<BreadCrumbItem> = emptyList()
-    ) : BreadCrumbItem(
-        name = name,
-        children = children
-    )
-}
-
-
-fun main(args: Array<String>) {
-    singleWindowApplication {
-        BreadcrumbsRow(
-            activePath = arrayOf("a", "b", "x"),
-            root = BreadCrumbItem.Package(
-                name = "root", children = listOf(
-                    BreadCrumbItem.Package(
-                        name = "a",
-                        children = listOf(
-                            BreadCrumbItem.Package(
-                                name = "b",
-                                children = listOf(
-                                    BreadCrumbItem.Package(name = "x"),
-                                    BreadCrumbItem.Package(),
-                                    BreadCrumbItem.Package(),
-                                    BreadCrumbItem.Package()
-                                ),
-                            ),
-                            BreadCrumbItem.Package(),
-                            BreadCrumbItem.Package(),
-                            BreadCrumbItem.Package()
-                        )
-                    )
-                )
-            )
+@Composable
+private fun BreadCrumbIcon(tmm: TMM) {
+    if (tmm is TMM.ModelTree.Diagram) {
+        Icon(
+            modifier = Modifier.size(Space.dp16),
+            painter = tmm.initDiagram.diagramType.iconAsPainter(),
+            contentDescription = null,
+            tint = Color.Unspecified
         )
     }
+    if (tmm is TMM.ModelTree.Ecore.TModel) {
+        Icon(
+            modifier = Modifier.size(Space.dp16),
+            painter = painterResource("drawables/uml_icons/Model.gif"),
+            contentDescription = null,
+            tint = Color.Unspecified
+        )
+    } else {
+        if (tmm is TMM.ModelTree.Ecore.TPackage) {
+            Icon(
+                modifier = Modifier.size(Space.dp16),
+                painter = painterResource("drawables/uml_icons/Package.gif"),
+                contentDescription = null,
+                tint = Color.Unspecified
+            )
+        }
+    }
 }
+

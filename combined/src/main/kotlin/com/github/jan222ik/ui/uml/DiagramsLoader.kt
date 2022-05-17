@@ -5,16 +5,20 @@ import arrow.core.invalid
 import arrow.core.valid
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.module.kotlin.*
+import mu.KLogging
 import java.io.File
 
 class DiagramsLoader(
     val file: File
 ) {
-    val mapper =  JsonMapper().registerKotlinModule()
+    companion object : KLogging() {
+        private val mapper =  JsonMapper().registerKotlinModule()
+    }
     data class LoadError(val e: Exception)
 
     fun loadFromFile(): Validated<LoadError, List<DiagramHolder>> {
         if (!file.exists()) {
+            logger.warn { "Diagram file not found" }
             return emptyList<DiagramHolder>().valid()
         }
         return try {

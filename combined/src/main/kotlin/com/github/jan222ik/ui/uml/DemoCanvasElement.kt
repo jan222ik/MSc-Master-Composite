@@ -11,6 +11,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.util.packFloats
 import androidx.compose.ui.window.singleWindowApplication
+import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
 import com.github.jan222ik.ui.adjusted.BoundingRectState
@@ -92,7 +93,7 @@ fun main() {
         movableAndResizeableComponent.render(
             ProjectTreeHandler(
                 false,
-                root = FileTreeItem(0, "root", canExpand = true, file = File(""))
+                metamodelRoot = TMM.FS.Directory(File(""), emptyList())
             ), offset = Offset.Zero
         )
 
