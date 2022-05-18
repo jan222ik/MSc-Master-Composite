@@ -17,6 +17,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.jan222ik.ui.feature.main.diagram.propertyview.PropertyView
+import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import mu.KLogging
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 
@@ -35,7 +36,7 @@ class PropertiesViewComponent(
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
-    fun render(onToggle: () -> Unit) {
+    fun render(onToggle: () -> Unit, projectTreeHandler: ProjectTreeHandler) {
         val isMinimized = remember(parent.hSplitter.positionPercentage) { parent.hSplitter.positionPercentage > 0.99 }
         Surface(
             color = MaterialTheme.colors.background.copy(alpha = ContentAlpha.medium)
@@ -51,7 +52,7 @@ class PropertiesViewComponent(
                     ShowMoreLess(isMinimized = isMinimized, onToggle)
                 }
                 ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
-                    PropertyView(selectedElement = parent.projectTreeHandler.singleSelectedItem)
+                    PropertyView(selectedElement = projectTreeHandler.singleSelectedItem.value)
                 }
             }
         }

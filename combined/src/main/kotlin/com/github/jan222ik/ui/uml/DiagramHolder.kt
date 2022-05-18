@@ -6,6 +6,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.util.packFloats
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.commands.CompoundCommand
 import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
@@ -31,7 +32,7 @@ data class DiagramHolder(
     val content: List<DiagramStateHolders.UMLRef>
 ) {
     fun toObservable(
-        allUml: List<Element>,
+        umlRoot: TMM.FS.UmlProjectFile,
         commandStackHandler: CommandStackHandler
     ): DiagramHolderObservable {
         return DiagramHolderObservable(
@@ -40,7 +41,7 @@ data class DiagramHolder(
             upwardsDiagramLink = upwardsDiagramLink,
             location = location,
             initContent = content,
-            allUML = allUml,
+            umlRoot = umlRoot,
             commandStackHandler = commandStackHandler
         )
     }
@@ -90,7 +91,7 @@ class DiagramHolderObservable(
     val diagramType: DiagramType,
     val location: String,
     initContent: List<DiagramStateHolders.UMLRef>,
-    allUML: List<Element>,
+    umlRoot: TMM.FS.UmlProjectFile,
     commandStackHandler: CommandStackHandler,
     val upwardsDiagramLink: String?
 ) {
@@ -101,13 +102,16 @@ class DiagramHolderObservable(
 
     init {
         val (arrowRef, elementRef) = initContent.partition { it is DiagramStateHolders.UMLRef.ArrowRef }
+        val tmmAsList = umlRoot.toList().filterIsInstance<TMM.ModelTree.Ecore>()
         val initElements = elementRef
             .map { umlRef ->
                 umlRef as DiagramStateHolders.UMLRef.ClassRef to
-                        allUML.find { it is NamedElement && it.qualifiedName == umlRef.referencedQualifiedName }
+                        tmmAsList
+                            .find { it.element is NamedElement && it.element.qualifiedName == umlRef.referencedQualifiedName }
             }
             .mapNotNull {
-                val c = it.second
+                it.second
+                val c = it.second?.element
                 if (c != null && c is Class) {
                     UMLClassFactory.createInstance(
                         umlClass = c,
@@ -137,15 +141,10 @@ class DiagramHolderObservable(
                 } else null
             }
         elements.value = initElements
+        println("elements.value = ${elements.value}")
         println("arrowRef = ${arrowRef}")
-        println(
-            "allUML = ${
-                allUML.map {
-                    it.javaClass.name + " " + it.hashCode()
-                }
-            }"
-        )
-        val allDirectedRelationShip = allUML.filterIsInstance<DirectedRelationship>()
+
+        val allDirectedRelationShip = tmmAsList.filterElementIsInstance<DirectedRelationship>()
         println("allDirectedRelationShip = ${allDirectedRelationShip}")
         arrowRef as List<DiagramStateHolders.UMLRef.ArrowRef>
         val initArrows = arrowRef
@@ -164,7 +163,7 @@ class DiagramHolderObservable(
             }
             .mapNotNull {
                 if (it.first == null) {
-                    print("No element $it")
+                    println("No element $it")
                     null
                 } else it as Pair<DirectedRelationship, DiagramStateHolders.UMLRef.ArrowRef>
             }
@@ -232,10 +231,8 @@ class DiagramHolderObservable(
 
 }
 
-sealed class DiagramStateObservable {
-    class RootObservable : DiagramStateObservable() {
-
-    }
+private inline fun <reified T> List<TMM>.filterElementIsInstance(): List<T> {
+    return this.filterIsInstance<TMM.ModelTree.Ecore>().map { it.element }.filterIsInstance<T>()
 }
 
 enum class AnchorSide {

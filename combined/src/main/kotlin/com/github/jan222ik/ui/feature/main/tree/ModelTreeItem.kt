@@ -32,7 +32,7 @@ sealed class ModelTreeItem(
         get() = null
 
     override val canExpand: Boolean
-        get() = tmmModelItem.ownedElements.isNotEmpty()
+        get() = tmmModelItem.ownedElements.isNotEmpty() && tmmModelItem.ownedElements.any { it !is TMM.ModelTree.Ecore.TUNKNOWN }
 
     override val children: SnapshotStateList<TreeDisplayableItem> = emptyList<TreeDisplayableItem>().toMutableStateList()
 
@@ -95,6 +95,8 @@ sealed class ModelTreeItem(
     fun getElement(): org.eclipse.uml2.uml.Element {
         return tmmModelItem.element
     }
+
+    override fun getTMM(): TMM = tmmModelItem
 
     override val onPrimaryAction: (MouseClickScope.(idx: Int) -> Unit)? = null
 
@@ -252,7 +254,7 @@ sealed class ModelTreeItem(
             }
 
         override val displayName: String
-            get() = "Generalization: ${tmmTGeneralisation.generalization.general}"
+            get() = "<Generalization> ${tmmTGeneralisation.generalization.general.name}"
     }
 
 }
@@ -286,6 +288,7 @@ class DiagramTreeItem(
         }
 
     override val children: SnapshotStateList<TreeDisplayableItem> = emptyList<TreeDisplayableItem>().toMutableStateList()
+    override fun getTMM(): TMM = diagram
 
     override val icon: (@Composable (modifier: Modifier) -> Unit)
         get() = @Composable {

@@ -20,8 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.github.jan222ik.ui.feature.main.MainScreenScaffoldConstants
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabComponent
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
+import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.util.HorizontalDivider
 import mu.KLogging
@@ -38,7 +40,7 @@ class DiagramCanvasComponent(
     companion object : KLogging()
 
     @Composable
-    fun render() {
+    fun render(projectTreeHandler: ProjectTreeHandler) {
         LaunchedEffect(Unit) {
             EditorManager.activeEditorTab.value = EditorManager.openTabs.value.firstOrNull()
         }
@@ -59,7 +61,7 @@ class DiagramCanvasComponent(
                 val vm = remember(it, it.id) { it }
                 EditorTabComponent(
                     stateOut = vm,
-                    projectTreeHandler = parent.projectTreeHandler
+                    projectTreeHandler = projectTreeHandler
                 )
             } ?: kotlin.run {
                 Text("No active Tab")
@@ -76,6 +78,7 @@ class DiagramCanvasComponent(
     ) {
         if (editorTabs.isNotEmpty()) {
             ScrollableTabRow(
+                modifier = Modifier.height(MainScreenScaffoldConstants.menuToolBarHeight),
                 selectedTabIndex = selectedIdx,
                 backgroundColor = EditorColors.backgroundGray,
                 edgePadding = TabRowDefaults.ScrollableTabRowPadding.div(2)

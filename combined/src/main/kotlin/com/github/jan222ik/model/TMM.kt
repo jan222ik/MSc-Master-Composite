@@ -1,5 +1,6 @@
 package com.github.jan222ik.model
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -45,28 +46,35 @@ sealed class TMM {
     }
 
     fun findModellingElementOrNull(element: Element): TMMPath<TMM.ModelTree.Ecore>? {
-        if (this !is TMM.ModelTree.Ecore) return null;
-        if (this.element == element) {
-            return TMMPath(emptyList(), target = this)
-        } else {
-            for (ownedElement in ownedElements) {
-                val res = ownedElement.findModellingElementOrNull(element)
-                if (res != null) {
-                    return res.copyWithAttachedParent(parent = this)
-                }
+        if (this is TMM.ModelTree.Ecore) {
+            if (this.element == element) {
+                return TMMPath(nodes = listOf(this), this)
             }
+        }
+        if (this is IHasChildren<*>) {
+            return children.firstNotNullOfOrNull { it.findModellingElementOrNull(element) }
+                ?.copyWithAttachedParent(this)
+        } else {
             return null
         }
     }
 
     fun findDiagramElementByLocation(location: String): TMMPath<TMM.ModelTree.Diagram>? {
-        return if (this is ModelTree.Diagram &&  this.initDiagram.let { "${it.location}::${it.name}" } == location) {
+        return if (this is ModelTree.Diagram && this.initDiagram.let { "${it.location}::${it.name}" } == location) {
             TMMPath(nodes = listOf(this), this)
         } else {
             if (this is TMM.IHasChildren<*>) {
-                children.firstNotNullOf { it.findDiagramElementByLocation(location) }.copyWithAttachedParent(this)
+                children.firstNotNullOfOrNull { it.findDiagramElementByLocation(location) }
+                    ?.copyWithAttachedParent(this)
             } else null
         }
+    }
+
+    fun toList(): List<TMM> {
+        val self = listOf(this)
+        if (this is IHasChildren<*>) {
+            return self + children.map { it.toList() }.flatten()
+        } else return self
     }
 
     fun treePath(): TMMPath<TMM> {
@@ -77,6 +85,18 @@ sealed class TMM {
             nodes = this.treePathRec(),
             target = this
         )
+    }
+
+    fun find(predicate: (TMM) -> Boolean) : TMM? {
+        return if (predicate(this)) {
+            this
+        } else {
+            if (this is IHasChildren<*>) {
+                children.firstNotNullOfOrNull { it.find(predicate) }
+            } else {
+                null
+            }
+        }
     }
 
     interface IHasChildren<T : TMM> {
@@ -114,16 +134,7 @@ sealed class TMM {
             private var tmpDiagrams: List<DiagramHolder> = emptyList()
 
             init {
-                val ecoreClientPerModel = EcoreModelLoader.open(file.name).also {
-                    // TODO Change !!!
-                    val list = mutableListOf<Element>()
-                    it.model.eAllContents().forEachRemaining {
-                        if (it is Element) {
-                            list.add(it)
-                        }
-                    }
-                    EditorManager.allUML.value = list
-                }
+                val ecoreClientPerModel = EcoreModelLoader.open(file.name)
                 DiagramsLoader(File(file.parent, "$modelName.diagrams")).loadFromFile()
                     .tap {
                         tmpDiagrams = it
@@ -312,7 +323,7 @@ fun File.convertToTreeItem(): TMM.FS {
 }
 
 @Composable
-fun TMM.viewer(level: Int, showFS: Boolean, highlight: Pattern) {
+fun TMM.viewer(level: Int, showFS: Boolean, highlight: Pattern, searchFor: (Element) -> Unit) {
     val matchesHighlightPattern = matchesHighlightPattern(highlight)
     Column(modifier = Modifier.padding(start = Space.dp8.times(level))) {
         with(this@viewer) {
@@ -323,7 +334,7 @@ fun TMM.viewer(level: Int, showFS: Boolean, highlight: Pattern) {
                         if (showFS) {
                             Text("Dir: ${this.file.name}")
                         }
-                        this.children.forEach { it.viewer(level.inc(), showFS, highlight) }
+                        this.children.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
                     }
                     is TMM.FS.TreeFile -> {
                         if (showFS) {
@@ -334,34 +345,39 @@ fun TMM.viewer(level: Int, showFS: Boolean, highlight: Pattern) {
                         if (showFS) {
                             Text("UML File: ${this.file.name}")
                         }
-                        this.children.forEach { it.viewer(level.inc(), showFS, highlight) }
+                        this.children.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
                     }
                     is TMM.ModelTree.Diagram -> {
                         Text("Diagram")
                     }
-                    is TMM.ModelTree.Ecore.TClass -> {
-                        Text("Class: ${umlClass.name}")
-                        ownedElements.forEach { it.viewer(level.inc(), showFS, highlight) }
-                    }
-                    is TMM.ModelTree.Ecore.TProperty -> {
-                        Text("Property: ${property.name}")
-                        ownedElements.forEach { it.viewer(level.inc(), showFS, highlight) }
-                    }
-                    is TMM.ModelTree.Ecore.TPackage -> {
-                        Text("Package: ${umlPackage.name}")
-                        ownedElements.forEach { it.viewer(level.inc(), showFS, highlight) }
-                    }
-                    is TMM.ModelTree.Ecore.TGeneralisation -> {
-                        Text("Generalization: ${generalization.toString()}")
-                        ownedElements.forEach { it.viewer(level.inc(), showFS, highlight) }
-                    }
-                    is TMM.ModelTree.Ecore.TPackageImport -> {
-                        Text("PackageImport: ${packageImport.importedPackage.name}")
-                        ownedElements.forEach { it.viewer(level.inc(), showFS, highlight) }
-                    }
-                    is TMM.ModelTree.Ecore.TUNKNOWN -> {
-                        Text("Unknown: $element")
-                        ownedElements.forEach { it.viewer(level.inc(), showFS, highlight) }
+                    is TMM.ModelTree.Ecore -> {
+                        val mod = Modifier.clickable { searchFor(this.element) }
+                        when (this) {
+                            is TMM.ModelTree.Ecore.TClass -> {
+                                Text("Class: ${umlClass.name}", mod)
+                                ownedElements.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
+                            }
+                            is TMM.ModelTree.Ecore.TProperty -> {
+                                Text("Property: ${property.name}", mod)
+                                ownedElements.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
+                            }
+                            is TMM.ModelTree.Ecore.TPackage -> {
+                                Text("Package: ${umlPackage.name}", mod)
+                                ownedElements.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
+                            }
+                            is TMM.ModelTree.Ecore.TGeneralisation -> {
+                                Text("Generalization: ${generalization.toString()}", mod)
+                                ownedElements.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
+                            }
+                            is TMM.ModelTree.Ecore.TPackageImport -> {
+                                Text("PackageImport: ${packageImport.importedPackage.name}", mod)
+                                ownedElements.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
+                            }
+                            is TMM.ModelTree.Ecore.TUNKNOWN -> {
+                                Text("Unknown: $element", mod)
+                                ownedElements.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
+                            }
+                        }
                     }
                 }
             }
@@ -399,7 +415,9 @@ fun main(args: Array<String>) {
                     onCheckedChange = { showFS.value = it }
                 )
             }
-            treeItem.viewer(0, showFS.value, activePattern.value)
+            treeItem.viewer(0, showFS.value, activePattern.value, searchFor = {
+                println("tmm= " + treeItem.findModellingElementOrNull(it))
+            })
         }
     }
 }

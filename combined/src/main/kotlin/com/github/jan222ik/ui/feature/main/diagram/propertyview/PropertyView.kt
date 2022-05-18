@@ -19,13 +19,13 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
+import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.validation.transformations.NonTransformer
 import com.github.jan222ik.model.validation.valudations.ListValidations.inCollection
 import com.github.jan222ik.ui.components.inputs.*
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.tree.ModelTreeItem
-import com.github.jan222ik.ui.feature.main.tree.TreeDisplayableItem
 import com.github.jan222ik.ui.value.descriptions.DescriptiveElements
 import com.github.jan222ik.ui.value.descriptions.IPropertyViewElement
 import org.eclipse.emf.ecore.EObject
@@ -37,25 +37,25 @@ import org.eclipse.uml2.uml.VisibilityKind
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PropertyView(
-    selectedElement: TreeDisplayableItem?
+    selectedElement: TMM?
 ) {
     Column {
         Text("Properties:")
         if (selectedElement != null) {
             Text(text = "Current Element:$selectedElement")
-            if (selectedElement is ModelTreeItem) {
+            if (selectedElement is TMM.ModelTree.Ecore) {
                 when (selectedElement) {
-                    is ModelTreeItem.ClassItem -> renderConfig(selectedElement.tmmTClass.umlClass, PropertyViewConfigs.pvForClass)
-                    is ModelTreeItem.ImportItem -> Text("Does not exist yet")
-                    is ModelTreeItem.PackageItem -> renderConfig(
-                        selectedElement.tmmTPackage.umlPackage,
+                    is TMM.ModelTree.Ecore.TClass -> renderConfig(selectedElement.umlClass, PropertyViewConfigs.pvForClass)
+                    is TMM.ModelTree.Ecore.TPackage -> renderConfig(
+                        selectedElement.umlPackage,
                         PropertyViewConfigs.pvForPackage
                     )
-                    is ModelTreeItem.PropertyItem -> renderConfig(
-                        selectedElement.tmmTProperty.property,
+                    is TMM.ModelTree.Ecore.TPackageImport -> Text("Does not exist yet")
+                    is TMM.ModelTree.Ecore.TProperty -> renderConfig(
+                        selectedElement.property,
                         PropertyViewConfigs.pvForProperty
                     )
-                    is ModelTreeItem.ValueItem -> Text("Does not exist yet")
+                    is TMM.ModelTree.Ecore.TUNKNOWN -> TODO()
                 }
             } else Text("Not properties available for selected item.")
         } else {

@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.TMMPath
+import com.github.jan222ik.ui.feature.LocalCommandStackHandler
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.value.Space
 
 @Composable
@@ -25,6 +27,7 @@ fun BreadcrumbsRow(
     activePath: TMMPath<*>,
 ) {
     val changedPath = remember(activePath) { mutableStateOf(activePath) }
+    val commandStackHandler = LocalCommandStackHandler.current
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -47,8 +50,16 @@ fun BreadcrumbsRow(
                     visible = showPopup.value,
                     options = it.children.filter { it is TMM.IBreadCrumbDisplayableMarker },
                     onDismissRequest = { showPopup.value = false },
-                    onSelectionChanged = {
-                        changedPath.value = TMMPath(nodes = activePath.nodes.subList(0, pathIndex) + it, it)
+                    onSelectionChanged = { tmm ->
+                        if (tmm is TMM.ModelTree.Diagram) {
+                            EditorManager.moveToOrOpenDiagram(
+                                tmmDiagram = tmm,
+                                commandStackHandler = commandStackHandler
+                            )
+                            showPopup.value = false
+                        } else {
+                            changedPath.value = TMMPath(nodes = activePath.nodes.subList(0, pathIndex) + tmm, tmm)
+                        }
                     }
                 )
             }
@@ -64,8 +75,14 @@ fun BreadcrumbsRow(
                     visible = showArrowPopup.value,
                     options = activeItem.children.filter { it is TMM.IBreadCrumbDisplayableMarker },
                     onDismissRequest = { showArrowPopup.value = false },
-                    onSelectionChanged = {
-
+                    onSelectionChanged = { tmm ->
+                        if (tmm is TMM.ModelTree.Diagram) {
+                            EditorManager.moveToOrOpenDiagram(
+                                tmmDiagram = tmm,
+                                commandStackHandler = commandStackHandler
+                            )
+                            showArrowPopup.value = false
+                        }
                     }
                 )
                 BreadCrumbItem(

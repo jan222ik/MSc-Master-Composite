@@ -23,6 +23,7 @@ data class FileTreeItem(
     companion object : KLogging()
 
     override val children: SnapshotStateList<TreeDisplayableItem> = mutableStateListOf()
+    override fun getTMM(): TMM = tmmElement
 
     override val icon: @Composable ((modifier: Modifier) -> Unit)
         get() = @Composable { modifier ->

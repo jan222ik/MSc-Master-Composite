@@ -5,10 +5,8 @@ import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
 import com.github.jan222ik.ui.uml.DiagramHolder
-import org.eclipse.uml2.uml.Element
 
 object EditorManager {
-    val allUML = mutableStateOf<List<Element>>(emptyList())
     val diagrams = mutableStateOf(emptyList<DiagramHolder>())
 
     val openTabs = mutableStateOf(emptyList<EditorTabViewModel>())
@@ -45,7 +43,7 @@ object EditorManager {
         if (firstIdx != -1) {
             onEditorSwitch(firstIdx)
         } else {
-            val toObservable = tmmDiagram.initDiagram.toObservable(allUML.value, commandStackHandler)
+            val toObservable = tmmDiagram.initDiagram.toObservable(tmmDiagram.getProjectUMLElement(), commandStackHandler)
             openTabs.value = openTabs.value + EditorTabViewModel(tmmDiagram = tmmDiagram, observableDiagram = toObservable)
             onEditorSwitch(openTabs.value.lastIndex)
         }

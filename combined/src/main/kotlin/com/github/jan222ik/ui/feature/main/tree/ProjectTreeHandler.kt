@@ -35,6 +35,7 @@ import com.github.jan222ik.ui.components.menu.MenuItemList
 import com.github.jan222ik.ui.feature.LocalDropTargetHandler
 import com.github.jan222ik.ui.feature.LocalJobHandler
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
+import com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
 import com.github.jan222ik.ui.value.EditorColors
@@ -54,15 +55,17 @@ class ProjectTreeHandler(
     companion object : KLogging()
 
 
-    private var items by mutableStateOf(emptyList<TreeItem>())
-
-    private var treeSelection by mutableStateOf(emptyList<Int>())
+    private val _treeSelection = mutableStateOf(emptyList<TMM>())
+    val treeSelection: State<List<TMM>>
+        get() = _treeSelection
 
     private val focusRequester = FocusRequester()
     private var focus by mutableStateOf<FocusState?>(null)
 
-    var singleSelectedItem by mutableStateOf<TreeDisplayableItem?>(
-        treeSelection.firstOrNull()?.let { items.getOrNull(it)?.actual })
+    private val _singleSelectedItem = mutableStateOf<TMM?>(treeSelection.value.firstOrNull())
+    val singleSelectedItem: State<TMM?>
+        get() = _singleSelectedItem
+
 
     var setTreeSelectionByElements: ((List<Element>) -> Unit)? by mutableStateOf(null)
 
@@ -72,13 +75,15 @@ class ProjectTreeHandler(
         contextMenuFor = pair
     }
 
+    var viewTreeElementRoot: TreeDisplayableItem? = null
+
     private val selectAllAction = ShortcutAction.of(
         key = Key.A,
         modifierSum = ShortcutAction.KeyModifier.CTRL,
         action = {
             if (focus?.hasFocus == true) {
-                treeSelection = items.indices.toMutableList()
-                singleSelectedItem = null
+                _treeSelection.value = metamodelRoot.toList()
+                _singleSelectedItem.value = null
                 /*consume = */ true
             } else /*consume = */ false
         }
@@ -88,8 +93,8 @@ class ProjectTreeHandler(
         key = Key.Escape,
         action = {
             if (focus?.hasFocus == true) {
-                treeSelection = emptyList()
-                singleSelectedItem = null
+                _treeSelection.value = emptyList()
+                _singleSelectedItem.value = null
                 /*consume = */ true
             } else /*consume = */ false
         }
@@ -167,7 +172,7 @@ class ProjectTreeHandler(
 
         Box {
             var count = 0
-            val viewTreeElementRoot = remember(metamodelRoot) { metamodelRoot.toViewTreeElement(0) }
+            viewTreeElementRoot = remember(metamodelRoot) { metamodelRoot.toViewTreeElement(0) }
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -204,8 +209,8 @@ class ProjectTreeHandler(
 
     @Composable
     internal fun TreeItemRow(itemIdx: Int, item: TreeItem, lazyListState: LazyListState) {
-        val isSelected = remember(itemIdx, treeSelection) {
-            treeSelection.contains(itemIdx)
+        val isSelected = remember(item, treeSelection.value) {
+            treeSelection.value.contains(item.actual.getTMM())
         }
         Row(
             modifier = Modifier
@@ -255,7 +260,7 @@ class ProjectTreeHandler(
                                 if (buttons.isPrimaryPressed) {
                                     item.onDoublePrimaryAction.invoke(this)
                                     selectItem(
-                                        idx = itemIdx,
+                                        tmm = item.actual.getTMM(),
                                         singleSelect = true,
                                         keepSelect = this.keyboardModifiers.isCtrlPressed
                                     )
@@ -270,7 +275,7 @@ class ProjectTreeHandler(
                                 if (buttons.isPrimaryPressed) {
                                     item.onDoublePrimaryAction.invoke(this)
                                     selectItem(
-                                        idx = itemIdx,
+                                        tmm = item.actual.getTMM(),
                                         singleSelect = true,
                                         keepSelect = this.keyboardModifiers.isCtrlPressed
                                     )
@@ -296,7 +301,7 @@ class ProjectTreeHandler(
                                     isSecondaryPressed -> item.onSecondaryAction.invoke(
                                         this@mouseCombinedClickable,
                                         lazyListState,
-                                        items.indexOf(item),
+                                        itemIdx,
                                         this@ProjectTreeHandler as ITreeContextFor
                                     )
                                 }
@@ -308,7 +313,8 @@ class ProjectTreeHandler(
                             }
                         }
                     ),
-                text = item.name
+                text = item.name,
+                color = if (isSelected) Color.White else Color.Unspecified
             )
         }
     }
@@ -317,8 +323,7 @@ class ProjectTreeHandler(
     internal class TreeItem(
         internal val actual: TreeDisplayableItem,
         private val treeHandler: ProjectTreeHandler
-    )
-    {
+    ) {
         val icon: @Composable ((modifier: Modifier) -> Unit)?
             get() = actual.icon
         val name: String
@@ -335,7 +340,7 @@ class ProjectTreeHandler(
                 treeHandler.focusRequester.requestFocus()
                 val singleSelect = keyboardModifiers.let { it.isCtrlPressed && !it.isShiftPressed }
                 val keepSelect = keyboardModifiers.let { it.isCtrlPressed || it.isShiftPressed }
-                selectItem(idx = idx, singleSelect = singleSelect, keepSelect = keepSelect)
+                selectItem(tmm = actual.getTMM(), singleSelect = singleSelect, keepSelect = keepSelect)
             }
 
         val onDoublePrimaryAction: MouseClickScope.() -> Unit
@@ -350,32 +355,36 @@ class ProjectTreeHandler(
         val children: SnapshotStateList<TreeDisplayableItem>
             get() = actual.children
 
-        private fun selectItem(idx: Int, singleSelect: Boolean, keepSelect: Boolean) {
-            treeHandler.selectItem(idx = idx, singleSelect = singleSelect, keepSelect = keepSelect)
+        private fun selectItem(singleSelect: Boolean, keepSelect: Boolean, tmm: TMM) {
+            treeHandler.selectItem(tmm = tmm, singleSelect = singleSelect, keepSelect = keepSelect)
         }
     }
 
-    private fun selectItem(idx: Int, singleSelect: Boolean, keepSelect: Boolean) {
-        val selection = (treeSelection.takeIf { keepSelect } ?: emptyList()).toMutableList()
+    private fun selectItem(tmm: TMM, singleSelect: Boolean, keepSelect: Boolean) {
+        val selection = (treeSelection.value.takeIf { keepSelect } ?: emptyList()).toMutableList()
         if (singleSelect) {
-            if (selection.contains(idx)) {
-                selection.remove(element = idx)
+            if (selection.contains(tmm)) {
+                selection.remove(element = tmm)
             } else {
-                selection.add(idx)
+                selection.add(tmm)
             }
         } else {
             if (selection.isEmpty()) {
-                selection.add(idx)
+                selection.add(tmm)
             } else {
+                // TODO slection repair
+                /*
                 val lastAdditionIdx = selection.last()
                 val min = minOf(lastAdditionIdx + 1, idx)
                 val max = maxOf(lastAdditionIdx + 1, idx + 1)
                 selection.addAll(IntRange(start = min, endInclusive = max - 1).toList())
+
+                 */
             }
         }
-        treeSelection = selection
-        singleSelectedItem = if (selection.size == 1) {
-            treeSelection.firstOrNull()?.let { items.getOrNull(it)?.actual }
+        _treeSelection.value = selection
+        _singleSelectedItem.value = if (selection.size == 1) {
+            treeSelection.value.firstOrNull()
         } else {
             null
         }
@@ -393,6 +402,18 @@ class ProjectTreeHandler(
         val list = mutableListOf<TreeItem>()
         addTo(list)
         return list
+    }
+
+    fun expandAll() {
+        viewTreeElementRoot?.expandAll()
+    }
+
+    fun collapseAll() {
+        viewTreeElementRoot?.let {
+            if (it.children.isNotEmpty()) {
+                it.onDoublePrimaryAction.invoke(EmptyClickContext)
+            }
+        }
     }
 
 }

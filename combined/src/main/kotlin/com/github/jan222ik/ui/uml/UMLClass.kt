@@ -45,12 +45,8 @@ class UMLClass(
     @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
     @Composable
     override fun content(projectTreeHandler: ProjectTreeHandler) {
-        remember(projectTreeHandler.singleSelectedItem) {
-            selected = projectTreeHandler.singleSelectedItem?.let {
-                if (it is ModelTreeItem) {
-                    it.getElement() == umlClass
-                } else null
-            } ?: false
+        remember(projectTreeHandler.singleSelectedItem.value) {
+            selected = projectTreeHandler.metamodelRoot.findModellingElementOrNull(umlClass)?.let { projectTreeHandler.treeSelection.value.contains(it.target) } ?: false
         }
 
         Column(
@@ -128,19 +124,17 @@ class UMLClass(
     @Composable
     fun org.eclipse.uml2.uml.Property.displayProp(projectTreeHandler: ProjectTreeHandler) {
         this.let { prop ->
-            val selected = remember(projectTreeHandler.singleSelectedItem) {
-                projectTreeHandler.singleSelectedItem?.let {
-                    if (it is ModelTreeItem) {
-                        it.getElement() == prop
-                    } else null
-                }
+            val selected = remember(this, projectTreeHandler.treeSelection.value) {
+                val modellingElementOrNull = projectTreeHandler.metamodelRoot.findModellingElementOrNull(prop)
+                println("modellingElementOrNull = ${modellingElementOrNull}")
+                modellingElementOrNull?.let { projectTreeHandler.treeSelection.value.contains(it.target) } ?: false
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.clickable {
                     projectTreeHandler.setTreeSelectionByElements?.invoke(listOf(prop))
                 }.then(
-                    if (selected == true) {
+                    if (selected) {
                         Modifier.border(width = 1.dp, color = MaterialTheme.colors.primary)
                     } else Modifier
                 )

@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.github.jan222ik.model.TMM
 
 @ExperimentalFoundationApi
 abstract class TreeDisplayableItem(
@@ -50,6 +51,17 @@ abstract class TreeDisplayableItem(
         result = 31 * result + children.hashCode()
         return result
     }
+
+    fun expandAll() {
+        if (canExpand) {
+            if (children.isEmpty()) {
+                onDoublePrimaryAction.invoke(com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext)
+            }
+            children.onEach { it.expandAll() }
+        }
+    }
+
+    abstract fun getTMM() : TMM
 
 
 }

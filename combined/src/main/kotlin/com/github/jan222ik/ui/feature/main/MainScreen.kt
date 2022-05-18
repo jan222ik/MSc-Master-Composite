@@ -36,6 +36,7 @@ import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.MenuToolBarComponent
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.ToolBarComponent
 import com.github.jan222ik.ui.feature.main.tree.FileTree
+import com.github.jan222ik.ui.feature.main.tree.FileTreeToolBar
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import org.jetbrains.compose.splitpane.SplitPaneState
@@ -60,7 +61,7 @@ fun MainScreen(
 
 
     val diagramAreaComponent = remember(FileTree.treeHandler.value) {
-        FileTree.treeHandler.value?.let { DiagramAreaComponent(it) }
+        FileTree.treeHandler.value?.let { DiagramAreaComponent() }
     }
     MainScreenScaffold(
         menuToolBar = {
@@ -134,7 +135,7 @@ fun MainScreen(
 
                         Column(Modifier.padding(end = 20.dp)) {
                             ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
-                                Text("File Tree")
+                                FileTreeToolBar()
                                 FileTree.treeHandler.value?.render()
                             }
                         }
@@ -145,7 +146,9 @@ fun MainScreen(
                 second(50.dp) {
                     Box(Modifier.zIndex(1f)) {
                         ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
-                            diagramAreaComponent?.render()
+                            FileTree.treeHandler.value?.let {
+                                diagramAreaComponent?.render(projectTreeHandler = it)
+                            }
                         }
                     }
                 }

@@ -20,9 +20,7 @@ import org.jetbrains.compose.splitpane.VerticalSplitPane
 @ExperimentalComposeUiApi
 @ExperimentalSplitPaneApi
 @ExperimentalFoundationApi
-class DiagramAreaComponent(
-    val projectTreeHandler: ProjectTreeHandler
-) {
+class DiagramAreaComponent {
 
     companion object : KLogging()
 
@@ -61,7 +59,7 @@ class DiagramAreaComponent(
     )
 
     @Composable
-    fun render() {
+    fun render(projectTreeHandler: ProjectTreeHandler) {
         val hSplitterRem = remember { hSplitter }
         val vSplitterRem = remember { vSplitter }
         val expandToggleForPropViewShortcutActionRem = remember { expandToggleForPropViewShortcutAction }
@@ -85,7 +83,7 @@ class DiagramAreaComponent(
             first() {
                 VerticalSplitPane(splitPaneState = vSplitterRem) {
                     first() {
-                        canvasComponent.render()
+                        canvasComponent.render(projectTreeHandler)
                     }
                     second(minSize = PaletteComponent.PALETTE_MIN_HEIGHT) {
                         paletteComponent.render(
@@ -108,7 +106,8 @@ class DiagramAreaComponent(
                         } else {
                             hSplitterRem.setToMax()
                         }
-                    }
+                    },
+                    projectTreeHandler = projectTreeHandler
                 )
             }
         }

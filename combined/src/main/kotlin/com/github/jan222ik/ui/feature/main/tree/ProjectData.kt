@@ -18,7 +18,7 @@ class ProjectData(
                 list.add(it)
             }
         }
-        EditorManager.allUML.value = list
+        //EditorManager.allUML.value = list
     }
     val diagramsLoader = listFiles.also { println(it) }.find { it.name == filename + ".diagrams" }
         ?.let { DiagramsLoader(file = it) }
