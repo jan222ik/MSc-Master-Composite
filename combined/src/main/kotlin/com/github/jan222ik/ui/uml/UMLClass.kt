@@ -162,8 +162,6 @@ class UMLClass(
                 val str =
                     prop.applicableStereotypes.toStereotypesString() + " $vis " + prop.labelOrName() + " " + prop.typeNameString() + " [1]"
                 Text(text = str, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                // TODO Visibility indication
-                // TODO type
                 // TODO Multiplicity
             }
         }

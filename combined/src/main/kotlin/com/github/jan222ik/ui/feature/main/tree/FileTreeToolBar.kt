@@ -31,6 +31,7 @@ fun FileTreeToolBar(
     isMinimized: Boolean,
     onMinimizeRequest: () -> Unit
 ) {
+    // TODO Add focus listener and change background to a blue is color.
     ToolWindowToolbar(
         isMinimized = isMinimized,
         onMinimizeRequest = onMinimizeRequest,
