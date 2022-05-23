@@ -129,6 +129,14 @@ sealed class TMM {
     sealed class FS(
         val file: File
     ) : TMM() {
+        fun findModelFilesOrNull() : List<TMM.FS.UmlProjectFile>? {
+            return when (this) {
+                is Directory -> children.mapNotNull { it.findModelFilesOrNull() }.flatten().ifEmpty { null }
+                is TreeFile -> null
+                is UmlProjectFile -> listOf(this)
+            }
+        }
+
         override val displayName: String
             get() = when (this) {
                 is Directory -> this.file.name
@@ -171,6 +179,21 @@ sealed class TMM {
 
             val diagrams = mutableStateOf<List<DiagramHolder>>(tmpDiagrams)
             override val children: SnapshotStateList<ModelTree.Ecore.TModel> = mutableStateListOf(tmpModel)
+
+            fun getDiagramsInSubtree() : List<TMM.ModelTree.Diagram> {
+                fun TMM.dInSubRec() : List<TMM.ModelTree.Diagram> {
+                    return if (this is ModelTree.Diagram) {
+                        listOf(this)
+                    } else {
+                        if (this is IHasChildren<*>) {
+                            children.flatMap { it.dInSubRec() }
+                        } else {
+                            emptyList()
+                        }
+                    }
+                }
+                return this.dInSubRec()
+            }
         }
     }
 

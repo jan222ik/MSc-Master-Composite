@@ -4,13 +4,10 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.MouseClickScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import com.github.jan222ik.model.TMM
+import com.github.jan222ik.model.TMMPath
 
 @ExperimentalFoundationApi
 abstract class TreeDisplayableItem(
@@ -58,6 +55,21 @@ abstract class TreeDisplayableItem(
                 onDoublePrimaryAction.invoke(com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext)
             }
             children.onEach { it.expandAll() }
+        }
+    }
+
+    fun expandToTarget(tmmPath: TMMPath<*>, idx: Int) {
+        val tmm = this.getTMM()
+        if (tmm != tmmPath.target) {
+            if (tmm is TMM.IHasChildren<*>) {
+                val find = tmm.children.find { it == tmmPath.nodes[idx.inc()] }
+                if (find != null) {
+                    if (children.isEmpty()) {
+                        onDoublePrimaryAction.invoke(com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext)
+                    }
+                    children.find { it.getTMM() == find }?.expandToTarget(tmmPath, idx.inc())
+                }
+            }
         }
     }
 

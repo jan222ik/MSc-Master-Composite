@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import com.github.jan222ik.model.TMM
+import com.github.jan222ik.model.TMMPath
 import com.github.jan222ik.ui.components.dnd.dndDraggable
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.components.menu.MenuItemList
@@ -70,6 +71,9 @@ class ProjectTreeHandler(
     fun setTreeSelection(selection: List<TMM>) {
         _treeSelection.value = selection
         _singleSelectedItem.value = selection.firstOrNull()
+        treeSelection.value.forEach {
+            expandToTarget(it.treePath())
+        }
     }
 
     var contextMenuFor by mutableStateOf<Pair<PopupPositionProvider, List<MenuContribution>>?>(null)
@@ -411,6 +415,11 @@ class ProjectTreeHandler(
 
     fun expandAll() {
         viewTreeElementRoot?.expandAll()
+    }
+
+    fun expandToTarget(tmmPath: TMMPath<*>) {
+        _treeSelection.value = listOf(tmmPath.target)
+        viewTreeElementRoot?.expandToTarget(tmmPath = tmmPath, 0)
     }
 
     fun collapseAll() {

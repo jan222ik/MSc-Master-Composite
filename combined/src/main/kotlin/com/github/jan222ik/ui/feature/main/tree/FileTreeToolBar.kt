@@ -9,14 +9,17 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Compress
 import androidx.compose.material.icons.filled.Expand
+import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.github.jan222ik.ui.components.tooltips.TooltipArea
 import com.github.jan222ik.ui.components.tooltips.TooltipSurface
 import com.github.jan222ik.ui.feature.main.MainScreenScaffoldConstants
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.ui.value.Space
 import com.github.jan222ik.util.HorizontalDivider
@@ -34,6 +37,29 @@ fun FileTreeToolBar(
         title = "File Tree",
         closeBeforeContent = false
     ) {
+        TooltipArea(
+            tooltip = {
+                TooltipSurface {
+                    Text("Find current editor in tree")
+                }
+            }
+        ) {
+            Icon(
+                modifier = Modifier
+                    .size(Space.dp16)
+                    .clickable(
+                        enabled = EditorManager.activeEditorTab.value != null
+                    ) {
+                        EditorManager.activeEditorTab.value?.tmmDiagram?.treePath()?.let { FileTree.treeHandler.value?.expandToTarget(it) }
+                    },
+                imageVector = Icons.Default.GpsFixed,
+                contentDescription = null,
+                tint = when (EditorManager.activeEditorTab.value) {
+                    null -> EditorColors.dividerGray
+                    else -> Color.Unspecified
+                }
+            )
+        }
         TooltipArea(
             tooltip = {
                 TooltipSurface {

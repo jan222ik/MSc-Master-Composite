@@ -6,10 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Icon
-import androidx.compose.material.ScrollableTabRow
-import androidx.compose.material.TabRowDefaults
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
@@ -21,11 +18,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.github.jan222ik.ui.feature.LocalCommandStackHandler
 import com.github.jan222ik.ui.feature.main.MainScreenScaffoldConstants
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabComponent
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
+import com.github.jan222ik.ui.feature.main.tree.FileTree
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.ui.value.EditorColors
+import com.github.jan222ik.ui.value.Space
 import com.github.jan222ik.util.HorizontalDivider
 import mu.KLogging
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
@@ -61,7 +62,7 @@ class DiagramCanvasComponent(
             Crossfade(
                 targetState = EditorManager.activeEditorTab.value
             ) { activeTab ->
-                if (activeTab != null)  {
+                if (activeTab != null) {
                     HorizontalDivider(modifier = Modifier.fillMaxWidth(), color = EditorColors.dividerGray)
                     val vm = remember(activeTab, activeTab.id) { activeTab }
                     EditorTabComponent(
@@ -117,7 +118,7 @@ class DiagramCanvasComponent(
                         )
 
                         Text(
-                            text = it.name + "${it.id}",
+                            text = it.name,
                             textAlign = TextAlign.Center
                         )
 
@@ -138,11 +139,44 @@ class DiagramCanvasComponent(
 
     @Composable
     fun NoActiveTab() {
-        Column(
-            modifier = Modifier.fillMaxSize()
+        val commandStackHandler = LocalCommandStackHandler.current
+        ProvideTextStyle(
+            LocalTextStyle.current.copy(fontSize = 18.sp)
         ) {
-
-            Text("No active Tab")
+            Column(
+                modifier = Modifier.fillMaxSize().background(EditorColors.dividerGray),
+                verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("No active Tab")
+                Text("Existing Diagrams in Project")
+                Column {
+                    val modelFiles = remember(
+                        FileTree.treeHandler.value, FileTree.treeHandler.value?.metamodelRoot
+                    ) {
+                        FileTree.treeHandler.value?.metamodelRoot?.findModelFilesOrNull()
+                    }
+                    modelFiles?.map { it.getDiagramsInSubtree() }?.flatten()?.forEach {
+                        Row(
+                            modifier = Modifier.clickable {
+                                EditorManager.moveToOrOpenDiagram(
+                                    tmmDiagram = it,
+                                    commandStackHandler = commandStackHandler
+                                )
+                            },
+                            horizontalArrangement = Arrangement.spacedBy(Space.dp8),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = it.initDiagram.diagramType.iconAsPainter(),
+                                contentDescription = null,
+                                tint = Color.Unspecified
+                            )
+                            Text(text = it.initDiagram.name)
+                        }
+                    }
+                }
+            }
         }
     }
 }
