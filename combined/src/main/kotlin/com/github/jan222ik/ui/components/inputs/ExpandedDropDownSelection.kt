@@ -34,7 +34,8 @@ fun ExpandedDropDownSelection(
     items: List<String>,
     initialValue: String,
     onSelectionChanged: (String) -> Unit,
-    transformation: ITransformation<String, String>? = null
+    transformation: ITransformation<String, String>? = null,
+    isReadOnly: Boolean
 ) {
     var expanded by remember { mutableStateOf(false) }
     var selectedText by remember(initialValue) { mutableStateOf(initialValue) }
@@ -83,38 +84,43 @@ fun ExpandedDropDownSelection(
                 },
             label = propViewElement?.let { { TitleWithTooltip(propViewElement) } },
             trailingIcon = {
-                Icon(
-                    modifier = Modifier.clickable { expanded = !expanded },
-                    imageVector = icon,
-                    contentDescription = "open dropdown"
-                )
+                if (!isReadOnly) {
+                    Icon(
+                        modifier = Modifier.clickable { expanded = !expanded },
+                        imageVector = icon,
+                        contentDescription = "open dropdown"
+                    )
+                }
             },
             isError = errors.isNotEmpty(),
+            readOnly = isReadOnly
         )
         errors.forEach {
             Text(text = it.msg, color = MaterialTheme.colors.error)
         }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier
-                .width(with(LocalDensity.current) { dropDownWidth.toDp() })
-        ) {
-            Row(
-                modifier = Modifier.align(Alignment.End),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+        if (!isReadOnly) {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier
+                    .width(with(LocalDensity.current) { dropDownWidth.toDp() })
             ) {
-                ShortcutDisplay(keys = listOf(Key.Escape))
-                Text(text = "to cancel", style = MaterialTheme.typography.caption)
-            }
-            items.forEach { label ->
-                DropdownMenuItem(onClick = {
-                    selectedText = label
-                    validate(label)
-                    expanded = false
-                }) {
-                    Text(text = label)
+                Row(
+                    modifier = Modifier.align(Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    ShortcutDisplay(keys = listOf(Key.Escape))
+                    Text(text = "to cancel", style = MaterialTheme.typography.caption)
+                }
+                items.forEach { label ->
+                    DropdownMenuItem(onClick = {
+                        selectedText = label
+                        validate(label)
+                        expanded = false
+                    }) {
+                        Text(text = label)
+                    }
                 }
             }
         }

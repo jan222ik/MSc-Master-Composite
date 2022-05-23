@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import com.github.jan222ik.model.validation.transformations.NonTransformer
 import com.github.jan222ik.model.validation.valudations.ListValidations
 import com.github.jan222ik.ui.components.tooltips.TitleWithTooltip
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.value.descriptions.IPropertyViewElement
 
 @ExperimentalComposeUiApi
@@ -33,6 +34,7 @@ fun MultiplicitySelection(propViewElement: IPropertyViewElement) {
                     initialValue = multiplicityItems.last(),
                     onSelectionChanged = {},
                     transformation = NonTransformer(validations = listOf(ListValidations.inCollection(list = multiplicityItems))),
+                    isReadOnly = !EditorManager.allowEdit.value,
                 )
             } else {
                 Column {

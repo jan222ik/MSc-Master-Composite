@@ -24,7 +24,8 @@ fun BooleanToggleWithLabel(
     propViewElement: IPropertyViewElement,
     initialValue: Boolean,
     focusRequester: FocusRequester,
-    focusOrderReceiver: FocusOrder.() -> Unit
+    focusOrderReceiver: FocusOrder.() -> Unit,
+    isReadOnly: Boolean
 ) {
     var checked by remember(initialValue) { mutableStateOf(initialValue) }
     Row(
@@ -44,7 +45,8 @@ fun BooleanToggleWithLabel(
                     println("FOCUS: ${propViewElement.title} -> $it")
                 },
             checked = checked,
-            onCheckedChange = { checked = it }
+            onCheckedChange = { checked = it },
+            enabled = !isReadOnly
         )
     }
 }

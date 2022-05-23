@@ -24,16 +24,12 @@ import com.github.jan222ik.model.validation.transformations.NonTransformer
 import com.github.jan222ik.model.validation.valudations.ListValidations.inCollection
 import com.github.jan222ik.ui.components.inputs.*
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.value.descriptions.DescriptiveElements
 import com.github.jan222ik.ui.value.descriptions.IPropertyViewElement
 import org.eclipse.emf.ecore.EObject
-import org.eclipse.uml2.uml.AggregationKind
-import org.eclipse.uml2.uml.NamedElement
-import org.eclipse.uml2.uml.Package
-import org.eclipse.uml2.uml.Property
-import org.eclipse.uml2.uml.ValueSpecification
-import org.eclipse.uml2.uml.VisibilityKind
+import org.eclipse.uml2.uml.*
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -185,12 +181,13 @@ data class PlaceholderElement<T : EObject>(
     @Composable
     override fun render(umlElement: T, fReqSelf: FocusRequester) {
         StingBasedInput(
+            isReadOnly = !EditorManager.allowEdit.value,
             propViewElement = propViewElement,
             initialValue = extractValueAsString(umlElement),
             focusRequester = fReqSelf,
             focusOrderReceiver = {
                 // TODO
-            }
+            },
         )
     }
 }
@@ -209,7 +206,8 @@ data class AggregationElement<T : EObject>(
             items = visibilityItems,
             initialValue = extractValueAsString(umlElement),
             onSelectionChanged = {},
-            transformation = NonTransformer(validations = listOf(inCollection(list = visibilityItems)))
+            transformation = NonTransformer(validations = listOf(inCollection(list = visibilityItems))),
+            isReadOnly = !EditorManager.allowEdit.value
         )
     }
 }
@@ -227,7 +225,8 @@ data class PlaceholderElementBool<T : EObject>(
             focusRequester = fReqSelf,
             focusOrderReceiver = {
                 // TODO
-            }
+            },
+            isReadOnly = !EditorManager.allowEdit.value
         )
     }
 }
@@ -246,7 +245,7 @@ data class ReadOnlyStringElement<T : EObject>(
             focusRequester = fReqSelf,
             focusOrderReceiver = {
                 // TODO
-            }
+            },
         )
     }
 }
@@ -265,7 +264,8 @@ data class Nameable<T : NamedElement>(
             focusRequester = fReqSelf,
             focusOrderReceiver = {
                 // TODO
-            }
+            },
+            isReadOnly = !EditorManager.allowEdit.value
         )
     }
 
@@ -285,7 +285,8 @@ data class Labelable<T : NamedElement>(
             focusRequester = fReqSelf,
             focusOrderReceiver = {
                 // TODO
-            }
+            },
+            isReadOnly = !EditorManager.allowEdit.value
         )
     }
 
@@ -306,7 +307,8 @@ data class Visibility<T : NamedElement>(
             items = visibilityItems,
             initialValue = umlElement.visibility.literal,
             onSelectionChanged = {},
-            transformation = NonTransformer(validations = listOf(inCollection(list = visibilityItems)))
+            transformation = NonTransformer(validations = listOf(inCollection(list = visibilityItems))),
+            isReadOnly = !EditorManager.allowEdit.value
         )
     }
 
@@ -372,7 +374,8 @@ fun demo() {
                             next = focusIsReadOnly
                             down = focusIsReadOnly
                             previous = focusName
-                        }
+                        },
+                        isReadOnly = !EditorManager.allowEdit.value
                     )
                 }
                 item {
@@ -383,7 +386,8 @@ fun demo() {
                         focusOrderReceiver = {
                             next = focusIsUnique
                             down = focusIsUnique
-                        }
+                        },
+                        isReadOnly = !EditorManager.allowEdit.value
                     )
                 }
                 item {
@@ -394,7 +398,8 @@ fun demo() {
                         focusOrderReceiver = {
                             next = focusIsOrdered
                             down = focusIsOrdered
-                        }
+                        },
+                        isReadOnly = !EditorManager.allowEdit.value
                     )
                 }
                 item {
@@ -405,7 +410,8 @@ fun demo() {
                         focusOrderReceiver = {
                             next = focusIsStatic
                             down = focusIsStatic
-                        }
+                        },
+                        isReadOnly = !EditorManager.allowEdit.value
                     )
                 }
                 item {
@@ -416,7 +422,8 @@ fun demo() {
                         focusOrderReceiver = {
                             next = focusName
                             down = focusName
-                        }
+                        },
+                        isReadOnly = !EditorManager.allowEdit.value
                     )
                 }
 
@@ -429,7 +436,8 @@ fun demo() {
                         items = visibilityItems,
                         initialValue = visibilityItems.first(),
                         onSelectionChanged = {},
-                        transformation = NonTransformer(validations = listOf(inCollection(list = visibilityItems)))
+                        transformation = NonTransformer(validations = listOf(inCollection(list = visibilityItems))),
+                        isReadOnly = !EditorManager.allowEdit.value
                     )
                 }
                 item {
@@ -441,7 +449,8 @@ fun demo() {
                         items = aggregationItems,
                         initialValue = aggregationItems.first(),
                         onSelectionChanged = {},
-                        transformation = NonTransformer(validations = listOf(inCollection(list = aggregationItems)))
+                        transformation = NonTransformer(validations = listOf(inCollection(list = aggregationItems))),
+                        isReadOnly = !EditorManager.allowEdit.value
                     )
                 }
                 item {
