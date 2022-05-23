@@ -28,9 +28,11 @@ import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.value.descriptions.DescriptiveElements
 import com.github.jan222ik.ui.value.descriptions.IPropertyViewElement
 import org.eclipse.emf.ecore.EObject
+import org.eclipse.uml2.uml.AggregationKind
 import org.eclipse.uml2.uml.NamedElement
 import org.eclipse.uml2.uml.Package
 import org.eclipse.uml2.uml.Property
+import org.eclipse.uml2.uml.ValueSpecification
 import org.eclipse.uml2.uml.VisibilityKind
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -55,9 +57,13 @@ fun PropertyView(
                         selectedElement.property,
                         PropertyViewConfigs.pvForProperty
                     )
-                    is TMM.ModelTree.Ecore.TUNKNOWN -> TODO()
+                    else -> {
+                        Text("Not properties available for selected uml-item.")
+                    }
                 }
-            } else Text("Not properties available for selected item.")
+            } else {
+                Text("Not properties available for selected item.")
+            }
         } else {
             Text(text = "No element selected.")
         }
@@ -131,8 +137,8 @@ object PropertyViewConfigs {
             Nameable(DescriptiveElements.name),
             Labelable(DescriptiveElements.label),
             ReadOnlyStringElement(DescriptiveElements.qualifiedName) { it.qualifiedName },
-            PlaceholderElementBool(DescriptiveElements.isAbstract),
-            PlaceholderElementBool(DescriptiveElements.isActive),
+            PlaceholderElementBool(DescriptiveElements.isAbstract) { it.isAbstract },
+            PlaceholderElementBool(DescriptiveElements.isActive) { it.isActive },
             Visibility(DescriptiveElements.visibility),
             // Owned attributes
             // Owned operations
@@ -144,15 +150,20 @@ object PropertyViewConfigs {
         elements = listOf(
             Nameable(DescriptiveElements.name),
             Labelable(DescriptiveElements.label),
-            PlaceholderElementBool(DescriptiveElements.isDerived),
-            PlaceholderElementBool(DescriptiveElements.isReadOnly),
-            PlaceholderElementBool(DescriptiveElements.isUnique),
-            PlaceholderElementBool(DescriptiveElements.isOrdered),
-            PlaceholderElementBool(DescriptiveElements.isStatic),
+            PlaceholderElementBool(DescriptiveElements.isDerived) { it.isDerived },
+            PlaceholderElementBool(DescriptiveElements.isReadOnly) { it.isReadOnly },
+            PlaceholderElementBool(DescriptiveElements.isUnique) { it.isUnique },
+            PlaceholderElementBool(DescriptiveElements.isOrdered) { it.isOrdered },
+            PlaceholderElementBool(DescriptiveElements.isStatic) { it.isStatic },
             Visibility(DescriptiveElements.visibility),
-            PlaceholderElement(DescriptiveElements.aggregation),
-            PlaceholderElement(DescriptiveElements.multiplicity),
-            PlaceholderElement(DescriptiveElements.defaultValue),
+            AggregationElement(DescriptiveElements.aggregation) { it.aggregation.literal },
+            PlaceholderElement(DescriptiveElements.multiplicity) {
+                val memberEnd = it.association?.memberEnds?.firstOrNull()
+                memberEnd?.let { "[${it.lower}, ${it.upper}]" } ?: ""
+            },
+            PlaceholderElement(DescriptiveElements.defaultValue) {
+                it.ownedElements.filterIsInstance<ValueSpecification>().firstOrNull()?.stringValue() ?: ""
+            },
         )
     )
 }
@@ -167,14 +178,15 @@ interface IPropertyViewConfigElement<T : EObject> {
 }
 
 data class PlaceholderElement<T : EObject>(
-    override val propViewElement: IPropertyViewElement
+    override val propViewElement: IPropertyViewElement,
+    val extractValueAsString: (T) -> String = { "" }
 ) : IPropertyViewConfigElement<T> {
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     override fun render(umlElement: T, fReqSelf: FocusRequester) {
         StingBasedInput(
             propViewElement = propViewElement,
-            initialValue = "",
+            initialValue = extractValueAsString(umlElement),
             focusRequester = fReqSelf,
             focusOrderReceiver = {
                 // TODO
@@ -183,9 +195,28 @@ data class PlaceholderElement<T : EObject>(
     }
 }
 
+data class AggregationElement<T : EObject>(
+    override val propViewElement: IPropertyViewElement,
+    val extractValueAsString: (T) -> String
+) : IPropertyViewConfigElement<T> {
+    @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+    @Composable
+    override fun render(umlElement: T, fReqSelf: FocusRequester) {
+        val kindByLiteral = AggregationKind.values().associateBy { it.literal }
+        val visibilityItems = kindByLiteral.keys.toList()
+        ExpandedDropDownSelection(
+            propViewElement = DescriptiveElements.aggregation,
+            items = visibilityItems,
+            initialValue = extractValueAsString(umlElement),
+            onSelectionChanged = {},
+            transformation = NonTransformer(validations = listOf(inCollection(list = visibilityItems)))
+        )
+    }
+}
+
 data class PlaceholderElementBool<T : EObject>(
     override val propViewElement: IPropertyViewElement,
-    val extractValueAsBoolean: (T) -> Boolean = { false }
+    val extractValueAsBoolean: (T) -> Boolean
 ) : IPropertyViewConfigElement<T> {
     @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
     @Composable

@@ -27,6 +27,7 @@ import com.github.jan222ik.ui.feature.main.tree.ModelTreeItem
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.util.HorizontalDivider
 import mu.KLogging
+import org.eclipse.uml2.uml.AggregationKind
 import org.eclipse.uml2.uml.Element
 import org.eclipse.uml2.uml.Stereotype
 import org.eclipse.uml2.uml.VisibilityKind
@@ -85,7 +86,9 @@ class UMLClass(
             ) {
                 Text(text = "attributes")
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    umlClass.attributes.forEach { it.displayProp(projectTreeHandler) }
+                    umlClass.attributes
+                        .filter { it.aggregation != AggregationKind.NONE_LITERAL }
+                        .forEach { it.displayProp(projectTreeHandler) }
                 }
             }
         }
