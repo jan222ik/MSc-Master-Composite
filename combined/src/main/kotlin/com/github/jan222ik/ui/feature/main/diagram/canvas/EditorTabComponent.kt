@@ -74,7 +74,8 @@ fun EditorTabComponent(stateOut: EditorTabViewModel, projectTreeHandler: Project
         }
         NavigateDiagramUPButton(
             modifier = Modifier.align(Alignment.TopStart),
-            text = observableDiagram.upwardsDiagramLink ?: "<Diagram name>",
+            text = observableDiagram.upwardsDiagramLink ?: "Not configured",
+            enabled = observableDiagram.upwardsDiagramLink != null,
             onClick = {
                 logger.debug { "TODO: Navigate to '${observableDiagram.upwardsDiagramLink}'" }
                 observableDiagram.upwardsDiagramLink?.let { location ->

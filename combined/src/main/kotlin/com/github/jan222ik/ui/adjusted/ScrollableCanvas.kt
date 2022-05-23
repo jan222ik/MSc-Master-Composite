@@ -225,7 +225,7 @@ fun ScrollableCanvas(
     }
 }
 
-private fun Modifier.addIf(condition: Boolean, other: Modifier) = if (condition) this.then(other) else this
+fun Modifier.addIf(condition: Boolean, other: Modifier) = if (condition) this.then(other) else this
 
 fun DrawScope.drawSelectionPlane(rect: Pair<Offset, Size>?) {
     if (rect == null) return

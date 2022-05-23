@@ -1,10 +1,24 @@
 [ {
-  "name" : "First diagram",
+  "name" : "Overview",
   "upwardsDiagramLink" : null,
+  "diagramType" : "PACKAGE",
+  "location" : "testuml",
+  "content" : [ {
+    "type" : "UMLRef.ComposableRef.PackageRef",
+    "referencedQualifiedName" : "testuml",
+    "shape" : {
+      "topLeftPacked" : 4898227545847627776,
+      "width" : 280.0,
+      "height" : 100.0
+    }
+  } ]
+}, {
+  "name" : "First diagram",
+  "upwardsDiagramLink" : "testuml::Overview",
   "diagramType" : "BLOCK_DEFINITION",
   "location" : "testuml",
   "content" : [ {
-    "type" : "UMLRef.Class",
+    "type" : "UMLRef.ComposableRef.ClassRef",
     "referencedQualifiedName" : "testuml::TestClass",
     "shape" : {
       "topLeftPacked" : 4898227545847627776,
@@ -13,7 +27,7 @@
     },
     "filters" : [ ]
   }, {
-    "type" : "UMLRef.Class",
+    "type" : "UMLRef.ComposableRef.ClassRef",
     "referencedQualifiedName" : "testuml::TestClassWithProperties",
     "shape" : {
       "topLeftPacked" : 4898227545864404992,
@@ -41,7 +55,7 @@
   "diagramType" : "BLOCK_DEFINITION",
   "location" : "testuml",
   "content" : [ {
-    "type" : "UMLRef.Class",
+    "type" : "UMLRef.ComposableRef.ClassRef",
     "referencedQualifiedName" : "testuml::TestClass",
     "shape" : {
       "topLeftPacked" : 4898227545847627776,
@@ -50,7 +64,7 @@
     },
     "filters" : [ ]
   }, {
-    "type" : "UMLRef.Class",
+    "type" : "UMLRef.ComposableRef.ClassRef",
     "referencedQualifiedName" : "testuml::TestClassWithProperties",
     "shape" : {
       "topLeftPacked" : 4898227545864404992,
@@ -59,7 +73,7 @@
     },
     "filters" : [ ]
   }, {
-    "type" : "UMLRef.Class",
+    "type" : "UMLRef.ComposableRef.ClassRef",
     "referencedQualifiedName" : "testuml::AnotherClass",
     "shape" : {
       "topLeftPacked" : 4913145719624957952,

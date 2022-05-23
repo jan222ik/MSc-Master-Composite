@@ -90,6 +90,7 @@ fun MenuToolBarComponent(
                                                 }
                                             }
                                             DebugCanvas.apply {
+                                                switch(title = "Block switch in edit mode", state = blockUXTestEdit)
                                                 switch(title = "Show/Hide debug canvas", state = debugCanvasVisible)
                                                 switch(title = "Clip Viewport", state = this.conditionalClipValue)
                                                 switch(title = "Show/Hide Arrow Offsets", state = this.showPathOffsetPoints)

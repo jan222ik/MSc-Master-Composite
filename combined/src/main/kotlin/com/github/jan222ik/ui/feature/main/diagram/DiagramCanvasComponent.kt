@@ -1,10 +1,8 @@
 package com.github.jan222ik.ui.feature.main.diagram
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -54,6 +52,8 @@ class DiagramCanvasComponent(
             modifier = Modifier
                 .fillMaxSize()
                 .mouseCombinedClickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
                     onClick = {
                         if (this.buttons.isBackPressed) {
                             EditorManager.moveBack()
@@ -62,7 +62,9 @@ class DiagramCanvasComponent(
                                 EditorManager.moveForward()
                             }
                         }
-                    }
+                    },
+                    onLongClick = {},
+                    onDoubleClick = {}
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

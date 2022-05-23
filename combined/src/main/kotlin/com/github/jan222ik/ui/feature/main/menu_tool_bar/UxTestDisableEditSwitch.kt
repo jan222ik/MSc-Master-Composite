@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.github.jan222ik.ui.adjusted.DebugCanvas
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.value.Space
 
@@ -18,7 +19,7 @@ import com.github.jan222ik.ui.value.Space
 @Composable
 fun UxTestDisableEditSwitch() {
     Box(Modifier.size(0.dp)) {
-        if (EditorManager.allowEdit.value) {
+        if (EditorManager.allowEdit.value && DebugCanvas.blockUXTestEdit.value) {
             AlertDialog(
                 modifier = Modifier.size(400.dp, 150.dp),
                 title = {

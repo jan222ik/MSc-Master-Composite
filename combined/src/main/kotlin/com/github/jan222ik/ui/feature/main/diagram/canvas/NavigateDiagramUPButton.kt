@@ -25,10 +25,10 @@ import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.ui.value.Space
 
 @Composable
-fun NavigateDiagramUPButton(modifier: Modifier, text: String, onClick: () -> Unit) {
+fun NavigateDiagramUPButton(modifier: Modifier, text: String, enabled: Boolean, onClick: () -> Unit) {
     Surface(
         modifier = modifier.clickable(onClick = onClick),
-        color = EditorColors.backgroundGray,
+        color = EditorColors.backgroundGray.takeUnless { !enabled } ?: EditorColors.dividerGray,
         shape = object : Shape {
             override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
                 val cutSize = 5f

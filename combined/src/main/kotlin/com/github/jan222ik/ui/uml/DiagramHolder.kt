@@ -54,7 +54,7 @@ data class DiagramHolder(
 sealed class DiagramStateHolders {
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
     @JsonSubTypes(
-        JsonSubTypes.Type(value = UMLRef.ClassRef::class, name = "UMLRef.Class"),
+        JsonSubTypes.Type(value = UMLRef.ComposableRef::class, name = "UMLRef.ComposableRef"),
         JsonSubTypes.Type(value = UMLRef.ArrowRef::class, name = "UMLRef.Arrow"),
     )
     sealed class UMLRef() : DiagramStateHolders() {
@@ -66,21 +66,36 @@ sealed class DiagramStateHolders {
             val targetAnchor: Anchor
         ) : UMLRef()
 
-        class ClassRef(
-            val referencedQualifiedName: String,
-            val shape: BoundingRectState,
-            val filters: List<UMLClassRefFilter>
-        ) : UMLRef() {
-            @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-            @JsonSubTypes(
-                JsonSubTypes.Type(
-                    value = ClassRef.UMLClassRefFilter.Compartment::class,
-                    name = "UMLClassRefFilter.Compartment"
-                ),
-            )
-            sealed class UMLClassRefFilter {
-                data class Compartment(val name: String, val elementsNames: List<String>) : UMLClassRefFilter()
+        @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+        @JsonSubTypes(
+            JsonSubTypes.Type(value = UMLRef.ComposableRef.ClassRef::class, name = "UMLRef.ComposableRef.ClassRef"),
+            JsonSubTypes.Type(value = UMLRef.ComposableRef.PackageRef::class, name = "UMLRef.ComposableRef.PackageRef"),
+        )
+        sealed class ComposableRef : UMLRef() {
+            abstract val referencedQualifiedName: String
+            abstract val shape: BoundingRectState
+
+            class ClassRef(
+                override val referencedQualifiedName: String,
+                override val shape: BoundingRectState,
+                val filters: List<UMLClassRefFilter>
+            ) : UMLRef.ComposableRef() {
+                @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+                @JsonSubTypes(
+                    JsonSubTypes.Type(
+                        value = ClassRef.UMLClassRefFilter.Compartment::class,
+                        name = "UMLClassRefFilter.Compartment"
+                    ),
+                )
+                sealed class UMLClassRefFilter {
+                    data class Compartment(val name: String, val elementsNames: List<String>) : UMLClassRefFilter()
+                }
             }
+
+            class PackageRef(
+                override val referencedQualifiedName: String,
+                override val shape: BoundingRectState
+            ) : UMLRef.ComposableRef()
         }
     }
 
@@ -105,7 +120,7 @@ class DiagramHolderObservable(
         val tmmAsList = umlRoot.toList().filterIsInstance<TMM.ModelTree.Ecore>()
         val initElements = elementRef
             .map { umlRef ->
-                umlRef as DiagramStateHolders.UMLRef.ClassRef to
+                umlRef as DiagramStateHolders.UMLRef.ComposableRef to
                         tmmAsList
                             .find { it.element is NamedElement && it.element.qualifiedName == umlRef.referencedQualifiedName }
             }
@@ -113,9 +128,10 @@ class DiagramHolderObservable(
                 it.second
                 val c = it.second?.element
                 if (c != null && c is Class) {
+                    val composableRef = it.first as DiagramStateHolders.UMLRef.ComposableRef.ClassRef
                     UMLClassFactory.createInstance(
                         umlClass = c,
-                        initBoundingRect = it.first.shape,
+                        initBoundingRect = composableRef.shape,
                         onMoveOrResize = { moveResizeCommand ->
                             DNDCreation.logger.debug { "Update Arrows after UMLClass movement" }
                             val updateArrowPathCommands = updateArrows(moveResizeCommand, c)
@@ -138,7 +154,35 @@ class DiagramHolderObservable(
                             command
                         }
                     )
-                } else null
+                } else
+                    if (c != null && c is Package) {
+                        val composableRef = it.first as DiagramStateHolders.UMLRef.ComposableRef.PackageRef
+                        UMLPackageFactory.createInstance(
+                            umlPackage = c,
+                            initBoundingRect = composableRef.shape,
+                            onMoveOrResize = { moveResizeCommand ->
+                                DNDCreation.logger.debug { "Update Arrows after UMLPackage movement" }
+                                val updateArrowPathCommands = updateArrows(moveResizeCommand, c)
+                                if (updateArrowPathCommands.isEmpty()) {
+                                    commandStackHandler.add(moveResizeCommand)
+                                } else {
+                                    commandStackHandler.add(CompoundCommand(updateArrowPathCommands + moveResizeCommand))
+                                }
+                            },
+                            deleteCommand = { toDelete ->
+                                val command = object : RemoveFromDiagramCommand() {
+                                    override suspend fun execute(handler: JobHandler) {
+                                        elements.value = elements.value - toDelete
+                                    }
+
+                                    override suspend fun undo() {
+                                        elements.value = elements.value + toDelete
+                                    }
+                                }
+                                command
+                            }
+                        )
+                    } else null
             }
         elements.value = initElements
         println("elements.value = ${elements.value}")
@@ -195,7 +239,7 @@ class DiagramHolderObservable(
         arrows.value = initArrows
     }
 
-    fun updateArrows(moveResizeCommand: MoveOrResizeCommand, data: Class): List<UpdateArrowPathCommand> {
+    fun updateArrows(moveResizeCommand: MoveOrResizeCommand, data: Element): List<UpdateArrowPathCommand> {
         val filteredSources = arrows.value.filter { it.data.sources.contains(data) }
         val filteredTargets = arrows.value.filter { it.data.targets.contains(data) }
         DNDCreation.logger.debug { "sources: $filteredSources, tragets: $filteredTargets" }
@@ -252,14 +296,29 @@ class Anchor(val side: AnchorSide, val fromTopLeftOffsetPercentage: Float) {
 }
 
 fun main() {
-
+    val overview = DiagramHolder(
+        name = "Overview",
+        diagramType = DiagramType.PACKAGE,
+        location = "testuml",
+        content = listOf(
+            DiagramStateHolders.UMLRef.ComposableRef.PackageRef(
+                referencedQualifiedName = "testuml",
+                shape = BoundingRectState(
+                    topLeftPacked = packFloats(500f, 200f),
+                    width = 280f,
+                    height = 100f,
+                )
+            )
+        ),
+        upwardsDiagramLink = null
+    )
 
     val diagram1 = DiagramHolder(
         name = "First diagram",
         diagramType = DiagramType.BLOCK_DEFINITION,
         location = "testuml",
         content = listOf(
-            DiagramStateHolders.UMLRef.ClassRef(
+            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
                 referencedQualifiedName = "testuml::TestClass",
                 filters = emptyList(),
                 shape = BoundingRectState(
@@ -268,7 +327,7 @@ fun main() {
                     height = 300f,
                 )
             ),
-            DiagramStateHolders.UMLRef.ClassRef(
+            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
                 referencedQualifiedName = "testuml::TestClassWithProperties",
                 filters = emptyList(),
                 shape = BoundingRectState(
@@ -285,7 +344,7 @@ fun main() {
                 targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.5f)
             )
         ),
-        upwardsDiagramLink = null
+        upwardsDiagramLink = "testuml::Overview"
     )
 
     val diagram2 = DiagramHolder(
@@ -293,7 +352,7 @@ fun main() {
         diagramType = DiagramType.BLOCK_DEFINITION,
         location = "testuml",
         content = listOf(
-            DiagramStateHolders.UMLRef.ClassRef(
+            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
                 referencedQualifiedName = "testuml::TestClass",
                 filters = emptyList(),
                 shape = BoundingRectState(
@@ -302,7 +361,7 @@ fun main() {
                     height = 200f,
                 )
             ),
-            DiagramStateHolders.UMLRef.ClassRef(
+            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
                 referencedQualifiedName = "testuml::TestClassWithProperties",
                 filters = emptyList(),
                 shape = BoundingRectState(
@@ -311,7 +370,7 @@ fun main() {
                     height = 200f,
                 )
             ),
-            DiagramStateHolders.UMLRef.ClassRef(
+            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
                 referencedQualifiedName = "testuml::AnotherClass",
                 filters = emptyList(),
                 shape = BoundingRectState(
@@ -341,6 +400,6 @@ fun main() {
 
     val diagramsLoader =
         DiagramsLoader(File("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite\\appworkspace\\testuml.diagrams"))
-    diagramsLoader.writeToFile(listOf(diagram1, diagram2))
+    diagramsLoader.writeToFile(listOf(overview, diagram1, diagram2))
     diagramsLoader.loadFromFile().tap { println(it) }.tapInvalid { println(it.e) }
 }

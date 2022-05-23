@@ -18,12 +18,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
-import com.github.jan222ik.ui.adjusted.BoundingRect
 import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
-import com.github.jan222ik.ui.feature.main.tree.ModelTreeItem
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.util.HorizontalDivider
 import mu.KLogging

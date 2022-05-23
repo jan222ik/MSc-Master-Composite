@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -29,6 +31,7 @@ import com.github.jan222ik.ui.feature.LocalJobHandler
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.ui.value.EditorColors
+import com.github.jan222ik.ui.value.Space
 import com.github.jan222ik.util.KeyHelpers
 import com.github.jan222ik.util.KeyHelpers.consumeOnKey
 import mu.KLogging
@@ -38,7 +41,8 @@ import kotlin.math.roundToInt
 
 abstract class MovableAndResizeableComponent(
     initBoundingRect: BoundingRectState,
-    val onNextUIConfig: (self: MovableAndResizeableComponent, old: BoundingRectState, new: BoundingRectState) -> Unit
+    val onNextUIConfig: (self: MovableAndResizeableComponent, old: BoundingRectState, new: BoundingRectState) -> Unit,
+    val movableBaseUI: MovableBaseUI = MovableBaseUI()
 ) : ICanvasComposable {
     override val boundingShape: BoundingRect =
         BoundingRect(initBoundingRect.topLeft, initBoundingRect.width, initBoundingRect.height)
@@ -80,20 +84,29 @@ abstract class MovableAndResizeableComponent(
                         x = offset.x.minus(resizeAreaExpandSize.value).roundToInt(),
                         y = offset.y.minus(resizeAreaExpandSize.value).roundToInt()
                     )
-                }
-            //.background(Color.Magenta)
+                },
+            contentAlignment = Alignment.Center
         ) {
             Card(
                 modifier = Modifier
-                    .align(Alignment.Center)
                     .fillMaxSize()
                     .padding(resizeAreaExpandSize)
-                    .border(
-                        width = 1.dp,
-                        color = when {
-                            selected -> Color.Blue
-                            else -> Color.Black
-                        }
+                    .addIf(
+                        condition = movableBaseUI.useBasecardBorder, other = Modifier.border(
+                            BorderStroke(
+                                width = 1.dp,
+                                color = when {
+                                    selected -> Color.Blue
+                                    else -> Color.Black
+                                }
+                            )
+                        )
+                    )
+                    .addIf(
+                        condition = !movableBaseUI.useBasecardBorder && selected,
+                        other = Modifier.border(
+                            BorderStroke(width = 1.dp, color = Color.Blue)
+                        )
                     )
                     .pointerInput(Unit) {
                         detectDragGestures(
@@ -122,7 +135,8 @@ abstract class MovableAndResizeableComponent(
                     .onPointerEvent(PointerEventType.Enter) { hover = true }
                     .onPointerEvent(PointerEventType.Exit) { hover = false },
                 shape = RectangleShape,
-                elevation = 16.dp
+                elevation = movableBaseUI.cardElevation,
+                backgroundColor = movableBaseUI.cardBackground.takeUnless { it == Color.Unspecified } ?: MaterialTheme.colors.surface
             ) {
                 if (showContextMenu.value) {
                     Popup(
@@ -280,4 +294,9 @@ abstract class MovableAndResizeableComponent(
 
 }
 
+data class MovableBaseUI(
+    val cardBackground: Color = Color.Unspecified,
+    val useBasecardBorder: Boolean = true,
+    val cardElevation: Dp = Space.dp16
+)
 
