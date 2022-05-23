@@ -25,7 +25,6 @@ import com.github.jan222ik.model.validation.valudations.ListValidations.inCollec
 import com.github.jan222ik.ui.components.inputs.*
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
-import com.github.jan222ik.ui.feature.main.tree.ModelTreeItem
 import com.github.jan222ik.ui.value.descriptions.DescriptiveElements
 import com.github.jan222ik.ui.value.descriptions.IPropertyViewElement
 import org.eclipse.emf.ecore.EObject
@@ -40,12 +39,13 @@ fun PropertyView(
     selectedElement: TMM?
 ) {
     Column {
-        Text("Properties:")
         if (selectedElement != null) {
-            Text(text = "Current Element:$selectedElement")
             if (selectedElement is TMM.ModelTree.Ecore) {
                 when (selectedElement) {
-                    is TMM.ModelTree.Ecore.TClass -> renderConfig(selectedElement.umlClass, PropertyViewConfigs.pvForClass)
+                    is TMM.ModelTree.Ecore.TClass -> renderConfig(
+                        selectedElement.umlClass,
+                        PropertyViewConfigs.pvForClass
+                    )
                     is TMM.ModelTree.Ecore.TPackage -> renderConfig(
                         selectedElement.umlPackage,
                         PropertyViewConfigs.pvForPackage

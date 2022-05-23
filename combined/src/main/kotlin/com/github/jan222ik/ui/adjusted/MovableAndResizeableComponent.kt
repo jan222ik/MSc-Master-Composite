@@ -26,6 +26,7 @@ import androidx.compose.ui.window.Popup
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.components.menu.MenuItemList
 import com.github.jan222ik.ui.feature.LocalJobHandler
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.util.KeyHelpers
@@ -97,19 +98,25 @@ abstract class MovableAndResizeableComponent(
                     .pointerInput(Unit) {
                         detectDragGestures(
                             onDragStart = {
-                                preMoveOrResize = boundingShape.toState()
+                                if (EditorManager.allowEdit.value) {
+                                    preMoveOrResize = boundingShape.toState()
+                                }
                             },
                             onDragEnd = {
-                                onNextUIConfig(
-                                    this@MovableAndResizeableComponent,
-                                    preMoveOrResize,
-                                    boundingShape.toState()
-                                )
+                                if (EditorManager.allowEdit.value) {
+                                    onNextUIConfig(
+                                        this@MovableAndResizeableComponent,
+                                        preMoveOrResize,
+                                        boundingShape.toState()
+                                    )
+                                }
                             }
                         ) { change, dragAmount ->
-                            change.consumeAllChanges()
-                            boundingShape.move(dragAmount)
-                            selected = true
+                            if (EditorManager.allowEdit.value) {
+                                change.consumeAllChanges()
+                                boundingShape.move(dragAmount)
+                                selected = true
+                            }
                         }
                     }
                     .onPointerEvent(PointerEventType.Enter) { hover = true }
@@ -144,56 +151,58 @@ abstract class MovableAndResizeableComponent(
                 }
                 content(projectTreeHandler)
             }
-            ResizeHandle(
-                alignment = Alignment.TopCenter,
-                isHorizontal = false,
-                onDrag = { _, drag ->
-                    boundingShape.addHeight(-drag); boundingShape.addY(drag)
-                })
-            ResizeHandle(
-                alignment = Alignment.BottomEnd,
-                isHorizontal = false,
-                onDrag = { _, drag -> boundingShape.addHeight(drag) })
-            ResizeHandle(
-                alignment = Alignment.CenterStart,
-                isHorizontal = true,
-                onDrag = { _, drag -> boundingShape.addWidth(-drag); boundingShape.addX(drag) })
-            ResizeHandle(
-                alignment = Alignment.CenterEnd,
-                isHorizontal = true,
-                onDrag = { _, drag -> boundingShape.addWidth(drag) })
-            DiagonalResizeHandle(
-                alignment = Alignment.TopStart,
-                onDrag = { _, drag ->
-                    boundingShape.addWidth(-drag.x)
-                    boundingShape.addX(drag.x)
-                    boundingShape.addHeight(-drag.y)
-                    boundingShape.addY(drag.y)
-                }
-            )
-            DiagonalResizeHandle(
-                alignment = Alignment.TopEnd,
-                onDrag = { _, drag ->
-                    boundingShape.addWidth(drag.x)
-                    boundingShape.addHeight(-drag.y)
-                    boundingShape.addY(drag.y)
-                }
-            )
-            DiagonalResizeHandle(
-                alignment = Alignment.BottomStart,
-                onDrag = { _, drag ->
-                    boundingShape.addWidth(-drag.x)
-                    boundingShape.addX(drag.x)
-                    boundingShape.addHeight(drag.y)
-                }
-            )
-            DiagonalResizeHandle(
-                alignment = Alignment.BottomEnd,
-                onDrag = { _, drag ->
-                    boundingShape.addWidth(drag.x)
-                    boundingShape.addHeight(drag.y)
-                }
-            )
+            if (EditorManager.allowEdit.value) {
+                ResizeHandle(
+                    alignment = Alignment.TopCenter,
+                    isHorizontal = false,
+                    onDrag = { _, drag ->
+                        boundingShape.addHeight(-drag); boundingShape.addY(drag)
+                    })
+                ResizeHandle(
+                    alignment = Alignment.BottomEnd,
+                    isHorizontal = false,
+                    onDrag = { _, drag -> boundingShape.addHeight(drag) })
+                ResizeHandle(
+                    alignment = Alignment.CenterStart,
+                    isHorizontal = true,
+                    onDrag = { _, drag -> boundingShape.addWidth(-drag); boundingShape.addX(drag) })
+                ResizeHandle(
+                    alignment = Alignment.CenterEnd,
+                    isHorizontal = true,
+                    onDrag = { _, drag -> boundingShape.addWidth(drag) })
+                DiagonalResizeHandle(
+                    alignment = Alignment.TopStart,
+                    onDrag = { _, drag ->
+                        boundingShape.addWidth(-drag.x)
+                        boundingShape.addX(drag.x)
+                        boundingShape.addHeight(-drag.y)
+                        boundingShape.addY(drag.y)
+                    }
+                )
+                DiagonalResizeHandle(
+                    alignment = Alignment.TopEnd,
+                    onDrag = { _, drag ->
+                        boundingShape.addWidth(drag.x)
+                        boundingShape.addHeight(-drag.y)
+                        boundingShape.addY(drag.y)
+                    }
+                )
+                DiagonalResizeHandle(
+                    alignment = Alignment.BottomStart,
+                    onDrag = { _, drag ->
+                        boundingShape.addWidth(-drag.x)
+                        boundingShape.addX(drag.x)
+                        boundingShape.addHeight(drag.y)
+                    }
+                )
+                DiagonalResizeHandle(
+                    alignment = Alignment.BottomEnd,
+                    onDrag = { _, drag ->
+                        boundingShape.addWidth(drag.x)
+                        boundingShape.addHeight(drag.y)
+                    }
+                )
+            }
         }
     }
 

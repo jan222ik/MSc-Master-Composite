@@ -9,6 +9,11 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.capitalize
+import androidx.compose.ui.text.decapitalize
+import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.window.singleWindowApplication
 import com.github.jan222ik.ecore.EcoreModelLoader
 import com.github.jan222ik.model.validation.ValidatedTextState
@@ -24,6 +29,7 @@ import java.util.regex.Pattern
 
 sealed class TMM {
     abstract val displayName: String
+
     var parent: TMM? = null
 
     companion object : KLogging()
@@ -43,6 +49,21 @@ sealed class TMM {
                 is ModelTree.Ecore.TUNKNOWN -> element.toString()
             }
         ).find()
+    }
+
+    fun getType() : String {
+        return when (this) {
+            is FS.Directory -> "Folder"
+            is FS.TreeFile -> "File"
+            is FS.UmlProjectFile -> "Model File"
+            is ModelTree.Diagram -> "${initDiagram.diagramType.name.toLowerCase(Locale.current).capitalize(Locale.current)}-Diagram"
+            is ModelTree.Ecore.TClass -> "Class"
+            is ModelTree.Ecore.TGeneralisation -> "Generalization"
+            is ModelTree.Ecore.TPackage -> "Package"
+            is ModelTree.Ecore.TPackageImport -> "PackageImport"
+            is ModelTree.Ecore.TProperty -> "Property"
+            is ModelTree.Ecore.TUNKNOWN -> "Unknown Element"
+        }
     }
 
     fun findModellingElementOrNull(element: Element): TMMPath<TMM.ModelTree.Ecore>? {

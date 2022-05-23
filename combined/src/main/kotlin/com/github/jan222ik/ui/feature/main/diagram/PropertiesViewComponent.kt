@@ -51,12 +51,13 @@ class PropertiesViewComponent(
             Row(Modifier.fillMaxSize()) {
                 VerticalDivider(modifier = Modifier.fillMaxHeight(), color = EditorColors.dividerGray)
                 Column(Modifier.fillMaxHeight()) {
+                    val selectedElement = projectTreeHandler.singleSelectedItem.value
                     ToolWindowToolbar(
                         isMinimized = isMinimized,
                         onMinimizeRequest = {
                             parent.hSplitter.setToMax()
                         },
-                        title = "Properties:",
+                        title = "Properties: ${selectedElement?.getType() ?: ""}",
                         toolbarContent = {},
                         closeBeforeContent = true
                     )
@@ -64,7 +65,7 @@ class PropertiesViewComponent(
                         modifier = Modifier.weight(1f).fillMaxHeight(),
                         content = {
                             Box {
-                                PropertyView(selectedElement = projectTreeHandler.singleSelectedItem.value)
+                                PropertyView(selectedElement = selectedElement)
                             }
                             VerticalDivider(
                                 modifier = Modifier.fillMaxHeight(),
