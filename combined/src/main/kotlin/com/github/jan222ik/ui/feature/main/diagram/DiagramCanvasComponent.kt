@@ -16,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.isBackPressed
+import androidx.compose.ui.input.pointer.isForwardPressed
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,6 +25,7 @@ import com.github.jan222ik.ui.feature.LocalCommandStackHandler
 import com.github.jan222ik.ui.feature.main.MainScreenScaffoldConstants
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabComponent
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
+import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
 import com.github.jan222ik.ui.feature.main.tree.FileTree
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.ui.value.EditorColors
@@ -48,7 +51,19 @@ class DiagramCanvasComponent(
         }
 
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .mouseCombinedClickable(
+                    onClick = {
+                        if (this.buttons.isBackPressed) {
+                            EditorManager.moveBack()
+                        } else {
+                            if (this.buttons.isForwardPressed) {
+                                EditorManager.moveForward()
+                            }
+                        }
+                    }
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 

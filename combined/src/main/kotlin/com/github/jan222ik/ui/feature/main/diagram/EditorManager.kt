@@ -5,6 +5,7 @@ import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
 import com.github.jan222ik.ui.uml.DiagramHolder
+import java.lang.Math.abs
 
 object EditorManager {
     val allowEdit = mutableStateOf(false)
@@ -61,5 +62,13 @@ object EditorManager {
             openTabs.value = openTabs.value + EditorTabViewModel(tmmDiagram = tmmDiagram, observableDiagram = toObservable)
             onEditorSwitch(openTabs.value.lastIndex)
         }
+    }
+
+    fun moveBack() {
+        onEditorSwitch(abs(selectedIdx.value.dec().rem(openTabs.value.size)))
+    }
+
+    fun moveForward() {
+        onEditorSwitch(abs(selectedIdx.value.inc().rem(openTabs.value.size)))
     }
 }
