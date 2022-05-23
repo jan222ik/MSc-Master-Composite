@@ -36,6 +36,7 @@ import com.github.jan222ik.ui.components.menu.MenuItemList
 import com.github.jan222ik.ui.feature.LocalDropTargetHandler
 import com.github.jan222ik.ui.feature.LocalJobHandler
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
@@ -43,7 +44,6 @@ import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.util.KeyHelpers
 import com.github.jan222ik.util.KeyHelpers.consumeOnKey
 import mu.KLogging
-import org.eclipse.uml2.uml.Element
 import java.io.InvalidClassException
 
 
@@ -236,19 +236,22 @@ class ProjectTreeHandler(
                 .padding(start = item.level.times(16).dp)
                 .drawBehind { drawLine(Color.Black, Offset.Zero, Offset.Zero.copy(y = this.size.height)) }
                 .then(
-                    when (val actual = item.actual) {
-                        is ModelTreeItem -> Modifier.dndDraggable(
-                            handler = LocalDropTargetHandler.current,
-                            dataProvider = {
-                                try {
-                                    actual.getElement()
-                                } catch (e: InvalidClassException) {
-                                    null
-                                }
-                            },
-                            onDragCancel = Function0<Unit>::invoke,
-                            onDragFinished = { _, snapback -> snapback.invoke() }
-                        )
+                    when {
+                        item.actual is ModelTreeItem && EditorManager.allowEdit.value -> {
+                            val actual = item.actual
+                            Modifier.dndDraggable(
+                                handler = LocalDropTargetHandler.current,
+                                dataProvider = {
+                                    try {
+                                        actual.getElement()
+                                    } catch (e: InvalidClassException) {
+                                        null
+                                    }
+                                },
+                                onDragCancel = Function0<Unit>::invoke,
+                                onDragFinished = { _, snapback -> snapback.invoke() }
+                            )
+                        }
                         else -> Modifier
                     }
                 ),
@@ -323,7 +326,8 @@ class ProjectTreeHandler(
                 text = item.name,
                 color = when {
                     focus?.hasFocus == true && isSelected -> Color.White
-                    else -> Color.Unspecified}
+                    else -> Color.Unspecified
+                }
             )
         }
     }
