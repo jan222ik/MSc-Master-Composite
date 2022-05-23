@@ -76,8 +76,8 @@ abstract class MovableAndResizeableComponent(
                 )
                 .offset {
                     IntOffset(
-                        x = offset.x.roundToInt(),
-                        y = offset.y.roundToInt()
+                        x = offset.x.minus(resizeAreaExpandSize.value).roundToInt(),
+                        y = offset.y.minus(resizeAreaExpandSize.value).roundToInt()
                     )
                 }
             //.background(Color.Magenta)

@@ -1,11 +1,13 @@
 package com.github.jan222ik.ui.feature.main.diagram
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.unit.dp
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.SharedCommands
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
@@ -35,7 +37,6 @@ class DiagramAreaComponent {
         key = Key.Two,
         modifierSum = ShortcutAction.KeyModifier.ALT,
         action = {
-            println("showHidePalette action")
             if (hSplitter.positionPercentage > 0.99) {
                 hSplitter.setToDpFromSecond(PropertiesViewComponent.PROPERTIES_EXPAND_POINT_WIDTH)
             } else {
@@ -66,10 +67,14 @@ class DiagramAreaComponent {
         val expandToggleForPaletteShortcutActionRem = remember { expandToggleForPaletteShortcutAction }
 
         val shortcutActionsHandler = LocalShortcutActionHandler.current
-        DisposableEffect(Unit) {
+        DisposableEffect(EditorManager.allowEdit.value) {
             shortcutActionsHandler.register(expandToggleForPropViewShortcutActionRem)
             SharedCommands.showHidePropertiesView = expandToggleForPropViewShortcutActionRem
-            shortcutActionsHandler.register(expandToggleForPaletteShortcutActionRem)
+            if (EditorManager.allowEdit.value) {
+                shortcutActionsHandler.register(expandToggleForPaletteShortcutActionRem)
+            } else {
+                vSplitterRem.setToMax()
+            }
             SharedCommands.showHidePalette = expandToggleForPaletteShortcutActionRem
             onDispose {
                 shortcutActionsHandler.deregister(expandToggleForPropViewShortcutActionRem)
@@ -85,16 +90,25 @@ class DiagramAreaComponent {
                     first() {
                         canvasComponent.render(projectTreeHandler)
                     }
-                    second(minSize = PaletteComponent.PALETTE_MIN_HEIGHT) {
-                        paletteComponent.render(
-                            onToggle = {
-                                if (vSplitterRem.positionPercentage > 0.97) {
-                                    vSplitterRem.setToDpFromSecond(PaletteComponent.PALETTE_EXPAND_POINT_HEIGHT)
-                                } else {
-                                    vSplitterRem.setToMax()
+                    second(
+                        minSize = when (EditorManager.allowEdit.value) {
+                            true -> PaletteComponent.PALETTE_MIN_HEIGHT
+                            false -> 0.dp
+                        }
+                    ) {
+                        if (EditorManager.allowEdit.value) {
+                            paletteComponent.render(
+                                onToggle = {
+                                    if (vSplitterRem.positionPercentage > 0.97) {
+                                        vSplitterRem.setToDpFromSecond(PaletteComponent.PALETTE_EXPAND_POINT_HEIGHT)
+                                    } else {
+                                        vSplitterRem.setToMax()
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        } else {
+                            Box {}
+                        }
                     }
                 }
             }

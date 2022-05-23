@@ -67,7 +67,10 @@ class ProjectTreeHandler(
         get() = _singleSelectedItem
 
 
-    var setTreeSelectionByElements: ((List<Element>) -> Unit)? by mutableStateOf(null)
+    fun setTreeSelection(selection: List<TMM>) {
+        _treeSelection.value = selection
+        _singleSelectedItem.value = selection.firstOrNull()
+    }
 
     var contextMenuFor by mutableStateOf<Pair<PopupPositionProvider, List<MenuContribution>>?>(null)
 
@@ -314,7 +317,9 @@ class ProjectTreeHandler(
                         }
                     ),
                 text = item.name,
-                color = if (isSelected) Color.White else Color.Unspecified
+                color = when {
+                    focus?.hasFocus == true && isSelected -> Color.White
+                    else -> Color.Unspecified}
             )
         }
     }

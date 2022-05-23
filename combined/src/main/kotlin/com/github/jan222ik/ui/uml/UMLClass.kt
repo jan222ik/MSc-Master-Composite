@@ -45,15 +45,24 @@ class UMLClass(
     @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
     @Composable
     override fun content(projectTreeHandler: ProjectTreeHandler) {
-        remember(projectTreeHandler.singleSelectedItem.value) {
-            selected = projectTreeHandler.metamodelRoot.findModellingElementOrNull(umlClass)?.let { projectTreeHandler.treeSelection.value.contains(it.target) } ?: false
+        val tmmClassPath = remember(
+            umlClass,
+            projectTreeHandler,
+            projectTreeHandler.metamodelRoot
+        ) {
+            projectTreeHandler.metamodelRoot.findModellingElementOrNull(umlClass)
+        }
+        remember(projectTreeHandler.singleSelectedItem.value, tmmClassPath) {
+            selected = tmmClassPath?.let { projectTreeHandler.treeSelection.value.contains(it.target) } ?: false
         }
 
         Column(
             modifier = Modifier.mouseCombinedClickable {
                 if (buttons.isPrimaryPressed) {
                     println("Clicked")
-                    projectTreeHandler.setTreeSelectionByElements?.invoke(listOf(umlClass))
+                    tmmClassPath?.target?.let {
+                        projectTreeHandler.setTreeSelection(listOf(it))
+                    }
                 }
                 if (buttons.isSecondaryPressed) {
                     showContextMenu.value = true
@@ -124,15 +133,17 @@ class UMLClass(
     @Composable
     fun org.eclipse.uml2.uml.Property.displayProp(projectTreeHandler: ProjectTreeHandler) {
         this.let { prop ->
-            val selected = remember(this, projectTreeHandler.treeSelection.value) {
-                val modellingElementOrNull = projectTreeHandler.metamodelRoot.findModellingElementOrNull(prop)
-                println("modellingElementOrNull = ${modellingElementOrNull}")
-                modellingElementOrNull?.let { projectTreeHandler.treeSelection.value.contains(it.target) } ?: false
+            val tmmProp = remember(this, projectTreeHandler.metamodelRoot) { projectTreeHandler.metamodelRoot.findModellingElementOrNull(prop) }
+            val selected = remember(this, tmmProp, projectTreeHandler.treeSelection.value) {
+                println("modellingElementOrNull = ${tmmProp}")
+                tmmProp?.let { projectTreeHandler.treeSelection.value.contains(it.target) } ?: false
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.clickable {
-                    projectTreeHandler.setTreeSelectionByElements?.invoke(listOf(prop))
+                    tmmProp?.target?.let {
+                        projectTreeHandler.setTreeSelection(listOf(it))
+                    }
                 }.then(
                     if (selected) {
                         Modifier.border(width = 1.dp, color = MaterialTheme.colors.primary)

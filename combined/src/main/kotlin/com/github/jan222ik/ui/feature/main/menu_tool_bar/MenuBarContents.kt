@@ -14,6 +14,7 @@ import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.components.menu.MenuContribution.Contentful.MenuItem
 import com.github.jan222ik.ui.components.menu.MenuContribution.Contentful.NestedMenuItem
 import com.github.jan222ik.ui.feature.SharedCommands
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.feature.main.footer.progress.IProgressMonitor
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import com.github.jan222ik.ui.feature.main.footer.progress.ProgressObservedJob
@@ -53,12 +54,28 @@ object MenuBarContents {
         MenuItem(
             icon = null,
             displayName = "Close Editor",
-            command = NotImplementedCommand("Close Editor")
+            command = object : ICommand {
+                override fun isActive(): Boolean = EditorManager.activeEditorTab.value != null
+                override suspend fun execute(handler: JobHandler) {
+                    EditorManager.onCloseActiveEditor()
+                }
+                override fun canUndo(): Boolean = false
+                override suspend fun undo() {}
+                override fun pushToStack(): Boolean = false
+            }
         ),
         MenuItem(
             icon = null,
-            displayName = "Close All Editor",
-            command = NotImplementedCommand("Close All Editor")
+            displayName = "Close All Editors",
+            command = object : ICommand {
+                override fun isActive(): Boolean = EditorManager.openTabs.value.isNotEmpty()
+                override suspend fun execute(handler: JobHandler) {
+                    EditorManager.closeAllEditors()
+                }
+                override fun canUndo(): Boolean = false
+                override suspend fun undo() {}
+                override fun pushToStack(): Boolean = false
+            }
         ),
         MenuContribution.Separator,
         MenuItem(
@@ -198,7 +215,7 @@ object MenuBarContents {
                 icon = null,
                 displayName = displayName,
                 command = object : ICommand {
-                    override fun isActive(): Boolean = true
+                    override fun isActive(): Boolean = EditorManager.allowEdit.value
                     override suspend fun execute(handler: JobHandler) {
                         handler.run(ProgressObservedJob(
                             hasTicks = false,

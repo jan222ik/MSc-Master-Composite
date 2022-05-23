@@ -4,7 +4,10 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.Icon
+import androidx.compose.material.LocalTextStyle
+import androidx.compose.material.ProvideTextStyle
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -16,12 +19,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,13 +32,14 @@ import com.github.jan222ik.ui.feature.LocalProjectSwitcher
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.SharedCommands
 import com.github.jan222ik.ui.feature.main.diagram.DiagramAreaComponent
-import com.github.jan222ik.ui.feature.main.footer.FooterComponent
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.MenuToolBarComponent
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.ToolBarComponent
 import com.github.jan222ik.ui.feature.main.tree.FileTree
 import com.github.jan222ik.ui.feature.main.tree.FileTreeToolBar
+import com.github.jan222ik.ui.value.EditorColors
+import com.github.jan222ik.util.VerticalDivider
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import org.jetbrains.compose.splitpane.SplitPaneState
@@ -83,7 +86,7 @@ fun MainScreen(
             }
         },
         footer = {
-                 Box(Modifier.size(0.dp))
+            Box(Modifier.size(0.dp))
             /*
             ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
                 val component = remember(jobHandler) { FooterComponent(jobHandler) }
@@ -131,16 +134,51 @@ fun MainScreen(
                 splitPaneState = hSplitter
             ) {
                 first(20.dp) {
-                    Box(Modifier.fillMaxSize().zIndex(3f)) {
-
-                        Column(Modifier.padding(end = 20.dp)) {
-                            ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
-                                FileTreeToolBar()
-                                FileTree.treeHandler.value?.render()
+                    ProvideTextStyle(LocalTextStyle.current.copy(fontSize = 14.sp)) {
+                        Row {
+                            Column(Modifier.weight(1f).fillMaxHeight().zIndex(3f)) {
+                                FileTreeToolBar(
+                                    isMinimized = isMinimized,
+                                    onMinimizeRequest = {
+                                        hSplitter.setToMin()
+                                    },
+                                )
+                                Layout(
+                                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                                    content = {
+                                        Box {
+                                            FileTree.treeHandler.value?.render()
+                                        }
+                                        VerticalDivider(
+                                            modifier = Modifier.fillMaxHeight(),
+                                            color = EditorColors.dividerGray
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .width(20.dp)
+                                        ) {
+                                            ShowMoreLess(hSplitter, isMinimized = isMinimized)
+                                        }
+                                    }) { measureables, constraints ->
+                                    val pDivider = measureables[1].measure(constraints.copy(minWidth = 1))
+                                    val pShowMoreLess = measureables[2].measure(constraints)
+                                    val pTree = measureables[0].measure(
+                                        Constraints.fixed(
+                                            width = constraints.maxWidth.minus(pDivider.width)
+                                                .minus(pShowMoreLess.width).coerceAtLeast(0),
+                                            height = constraints.maxHeight
+                                        )
+                                    )
+                                    layout(width = constraints.maxWidth, height = constraints.maxHeight) {
+                                        pTree.placeRelative(IntOffset.Zero)
+                                        pShowMoreLess.placeRelative(x = pTree.width + pDivider.width, y = 0)
+                                        pDivider.placeRelative(x = pTree.width, y = 0)
+                                    }
+                                }
                             }
+                            VerticalDivider(modifier = Modifier.fillMaxHeight(), color = EditorColors.dividerGray)
                         }
-
-                        ShowMoreLess(hSplitter, isMinimized = isMinimized)
                     }
                 }
                 second(50.dp) {
@@ -150,26 +188,6 @@ fun MainScreen(
                                 diagramAreaComponent?.render(projectTreeHandler = it)
                             }
                         }
-                    }
-                }
-                splitter {
-                    visiblePart {
-                        Box(
-                            Modifier
-                                .width(1.dp)
-                                .fillMaxHeight()
-                                .background(MaterialTheme.colors.background)
-                        )
-                    }
-                    handle {
-                        Box(
-                            Modifier
-                                .markAsHandle()
-                                .cursorForHorizontalResize()
-                                .background(SolidColor(Color.Gray), alpha = 0.50f)
-                                .width(9.dp)
-                                .fillMaxHeight()
-                        )
                     }
                 }
             }
@@ -184,37 +202,41 @@ fun BoxScope.ShowMoreLess(
     hSplitter: SplitPaneState,
     isMinimized: Boolean
 ) {
-    Layout(modifier = Modifier.align(Alignment.TopEnd).clickable(
-        onClick = {
-            if (isMinimized) {
-                hSplitter.setToDpFromFirst(400.dp)
-            } else {
-                hSplitter.setToMin()
-            }
+    Layout(
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .clickable(
+                onClick = {
+                    if (isMinimized) {
+                        hSplitter.setToDpFromFirst(400.dp)
+                    } else {
+                        hSplitter.setToMin()
+                    }
 
-        }
-    ), content = {
-        Row(
-            modifier = Modifier
-                .rotate(90f),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            val imageVector = when (isMinimized) {
-                true -> Icons.Filled.ExpandLess
-                false -> Icons.Filled.ExpandMore
+                }
+            ).background(EditorColors.backgroundGray),
+        content = {
+            Row(
+                modifier = Modifier
+                    .rotate(90f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                val imageVector = when (isMinimized) {
+                    true -> Icons.Filled.ExpandLess
+                    false -> Icons.Filled.ExpandMore
+                }
+                Icon(
+                    imageVector = imageVector,
+                    contentDescription = null
+                )
+                Text(text = "Tree")
+                Icon(
+                    imageVector = imageVector,
+                    contentDescription = null
+                )
             }
-            Icon(
-                imageVector = imageVector,
-                contentDescription = null
-            )
-            Text(text = "Tree")
-            Icon(
-                imageVector = imageVector,
-                contentDescription = null
-            )
-        }
-    }) { measurables, constraints ->
+        }) { measurables, constraints ->
         val pRow = measurables.first()
             .measure(constraints.copy(maxHeight = constraints.maxWidth, maxWidth = constraints.maxHeight))
         layout(pRow.height, constraints.maxHeight) {

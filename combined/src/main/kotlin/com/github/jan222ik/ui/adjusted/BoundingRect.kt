@@ -25,27 +25,35 @@ class BoundingRect(
     override val topLeft: MutableState<Offset> = mutableStateOf(initTopLeft)
     val width: MutableState<Float> = mutableStateOf(initWidth)
     val height: MutableState<Float> = mutableStateOf(initHeight)
-    fun drawWireframe(drawScope: DrawScope, color: Color = Color.Cyan, fill: Boolean, showText: Boolean) {
+    fun drawWireframe(
+        drawScope: DrawScope,
+        color: Color = Color.Cyan,
+        fill: Boolean,
+        showText: Boolean,
+        showBox: Boolean
+    ) {
         drawScope.translate(
             left = topLeft.value.x,
             top = topLeft.value.y
         ) {
-            drawRect(
-                color = color,
-                style = if (fill) Fill else Stroke(),
-                topLeft = Offset.Zero,
-                size = Size(width = width.value, height = height.value)
-            )
-            drawLine(
-                color = color,
-                start = Offset.Zero,
-                end = Offset(width.value, height.value)
-            )
-            drawLine(
-                color = color,
-                start = Offset(0f, height.value),
-                end = Offset(width.value, 0f)
-            )
+            if (showBox) {
+                drawRect(
+                    color = color,
+                    style = if (fill) Fill else Stroke(),
+                    topLeft = Offset.Zero,
+                    size = Size(width = width.value, height = height.value)
+                )
+                drawLine(
+                    color = color,
+                    start = Offset.Zero,
+                    end = Offset(width.value, height.value)
+                )
+                drawLine(
+                    color = color,
+                    start = Offset(0f, height.value),
+                    end = Offset(width.value, 0f)
+                )
+            }
             if (showText) {
                 val textLine = TextLine.make(debugName, Font())
                 this.drawContext.canvas.nativeCanvas.drawTextLine(
@@ -113,7 +121,7 @@ class BoundingRect(
         coerceAtMost: Float = ScrollableCanvasDefaults.viewportSizeMaxHeight
     ) = this.copy(y = (this.y + amount).coerceIn(coerceAtLeast, coerceAtMost))
 
-    fun toState() : BoundingRectState {
+    fun toState(): BoundingRectState {
         return BoundingRectState(topLeft.value.let { packFloats(it.x, it.y) }, width.value, height.value)
     }
 

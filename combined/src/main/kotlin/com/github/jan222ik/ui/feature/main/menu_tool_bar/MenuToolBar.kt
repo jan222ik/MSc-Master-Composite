@@ -3,11 +3,10 @@
 package com.github.jan222ik.ui.feature.main.menu_tool_bar
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.window.WindowDraggableArea
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Minimize
@@ -21,8 +20,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.WindowPlacement
 import com.github.jan222ik.model.command.ICommand
+import com.github.jan222ik.ui.adjusted.DebugCanvas
 import com.github.jan222ik.ui.components.menu.ActionButton
 import com.github.jan222ik.ui.components.menu.MenuButton
 import com.github.jan222ik.ui.components.menu.MenuContribution
@@ -62,10 +63,45 @@ fun MenuToolBarComponent(
                         horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        var showDebugPopup by remember { mutableStateOf(false) }
                         Icon(
+                            modifier = Modifier.clickable { showDebugPopup = true },
                             painter = painterResource("drawables/launcher_icons/system.png"),
                             contentDescription = "Logo"
                         )
+                        Box(Modifier.size(0.dp)) {
+                            if (showDebugPopup) {
+                                Popup(
+                                    onDismissRequest = { showDebugPopup = false },
+                                    focusable = true
+                                ) {
+                                    Surface(color = EditorColors.dividerGray) {
+                                        Column {
+                                            @Composable
+                                            fun switch(title: String, state: MutableState<Boolean>) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text(text = title)
+                                                    Switch(
+                                                        checked = state.value,
+                                                        onCheckedChange = state.component2()
+                                                    )
+                                                }
+                                            }
+                                            DebugCanvas.apply {
+                                                switch(title = "Show/Hide debug canvas", state = debugCanvasVisible)
+                                                switch(title = "Clip Viewport", state = this.conditionalClipValue)
+                                                switch(title = "Show/Hide Arrow Offsets", state = this.showPathOffsetPoints)
+                                                switch(title = "Show/Hide Wireframes", state = this.showWireframes)
+                                                switch(title = "Hide Class Elements", state = this.hideElements)
+                                                switch(title = "Wireframe Names", state = this.showWireframeName)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         var showWizard by remember { mutableStateOf(false) }
                         val (project, switchProject) = LocalProjectSwitcher.current
                         val createProjectWizard = remember {

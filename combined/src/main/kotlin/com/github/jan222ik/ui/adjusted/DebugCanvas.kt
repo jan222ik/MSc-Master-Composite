@@ -24,10 +24,11 @@ import com.github.jan222ik.ui.adjusted.arrow.Arrow
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.mapPair
 
 object DebugCanvas {
+    val showWireframes = mutableStateOf(false)
     val debugCanvasVisible = mutableStateOf(false)
 
     val conditionalClipValue = mutableStateOf(true)
-    val showWireframeOnly = mutableStateOf(false)
+    val hideElements = mutableStateOf(false)
     val showWireframeName = mutableStateOf(false)
     val showPathOffsetPoints = mutableStateOf(false)
 
@@ -72,7 +73,8 @@ object DebugCanvas {
                                             drawScope = this,
                                             color = if (inViewport) Color.Cyan else Color.Blue,
                                             fill = inSelection,
-                                            showText = showWireframeName.value
+                                            showText = showWireframeName.value,
+                                            showBox = true
                                         )
                                     }
                                 }
@@ -106,8 +108,8 @@ object DebugCanvas {
                         ) {
                             Text("Wireframe Only: ")
                             Switch(
-                                checked = showWireframeOnly.value,
-                                onCheckedChange = { showWireframeOnly.value = it },
+                                checked = hideElements.value,
+                                onCheckedChange = { hideElements.value = it },
                             )
                         }
                         Row(

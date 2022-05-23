@@ -175,18 +175,21 @@ fun ScrollableCanvas(
                                     left = -viewport.value.origin.x,
                                     top = -viewport.value.origin.y
                                 ) {
-                                    elements
-                                        .filter { it.boundingShape.isVisibleInViewport(viewport.value) }
-                                        .map { it.boundingShape }
-                                        .forEach {
-                                            if (it is BoundingRect) {
-                                                it.drawWireframe(
-                                                    drawScope = this,
-                                                    fill = selectedBoundingBoxes.value.contains(it),
-                                                    showText = DebugCanvas.showWireframeName.value
-                                                )
+
+                                        elements
+                                            .filter { it.boundingShape.isVisibleInViewport(viewport.value) }
+                                            .map { it.boundingShape }
+                                            .forEach {
+                                                if (it is BoundingRect) {
+                                                    it.drawWireframe(
+                                                        drawScope = this,
+                                                        fill = selectedBoundingBoxes.value.contains(it),
+                                                        showBox = DebugCanvas.showWireframes.value,
+                                                        showText = DebugCanvas.showWireframeName.value
+                                                    )
+                                                }
                                             }
-                                        }
+
                                     arrows
                                         .filter {
                                             it.offsetPath.value.any { BoundingRect(initTopLeft = it, 0f, 0f).isVisibleInViewport(viewport.value) }
@@ -205,7 +208,7 @@ fun ScrollableCanvas(
                         }
                         .then(canvasThenModifier)
                 ) {
-                    if (!DebugCanvas.showWireframeOnly.value) {
+                    if (!DebugCanvas.hideElements.value) {
                         elements
                             .filter { it.boundingShape.isVisibleInViewport(viewport.value) }
                             .forEach {

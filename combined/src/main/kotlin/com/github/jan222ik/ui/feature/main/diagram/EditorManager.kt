@@ -7,6 +7,7 @@ import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
 import com.github.jan222ik.ui.uml.DiagramHolder
 
 object EditorManager {
+    val allowEdit = mutableStateOf(false)
     val diagrams = mutableStateOf(emptyList<DiagramHolder>())
 
     val openTabs = mutableStateOf(emptyList<EditorTabViewModel>())
@@ -17,6 +18,19 @@ object EditorManager {
     fun onEditorSwitch(nextIdx: Int) {
         activeEditorTab.value = openTabs.value[nextIdx]
         selectedIdx.value = nextIdx
+    }
+
+    fun onCloseActiveEditor() {
+        openTabs.value.indexOfFirst { it.id == activeEditorTab.value?.id }.let {
+            if (it != -1) {
+                onEditorClose(closeIdx = it)
+            }
+        }
+    }
+
+    fun closeAllEditors() {
+        openTabs.value = emptyList()
+        activeEditorTab.value = null
     }
 
     fun onEditorClose(closeIdx: Int) {

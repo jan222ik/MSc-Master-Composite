@@ -1,5 +1,6 @@
 package com.github.jan222ik.ui.feature.main.diagram
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -56,16 +57,22 @@ class DiagramCanvasComponent(
                 onEditorSwitch = EditorManager::onEditorSwitch,
                 onEditorClose = EditorManager::onEditorClose
             )
-            HorizontalDivider(modifier = Modifier.fillMaxWidth(), color = EditorColors.dividerGray)
-            EditorManager.activeEditorTab.value?.let {
-                val vm = remember(it, it.id) { it }
-                EditorTabComponent(
-                    stateOut = vm,
-                    projectTreeHandler = projectTreeHandler
-                )
-            } ?: kotlin.run {
-                Text("No active Tab")
+
+            Crossfade(
+                targetState = EditorManager.activeEditorTab.value
+            ) { activeTab ->
+                if (activeTab != null)  {
+                    HorizontalDivider(modifier = Modifier.fillMaxWidth(), color = EditorColors.dividerGray)
+                    val vm = remember(activeTab, activeTab.id) { activeTab }
+                    EditorTabComponent(
+                        stateOut = vm,
+                        projectTreeHandler = projectTreeHandler
+                    )
+                } else {
+                    NoActiveTab()
+                }
             }
+
         }
     }
 
@@ -126,6 +133,16 @@ class DiagramCanvasComponent(
                     }
                 }
             }
+        }
+    }
+
+    @Composable
+    fun NoActiveTab() {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+
+            Text("No active Tab")
         }
     }
 }

@@ -7,12 +7,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.Switch
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.github.jan222ik.ui.adjusted.DebugCanvas
 import com.github.jan222ik.ui.components.breadcrumbs.BreadcrumbsRow
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
@@ -49,18 +52,28 @@ fun ToolBarComponent(modifier: Modifier, jobHandler: JobHandler) {
             Row(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
-                    .width(IntrinsicSize.Min)
                     .padding(end = Space.dp16)
+                    .widthIn(min = 0.dp, max = 600.dp)
             ) {
-                Box {
+                Spacer(modifier = Modifier.weight(1f))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Space.dp8)
+                ) {
+                    Text("Viewing only")
+                    Switch(
+                        checked = !EditorManager.allowEdit.value,
+                        onCheckedChange = {
+                            EditorManager.allowEdit.value = !it
+                        }
+                    )
+                }
+                Box(
+                    modifier = Modifier.width(IntrinsicSize.Min)
+                ) {
                     val component = remember(jobHandler) { BackgroundJobComponent(jobHandler) }
                     component.render()
                 }
-                Icon(
-                    modifier = modifier.size(Space.dp16).clickable { DebugCanvas.debugCanvasVisible.value = true },
-                    imageVector = Icons.Filled.Android,
-                    contentDescription = null
-                )
             }
         }
         val minBy = jobHandler.jobs

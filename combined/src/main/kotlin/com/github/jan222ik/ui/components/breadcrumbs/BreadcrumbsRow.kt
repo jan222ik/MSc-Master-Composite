@@ -39,6 +39,9 @@ fun BreadcrumbsRow(
             val showPopup = remember { mutableStateOf(false) }
             val showArrowPopup = remember { mutableStateOf(false) }
             val activeItem = remember(pathIndex, parent, activePath, changedPath.value) { changedPath.value.nodes[pathIndex] }
+            if (activeItem is TMM.ModelTree.Diagram) {
+                BreadCrumbIcon(activeItem)
+            }
             Text(
                 text = activeItem.displayName,
                 modifier = Modifier.clickable {
