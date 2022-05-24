@@ -76,6 +76,9 @@ class DiagramAreaComponent {
                 vSplitterRem.setToMax()
             }
             SharedCommands.showHidePalette = expandToggleForPaletteShortcutActionRem
+            SharedCommands.forceOpenProperties = {
+                hSplitter.setToDpFromSecond(PropertiesViewComponent.PROPERTIES_EXPAND_POINT_WIDTH)
+            }
             onDispose {
                 shortcutActionsHandler.deregister(expandToggleForPropViewShortcutActionRem)
                 SharedCommands.showHidePropertiesView = null

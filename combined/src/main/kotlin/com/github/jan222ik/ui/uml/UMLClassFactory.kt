@@ -2,15 +2,16 @@ package com.github.jan222ik.ui.uml
 
 import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
-import com.github.jan222ik.ui.adjusted.BoundingRect
 import com.github.jan222ik.ui.adjusted.BoundingRectState
+import org.eclipse.uml2.uml.Class
 
 object UMLClassFactory {
     fun createInstance(
-        umlClass: org.eclipse.uml2.uml.Class,
+        umlClass: Class,
         initBoundingRect: BoundingRectState,
         onMoveOrResize: (MoveOrResizeCommand) -> Unit,
-        deleteCommand: (UMLClass) -> RemoveFromDiagramCommand
+        deleteCommand: (UMLClass) -> RemoveFromDiagramCommand,
+        filters: List<DiagramStateHolders.UMLRef.ComposableRef.ClassRef.UMLClassRefFilter.Compartment>
     ): UMLClass {
         val newObj = UMLClass(
             umlClass = umlClass,
@@ -24,7 +25,8 @@ object UMLClassFactory {
                         after = new
                     )
                 )
-            }
+            },
+            filter = filters
         ).apply {
             deleteSelfCommand = deleteCommand.invoke(this)
         }

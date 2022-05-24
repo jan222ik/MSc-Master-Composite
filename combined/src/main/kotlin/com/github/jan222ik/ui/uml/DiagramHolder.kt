@@ -3,7 +3,6 @@ package com.github.jan222ik.ui.uml
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.util.packFloats
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.github.jan222ik.model.TMM
@@ -22,7 +21,6 @@ import com.github.jan222ik.ui.feature.main.diagram.canvas.DNDCreation
 import com.github.jan222ik.ui.feature.main.diagram.canvas.DiagramType
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import org.eclipse.uml2.uml.*
-import java.io.File
 
 data class DiagramHolder(
     val name: String,
@@ -57,7 +55,8 @@ sealed class DiagramStateHolders {
         JsonSubTypes.Type(value = UMLRef.ComposableRef::class, name = "UMLRef.ComposableRef"),
         JsonSubTypes.Type(value = UMLRef.ArrowRef::class, name = "UMLRef.Arrow"),
     )
-    sealed class UMLRef() : DiagramStateHolders() {
+    sealed class UMLRef : DiagramStateHolders() {
+
         class ArrowRef(
             val sourceReferencedQualifierName: String,
             val targetReferencedQualifierName: String,
@@ -74,11 +73,13 @@ sealed class DiagramStateHolders {
         sealed class ComposableRef : UMLRef() {
             abstract val referencedQualifiedName: String
             abstract val shape: BoundingRectState
+            abstract val link: String?
 
             class ClassRef(
                 override val referencedQualifiedName: String,
                 override val shape: BoundingRectState,
-                val filters: List<UMLClassRefFilter>
+                override val link: String?,
+                val filters: List<UMLClassRefFilter.Compartment>
             ) : UMLRef.ComposableRef() {
                 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
                 @JsonSubTypes(
@@ -88,17 +89,22 @@ sealed class DiagramStateHolders {
                     ),
                 )
                 sealed class UMLClassRefFilter {
-                    data class Compartment(val name: String, val elementsNames: List<String>) : UMLClassRefFilter()
+                    data class Compartment(val name: CompartmentEnum, val elementsNames: List<String>) : UMLClassRefFilter()
                 }
             }
 
             class PackageRef(
                 override val referencedQualifiedName: String,
-                override val shape: BoundingRectState
+                override val shape: BoundingRectState,
+                override val link: String?
             ) : UMLRef.ComposableRef()
         }
     }
 
+}
+
+enum class CompartmentEnum {
+    ATTRIBUTES, OPERATIONS
 }
 
 class DiagramHolderObservable(
@@ -152,12 +158,14 @@ class DiagramHolderObservable(
                                 }
                             }
                             command
-                        }
+                        },
+                        filters = composableRef.filters
                     )
                 } else
                     if (c != null && c is Package) {
                         val composableRef = it.first as DiagramStateHolders.UMLRef.ComposableRef.PackageRef
                         UMLPackageFactory.createInstance(
+                            packageRef = composableRef,
                             umlPackage = c,
                             initBoundingRect = composableRef.shape,
                             onMoveOrResize = { moveResizeCommand ->
@@ -180,7 +188,7 @@ class DiagramHolderObservable(
                                     }
                                 }
                                 command
-                            }
+                            },
                         )
                     } else null
             }
@@ -293,113 +301,4 @@ class Anchor(val side: AnchorSide, val fromTopLeftOffsetPercentage: Float) {
             AnchorSide.W -> o.copy(y = height.times(fromTopLeftOffsetPercentage))
         }
     }
-}
-
-fun main() {
-    val overview = DiagramHolder(
-        name = "Overview",
-        diagramType = DiagramType.PACKAGE,
-        location = "testuml",
-        content = listOf(
-            DiagramStateHolders.UMLRef.ComposableRef.PackageRef(
-                referencedQualifiedName = "testuml",
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(500f, 200f),
-                    width = 280f,
-                    height = 100f,
-                )
-            )
-        ),
-        upwardsDiagramLink = null
-    )
-
-    val diagram1 = DiagramHolder(
-        name = "First diagram",
-        diagramType = DiagramType.BLOCK_DEFINITION,
-        location = "testuml",
-        content = listOf(
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "testuml::TestClass",
-                filters = emptyList(),
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(500f, 200f),
-                    width = 280f,
-                    height = 300f,
-                )
-            ),
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "testuml::TestClassWithProperties",
-                filters = emptyList(),
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(500f, 800f),
-                    width = 280f,
-                    height = 300f,
-                )
-            ),
-            DiagramStateHolders.UMLRef.ArrowRef(
-                sourceReferencedQualifierName = "testuml::TestClassWithProperties",
-                targetReferencedQualifierName = "testuml::TestClass",
-                index = 0,
-                sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.5f),
-                targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.5f)
-            )
-        ),
-        upwardsDiagramLink = "testuml::Overview"
-    )
-
-    val diagram2 = DiagramHolder(
-        name = "second diagram",
-        diagramType = DiagramType.BLOCK_DEFINITION,
-        location = "testuml",
-        content = listOf(
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "testuml::TestClass",
-                filters = emptyList(),
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(500f, 200f),
-                    width = 280f,
-                    height = 200f,
-                )
-            ),
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "testuml::TestClassWithProperties",
-                filters = emptyList(),
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(500f, 800f),
-                    width = 280f,
-                    height = 200f,
-                )
-            ),
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "testuml::AnotherClass",
-                filters = emptyList(),
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(700f, 500f),
-                    width = 280f,
-                    height = 200f,
-                )
-            ),
-            DiagramStateHolders.UMLRef.ArrowRef(
-                sourceReferencedQualifierName = "testuml::TestClassWithProperties",
-                targetReferencedQualifierName = "testuml::TestClass",
-                index = 0,
-                sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.5f),
-                targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.5f)
-            ),
-            DiagramStateHolders.UMLRef.ArrowRef(
-                sourceReferencedQualifierName = "testuml::AnotherClass",
-                targetReferencedQualifierName = "testuml::TestClass",
-                index = 0,
-                sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.25f),
-                targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.25f)
-            )
-        ),
-        upwardsDiagramLink = "testuml::First diagram"
-    )
-
-
-    val diagramsLoader =
-        DiagramsLoader(File("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite\\appworkspace\\testuml.diagrams"))
-    diagramsLoader.writeToFile(listOf(overview, diagram1, diagram2))
-    diagramsLoader.loadFromFile().tap { println(it) }.tapInvalid { println(it.e) }
 }

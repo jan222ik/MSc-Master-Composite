@@ -215,7 +215,7 @@ sealed class ModelTreeItem(
         tmmModelItem = tmmTProperty
     ) {
         override val displayName: String
-            get() = tmmTProperty.property.name
+            get() = tmmTProperty.property.let { it.name ?: "null" }
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
                 Image(

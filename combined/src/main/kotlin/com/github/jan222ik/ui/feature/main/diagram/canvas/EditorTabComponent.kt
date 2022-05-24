@@ -3,7 +3,6 @@ package com.github.jan222ik.ui.feature.main.diagram.canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.currentComposer
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -155,7 +154,8 @@ object DNDCreation : KLogging() {
                     commandStackHandler.add(CompoundCommand(updateArrowPathCommands + moveResizeCommand))
                 }
             },
-            deleteCommand = state::getRemoveCommandFor
+            deleteCommand = state::getRemoveCommandFor,
+            filters = emptyList() // TODO change if filters are implemented
         )
     }
 }

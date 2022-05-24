@@ -3,7 +3,7 @@ package com.github.jan222ik.ui.uml
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -21,20 +21,30 @@ import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
 import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
 import com.github.jan222ik.ui.components.menu.MenuContribution
+import com.github.jan222ik.ui.feature.SharedCommands
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.util.HorizontalDivider
 import mu.KLogging
-import org.eclipse.uml2.uml.AggregationKind
+import org.eclipse.uml2.types.TypesPackage
 import org.eclipse.uml2.uml.Element
+import org.eclipse.uml2.uml.LiteralBoolean
+import org.eclipse.uml2.uml.LiteralInteger
+import org.eclipse.uml2.uml.LiteralReal
+import org.eclipse.uml2.uml.LiteralString
+import org.eclipse.uml2.uml.PrimitiveType
 import org.eclipse.uml2.uml.Stereotype
+import org.eclipse.uml2.uml.ValueSpecification
 import org.eclipse.uml2.uml.VisibilityKind
+import org.eclipse.uml2.uml.internal.impl.EnumerationImpl
+import org.eclipse.uml2.uml.internal.impl.PrimitiveTypeImpl
 
 @OptIn(ExperimentalFoundationApi::class)
 class UMLClass(
     val umlClass: org.eclipse.uml2.uml.Class,
     initBoundingRect: BoundingRectState,
     onNextUIConfig: (MovableAndResizeableComponent, BoundingRectState, BoundingRectState) -> Unit,
+    val filter: List<DiagramStateHolders.UMLRef.ComposableRef.ClassRef.UMLClassRefFilter.Compartment>
 ) : MovableAndResizeableComponent(initBoundingRect, onNextUIConfig) {
 
     companion object : KLogging()
@@ -56,17 +66,30 @@ class UMLClass(
         }
 
         Column(
-            modifier = Modifier.mouseCombinedClickable {
-                if (buttons.isPrimaryPressed) {
-                    println("Clicked")
-                    tmmClassPath?.target?.let {
-                        projectTreeHandler.setTreeSelection(listOf(it))
+            modifier = Modifier.mouseCombinedClickable(
+                onClick = {
+                    if (buttons.isPrimaryPressed) {
+                        println("Clicked")
+                        tmmClassPath?.target?.let {
+                            projectTreeHandler.setTreeSelection(listOf(it))
+                        }
+                    }
+                    if (buttons.isSecondaryPressed) {
+                        showContextMenu.value = true
+                    }
+                },
+                onDoubleClick = {
+                    if (buttons.isPrimaryPressed) {
+                        SharedCommands.forceOpenProperties?.invoke()
+                        tmmClassPath?.target?.let {
+                            projectTreeHandler.setTreeSelection(listOf(it))
+                        }
+                    }
+                    if (buttons.isSecondaryPressed) {
+                        showContextMenu.value = true
                     }
                 }
-                if (buttons.isSecondaryPressed) {
-                    showContextMenu.value = true
-                }
-            },
+            ),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -82,12 +105,22 @@ class UMLClass(
                 modifier = Modifier.padding(horizontal = 8.dp).fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "attributes")
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    umlClass.attributes
-                        .filter { it.aggregation != AggregationKind.NONE_LITERAL }
-                        .forEach { it.displayProp(projectTreeHandler) }
-                }
+                val attributesCompartmentFilter = filter.find { it.name == CompartmentEnum.ATTRIBUTES }
+                umlClass.ownedAttributes
+                    //.filter { it.aggregation != AggregationKind.NONE_LITERAL }
+                    .let {
+                        if (attributesCompartmentFilter != null) {
+                            it.filter { attributesCompartmentFilter.elementsNames.contains(it.name) }
+                        } else it
+                    }
+                    .let { filteredAttrs ->
+                        if (filteredAttrs.isNotEmpty()) {
+                            Text(text = "attributes")
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                filteredAttrs.forEach { it.displayProp(projectTreeHandler) }
+                            }
+                        }
+                    }
             }
         }
 
@@ -108,7 +141,7 @@ class UMLClass(
     }
 
     fun org.eclipse.uml2.uml.Class.appliedStereotypesString(): String =
-        this.appliedStereotypes.toStereotypesString()
+        this.appliedStereotypes.toStereotypesString().takeUnless { it.equals("") } ?: "≪Block≫"
 
     fun List<Stereotype>.toStereotypesString(limit: Int = this.size): String {
         return if (this.isEmpty()) "" else this.subList(0, limit)
@@ -117,8 +150,19 @@ class UMLClass(
 
     fun org.eclipse.uml2.uml.NamedElement.labelOrName(default: String = "No name"): String = label ?: name ?: default
 
-    fun org.eclipse.uml2.uml.Property.typeNameString(): String {
-        return "<" + (this.type?.labelOrName("undefined")) + ">"
+    fun org.eclipse.uml2.uml.Property.typeNameString(asBrackets: Boolean = true): String {
+        val t = this.type
+        val s = when (t) {
+            is PrimitiveTypeImpl -> {
+                t.toString().split("#").lastOrNull()?.removeSuffix(")")
+            }
+            is EnumerationImpl -> t.name ?: t.label
+            else -> "undefined"
+        }
+        return when {
+            asBrackets -> "≪" + (s ?: "undefined") + "≫"
+            else -> ": " + (s ?: "undefined")
+        }
     }
 
     fun org.eclipse.uml2.uml.NamedElement.visibilityChar(): Char {
@@ -134,18 +178,29 @@ class UMLClass(
     @Composable
     fun org.eclipse.uml2.uml.Property.displayProp(projectTreeHandler: ProjectTreeHandler) {
         this.let { prop ->
-            val tmmProp = remember(this, projectTreeHandler.metamodelRoot) { projectTreeHandler.metamodelRoot.findModellingElementOrNull(prop) }
+            val tmmProp = remember(
+                this,
+                projectTreeHandler.metamodelRoot
+            ) { projectTreeHandler.metamodelRoot.findModellingElementOrNull(prop) }
             val selected = remember(this, tmmProp, projectTreeHandler.treeSelection.value) {
                 println("modellingElementOrNull = ${tmmProp}")
                 tmmProp?.let { projectTreeHandler.treeSelection.value.contains(it.target) } ?: false
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable {
-                    tmmProp?.target?.let {
-                        projectTreeHandler.setTreeSelection(listOf(it))
+                modifier = Modifier.combinedClickable(
+                    onClick = {
+                        tmmProp?.target?.let {
+                            projectTreeHandler.setTreeSelection(listOf(it))
+                        }
+                    },
+                    onDoubleClick = {
+                        SharedCommands.forceOpenProperties?.invoke()
+                        tmmProp?.target?.let {
+                            projectTreeHandler.setTreeSelection(listOf(it))
+                        }
                     }
-                }.then(
+                ).then(
                     if (selected) {
                         Modifier.border(width = 1.dp, color = MaterialTheme.colors.primary)
                     } else Modifier
@@ -157,9 +212,25 @@ class UMLClass(
                     modifier = Modifier.width(16.dp)
                 )
                 val vis = prop.visibilityChar()
-                val str =
-                    prop.applicableStereotypes.toStereotypesString() + " $vis " + prop.labelOrName() + " " + prop.typeNameString() + " [1]"
-                Text(text = str, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                val value: ValueSpecification? = prop.defaultValue
+                if (value != null) {
+                    val valueStr = when (value) {
+                        is LiteralInteger -> value?.value?.toString()
+                        is LiteralBoolean -> value?.booleanValue()?.toString()
+                        is LiteralReal -> value?.realValue()?.toString()
+                        is LiteralString -> value?.stringValue()
+                        else -> {
+                            null
+                        }
+                    }
+                    val str =
+                        prop.applicableStereotypes.toStereotypesString() + " $vis " + prop.labelOrName() + " " + prop.typeNameString(false) + " = " + valueStr
+                    Text(text = str, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                } else {
+                    val str =
+                        prop.applicableStereotypes.toStereotypesString() + " $vis " + prop.labelOrName() + " " + prop.typeNameString() + " [1]"
+                    Text(text = str, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
                 // TODO Multiplicity
             }
         }

@@ -1,33 +1,47 @@
 package com.github.jan222ik.ui.uml
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.isPrimaryPressed
-import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
 import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
 import com.github.jan222ik.ui.adjusted.MovableBaseUI
 import com.github.jan222ik.ui.components.menu.MenuContribution
+import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
+import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
+import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.ui.value.Space
 import org.eclipse.uml2.uml.Element
+import org.eclipse.uml2.uml.Package
 import org.eclipse.uml2.uml.Stereotype
 
 class UMLPackage(
-    val umlPackage: org.eclipse.uml2.uml.Package,
+    val packageRef: DiagramStateHolders.UMLRef.ComposableRef.PackageRef,
+    val umlPackage: Package,
     initBoundingRect: BoundingRectState,
     onNextUIConfig: (MovableAndResizeableComponent, BoundingRectState, BoundingRectState) -> Unit,
 ) : MovableAndResizeableComponent(
@@ -41,7 +55,7 @@ class UMLPackage(
 ) {
     lateinit var deleteSelfCommand: RemoveFromDiagramCommand
 
-    @OptIn(ExperimentalFoundationApi::class)
+    @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
     @Composable
     override fun content(projectTreeHandler: ProjectTreeHandler) {
         val tmmClassPath = remember(
@@ -74,7 +88,9 @@ class UMLPackage(
                 border = BorderStroke(width = 1.dp, color = Color.Black)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = Space.dp16, vertical = Space.dp4).width(IntrinsicSize.Min),
+                    modifier = Modifier
+                        .padding(horizontal = Space.dp16, vertical = Space.dp4)
+                        .width(IntrinsicSize.Max),
                     horizontalArrangement = Arrangement.spacedBy(Space.dp8),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -101,10 +117,82 @@ class UMLPackage(
                 color = color,
                 border = BorderStroke(width = 1.dp, color = Color.Black)
             ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 8.dp).fillMaxWidth()
-                ) {
-                    Text("Package Content")
+                Box {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 8.dp).fillMaxWidth()
+                    ) {
+
+                    }
+                    val shortcutActionsHandler = LocalShortcutActionHandler.current
+                    packageRef.link?.let {
+                        val expand = remember { mutableStateOf(false) }
+                        val onHover = remember { mutableStateOf(false) }
+                        DisposableEffect(it) {
+                            val action = ShortcutAction.of(
+                                key = Key.CtrlLeft,
+                                modifierSum = ShortcutAction.KeyModifier.ANY_MODIFIERS,
+                                action = {
+                                    expand.value = true
+                                    false
+                                }
+                            )
+                            val releaseAction = ShortcutAction.of(
+                                key = Key.CtrlLeft,
+                                modifierSum = ShortcutAction.KeyModifier.ANY_MODIFIERS,
+                                action = {
+                                    expand.value = false
+                                    false
+                                }
+                            )
+                            shortcutActionsHandler.register(action)
+                            shortcutActionsHandler.registerOnRelease(releaseAction)
+                            onDispose {
+                                shortcutActionsHandler.deregister(action)
+                                shortcutActionsHandler.deregisterOnRelease(releaseAction)
+                            }
+                        }
+                        Surface(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(Space.dp4)
+                                .onPointerEvent(PointerEventType.Enter) { onHover.value = true }
+                                .onPointerEvent(PointerEventType.Exit) { onHover.value = false }
+                                .mouseCombinedClickable(
+                                    onClick = {
+                                        if (buttons.isPrimaryPressed) {
+                                            if (keyboardModifiers.isCtrlPressed || expand.value || onHover.value) {
+                                                tmmClassPath
+                                                    ?.target
+                                                    ?.getProjectUMLElement()
+                                                    ?.findDiagramElementByLocation(packageRef.link)
+                                                    ?.let { findPath ->
+                                                        EditorManager.moveToOrOpenDiagram(
+                                                            tmmDiagram = findPath.target,
+                                                            commandStackHandler = CommandStackHandler.INSTANCE
+                                                        )
+                                                    }
+                                            }
+                                        }
+                                    }
+                                ),
+                            color = EditorColors.backgroundGray,
+                            shape = RoundedCornerShape(Space.dp32)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Link,
+                                    contentDescription = null
+                                )
+                                AnimatedVisibility(
+                                    visible = expand.value || onHover.value
+                                ) {
+                                    Text(packageRef.link.split("::").last())
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

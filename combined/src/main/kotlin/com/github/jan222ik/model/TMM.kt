@@ -81,7 +81,7 @@ sealed class TMM {
     }
 
     fun findDiagramElementByLocation(location: String): TMMPath<TMM.ModelTree.Diagram>? {
-        return if (this is ModelTree.Diagram && this.initDiagram.let { "${it.location}::${it.name}" } == location) {
+        return if (this is ModelTree.Diagram && this.initDiagram.let { "${it.location}::${it.name}" }.also { println("it = ${it} location == ${location}") } == location) {
             TMMPath(nodes = listOf(this), this)
         } else {
             if (this is TMM.IHasChildren<*>) {
