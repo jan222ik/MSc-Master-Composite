@@ -82,11 +82,18 @@ fun MenuItemList(items: List<MenuContribution>, jobHandler: JobHandler, width: D
                             modifier = Modifier.size(iconSpace)
                         ) {
                             item.icon?.let {
-                                Icon(
-                                    imageVector = it,
-                                    contentDescription = "Execute: ${item.displayName}",
-                                    tint = contentColor.value
-                                )
+                                when (it) {
+                                    is DrawableIcon.viaImgVector -> Icon(
+                                        imageVector = it.vector,
+                                        contentDescription = "Execute: ${item.displayName}",
+                                        tint = contentColor.value
+                                    )
+                                    is DrawableIcon.viaPainterConstruction -> Icon(
+                                        painter = it.painter.invoke(),
+                                        contentDescription = "Execute: ${item.displayName}",
+                                        tint = Color.Unspecified
+                                    )
+                                }
                             }
                         }
                         Box(Modifier.fillMaxWidth()) {

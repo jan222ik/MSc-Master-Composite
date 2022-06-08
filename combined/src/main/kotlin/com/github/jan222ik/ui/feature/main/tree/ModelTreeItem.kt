@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.PopupPositionProvider
 import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.command.CommandStackHandler
+import com.github.jan222ik.ui.components.menu.DemoMenuContributions
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import mu.KLogging
@@ -146,16 +147,15 @@ sealed class ModelTreeItem(
                         )
 
                     }
-                } to listOf(
-                    MenuContribution.Contentful.MenuItem(
-                        icon = null,
-                        displayName = "Option 1",
-                        command = null
-                    ),
-                    MenuContribution.Separator,
-                )
+                } to contextMenuContributions()
             )
         }
+
+    fun contextMenuContributions() : List<MenuContribution> {
+        return listOf(
+            DemoMenuContributions.diagramContributionsFor(this)
+        )
+    }
 
     class PackageItem(
         level: Int,

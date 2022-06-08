@@ -1,15 +1,26 @@
 package com.github.jan222ik.ui.components.menu
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import com.github.jan222ik.model.command.ICommand
 import com.github.jan222ik.model.command.commands.NotImplementedCommand
 
+sealed class DrawableIcon {
+    data class viaPainterConstruction(val painter: @Composable () -> Painter) : DrawableIcon()
+    data class viaImgVector(val vector: ImageVector) : DrawableIcon()
+}
+
+fun ImageVector.toDrawableIcon() : DrawableIcon {
+    return DrawableIcon.viaImgVector(this)
+}
+
 sealed class MenuContribution {
     object Separator : MenuContribution()
 
     sealed class Contentful(
-        val icon: ImageVector?,
+        val icon: DrawableIcon?,
         val displayName: String,
         val command: ICommand?,
         val keyShortcut: List<Key>,
@@ -19,7 +30,7 @@ sealed class MenuContribution {
         fun isActive(): Boolean = command?.isActive() ?: let { it is NestedMenuItem && it.nestedItems.isNotEmpty() }
 
         open class NestedMenuItem(
-            icon: ImageVector? = null,
+            icon: DrawableIcon? = null,
             displayName: String,
             val nestedItems: List<MenuContribution>
         ) : Contentful(
@@ -31,7 +42,7 @@ sealed class MenuContribution {
         )
 
         open class MenuItem(
-            icon: ImageVector? = null,
+            icon: DrawableIcon? = null,
             displayName: String,
             command: ICommand? = NotImplementedCommand(displayName),
             keyShortcut: List<Key> = emptyList(),

@@ -13,6 +13,7 @@ import com.github.jan222ik.model.mock.MockBackgroundJobs
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.components.menu.MenuContribution.Contentful.MenuItem
 import com.github.jan222ik.ui.components.menu.MenuContribution.Contentful.NestedMenuItem
+import com.github.jan222ik.ui.components.menu.toDrawableIcon
 import com.github.jan222ik.ui.feature.SharedCommands
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.feature.main.footer.progress.IProgressMonitor
@@ -119,7 +120,7 @@ object MenuBarContents {
         kotlin.run {
             val displayName = "Rename..."
             MenuItem(
-                icon = Icons.Filled.Edit,
+                icon = Icons.Filled.Edit.toDrawableIcon(),
                 displayName = displayName,
                 command = NotImplementedCommand(displayName)
             )
@@ -241,7 +242,7 @@ object MenuBarContents {
         kotlin.run {
             val displayName = "Undo"
             MenuItem(
-                icon = Icons.Filled.Undo,
+                icon = Icons.Filled.Undo.toDrawableIcon(),
                 displayName = displayName,
                 command = object : ICommand {
                     override fun isActive(): Boolean = commandStackHandler.hasUndo
@@ -258,7 +259,7 @@ object MenuBarContents {
         kotlin.run {
             val displayName = "Redo"
             MenuItem(
-                icon = Icons.Filled.Redo,
+                icon = Icons.Filled.Redo.toDrawableIcon(),
                 displayName = displayName,
                 command = object : ICommand {
                     override fun isActive(): Boolean = commandStackHandler.hasRedo
@@ -399,7 +400,7 @@ object MenuBarContents {
         kotlin.run {
             val displayName = "Rename..."
             MenuItem(
-                icon = Icons.Filled.Edit,
+                icon = Icons.Filled.Edit.toDrawableIcon(),
                 displayName = displayName,
                 command = NotImplementedCommand(displayName)
             )
