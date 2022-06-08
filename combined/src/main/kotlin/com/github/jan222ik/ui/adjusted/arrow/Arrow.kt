@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import com.github.jan222ik.ui.adjusted.BoundingRect
 import com.github.jan222ik.ui.uml.Anchor
 import org.eclipse.uml2.uml.DirectedRelationship
+import org.eclipse.uml2.uml.Relationship
 import javax.annotation.meta.Exhaustive
 import kotlin.math.*
 
@@ -18,7 +19,7 @@ class Arrow(
     initSourceAnchor: Anchor,
     initTargetAnchor: Anchor,
     initOffsetPath: List<Offset>,
-    val data: DirectedRelationship,
+    val data: Relationship,
     val initSourceBoundingShape: BoundingRect,
     val initTargetBoundingShape: BoundingRect
 ) {

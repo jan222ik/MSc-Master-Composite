@@ -9,16 +9,13 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.capitalize
-import androidx.compose.ui.text.decapitalize
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.window.singleWindowApplication
 import com.github.jan222ik.ecore.EcoreModelLoader
 import com.github.jan222ik.model.validation.ValidatedTextState
 import com.github.jan222ik.model.validation.transformations.ToPatternTransformer
-import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.uml.DiagramHolder
 import com.github.jan222ik.ui.uml.DiagramsLoader
 import com.github.jan222ik.ui.value.Space
@@ -47,22 +44,34 @@ sealed class TMM {
                 is ModelTree.Ecore.TGeneralisation -> generalization.toString()
                 is ModelTree.Ecore.TPackageImport -> packageImport.importingNamespace.name
                 is ModelTree.Ecore.TUNKNOWN -> element.toString()
+                is ModelTree.Ecore.TAssociation -> association.name
+                is ModelTree.Ecore.TConnector -> connector.name
+                is ModelTree.Ecore.TConnectorEnd -> connectorEnd.definingEnd.name
+                is ModelTree.Ecore.TConstraint -> constraint.name
+                is ModelTree.Ecore.TEnumeration -> enumeration.name
             }
         ).find()
     }
 
-    fun getType() : String {
+    fun getType(): String {
         return when (this) {
             is FS.Directory -> "Folder"
             is FS.TreeFile -> "File"
             is FS.UmlProjectFile -> "Model File"
-            is ModelTree.Diagram -> "${initDiagram.diagramType.name.toLowerCase(Locale.current).capitalize(Locale.current)}-Diagram"
+            is ModelTree.Diagram -> "${
+                initDiagram.diagramType.name.toLowerCase(Locale.current).capitalize(Locale.current)
+            }-Diagram"
             is ModelTree.Ecore.TClass -> "Class"
             is ModelTree.Ecore.TGeneralisation -> "Generalization"
             is ModelTree.Ecore.TPackage -> "Package"
             is ModelTree.Ecore.TPackageImport -> "PackageImport"
             is ModelTree.Ecore.TProperty -> "Property"
             is ModelTree.Ecore.TUNKNOWN -> "Unknown Element"
+            is ModelTree.Ecore.TAssociation -> "Association"
+            is ModelTree.Ecore.TConnector -> "Connector"
+            is ModelTree.Ecore.TConnectorEnd -> "ConnectorEnd"
+            is ModelTree.Ecore.TConstraint -> "Constraint"
+            is ModelTree.Ecore.TEnumeration -> "Enumeration"
         }
     }
 
@@ -81,7 +90,8 @@ sealed class TMM {
     }
 
     fun findDiagramElementByLocation(location: String): TMMPath<TMM.ModelTree.Diagram>? {
-        return if (this is ModelTree.Diagram && this.initDiagram.let { "${it.location}::${it.name}" }.also { println("it = ${it} location == ${location}") } == location) {
+        return if (this is ModelTree.Diagram && this.initDiagram.let { "${it.location}::${it.name}" }
+                .also { println("it = ${it} location == ${location}") } == location) {
             TMMPath(nodes = listOf(this), this)
         } else {
             if (this is TMM.IHasChildren<*>) {
@@ -108,7 +118,7 @@ sealed class TMM {
         )
     }
 
-    fun find(predicate: (TMM) -> Boolean) : TMM? {
+    fun find(predicate: (TMM) -> Boolean): TMM? {
         return if (predicate(this)) {
             this
         } else {
@@ -129,7 +139,7 @@ sealed class TMM {
     sealed class FS(
         val file: File
     ) : TMM() {
-        fun findModelFilesOrNull() : List<TMM.FS.UmlProjectFile>? {
+        fun findModelFilesOrNull(): List<TMM.FS.UmlProjectFile>? {
             return when (this) {
                 is Directory -> children.mapNotNull { it.findModelFilesOrNull() }.flatten().ifEmpty { null }
                 is TreeFile -> null
@@ -180,8 +190,8 @@ sealed class TMM {
             val diagrams = mutableStateOf<List<DiagramHolder>>(tmpDiagrams)
             override val children: SnapshotStateList<ModelTree.Ecore.TModel> = mutableStateListOf(tmpModel)
 
-            fun getDiagramsInSubtree() : List<TMM.ModelTree.Diagram> {
-                fun TMM.dInSubRec() : List<TMM.ModelTree.Diagram> {
+            fun getDiagramsInSubtree(): List<TMM.ModelTree.Diagram> {
+                fun TMM.dInSubRec(): List<TMM.ModelTree.Diagram> {
                     return if (this is ModelTree.Diagram) {
                         listOf(this)
                     } else {
@@ -217,8 +227,13 @@ sealed class TMM {
                 is Ecore.TGeneralisation -> this.generalization.general.name
                 is Ecore.TPackage -> this.umlPackage.name
                 is Ecore.TPackageImport -> this.packageImport.importedPackage.name
-                is Ecore.TProperty -> this.property.name
+                is Ecore.TProperty -> this.property.name ?: property.type.name.let { ":$it" }
                 is Ecore.TUNKNOWN -> "<<UNKNOWN ELEMENT>>"
+                is Ecore.TAssociation -> this.association.name?.let { "<Association> $it" } ?: "A_${association.memberEnds.let { it.first().name  + "_" + it.last().name }}"
+                is Ecore.TConnector -> this.connector.name
+                is Ecore.TConnectorEnd -> this.connectorEnd.definingEnd.name
+                is Ecore.TConstraint -> this.constraint.name
+                is Ecore.TEnumeration -> this.enumeration.name
             }
 
         sealed class Ecore(
@@ -267,6 +282,31 @@ sealed class TMM {
 
             class TPackageImport(val packageImport: PackageImport, initOwnedElements: List<ModelTree>) : Ecore(
                 element = packageImport,
+                initOwnedElements = initOwnedElements
+            )
+
+            class TAssociation(val association: Association, initOwnedElements: List<ModelTree>) : Ecore(
+                element = association,
+                initOwnedElements = initOwnedElements
+            )
+
+            class TConnector(val connector: Connector, initOwnedElements: List<ModelTree>) : Ecore(
+                element = connector,
+                initOwnedElements = initOwnedElements
+            )
+
+            class TConnectorEnd(val connectorEnd: ConnectorEnd, initOwnedElements: List<ModelTree>) : Ecore(
+                element = connectorEnd,
+                initOwnedElements = initOwnedElements
+            )
+
+            class TEnumeration(val enumeration: Enumeration, initOwnedElements: List<ModelTree>) : Ecore(
+                element = enumeration,
+                initOwnedElements = initOwnedElements
+            )
+
+            class TConstraint(val constraint: Constraint, initOwnedElements: List<ModelTree>) : Ecore(
+                element = constraint,
                 initOwnedElements = initOwnedElements
             )
 
@@ -334,15 +374,52 @@ fun Element.convertToTreeItem(tmpDiagrams: List<DiagramHolder>): TMM.ModelTree {
                             packageImport = this,
                             initOwnedElements = initOwnedElements
                         )
+                    } else {
+                        if (this is Association) {
+                            TMM.ModelTree.Ecore.TAssociation(
+                                association = this,
+                                initOwnedElements = initOwnedElements
+                            )
+                        } else {
+                            if (this is Connector) {
+                                TMM.ModelTree.Ecore.TConnector(
+                                    connector = this,
+                                    initOwnedElements = initOwnedElements
+                                )
+                            } else {
+                                if (this is ConnectorEnd) {
+                                    TMM.ModelTree.Ecore.TConnectorEnd(
+                                        connectorEnd = this,
+                                        initOwnedElements = initOwnedElements
+                                    )
+                                } else {
+                                    if (this is Enumeration) {
+                                        TMM.ModelTree.Ecore.TEnumeration(
+                                            enumeration = this,
+                                            initOwnedElements = initOwnedElements
+                                        )
+                                    } else {
+                                        if (this is Constraint) {
+                                            TMM.ModelTree.Ecore.TConstraint(
+                                                constraint = this,
+                                                initOwnedElements = initOwnedElements
+                                            )
+                                        } else {
+                                            TMM.ModelTree.Ecore.TUNKNOWN(
+                                                element = this,
+                                                initOwnedElements = initOwnedElements
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                    TMM.ModelTree.Ecore.TUNKNOWN(
-                        element = this,
-                        initOwnedElements = initOwnedElements
-                    )
                 }
             }
         }
     }
+
     tmmElement.ownedElements.onEach { it.parent = tmmElement }
     return tmmElement
 }

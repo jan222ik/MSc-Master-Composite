@@ -26,16 +26,8 @@ import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.util.HorizontalDivider
 import mu.KLogging
-import org.eclipse.uml2.types.TypesPackage
-import org.eclipse.uml2.uml.Element
-import org.eclipse.uml2.uml.LiteralBoolean
-import org.eclipse.uml2.uml.LiteralInteger
-import org.eclipse.uml2.uml.LiteralReal
-import org.eclipse.uml2.uml.LiteralString
-import org.eclipse.uml2.uml.PrimitiveType
-import org.eclipse.uml2.uml.Stereotype
-import org.eclipse.uml2.uml.ValueSpecification
-import org.eclipse.uml2.uml.VisibilityKind
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.uml2.uml.*
 import org.eclipse.uml2.uml.internal.impl.EnumerationImpl
 import org.eclipse.uml2.uml.internal.impl.PrimitiveTypeImpl
 
@@ -140,6 +132,15 @@ class UMLClass(
         return umlClass == element
     }
 
+    override fun showsElementFromAssoc(element: Element?, lastMemberEnd: Boolean): Boolean {
+        val l = mutableListOf<EObject>()
+        umlClass.eAllContents().forEachRemaining { l.add(it) }
+        return kotlin.run {
+            umlClass.associations.any { it.memberEnds.let { if (lastMemberEnd) it.last() else it.first() } == element }
+        }
+    }
+
+
     fun org.eclipse.uml2.uml.Class.appliedStereotypesString(): String =
         this.appliedStereotypes.toStereotypesString().takeUnless { it.equals("") } ?: "≪Block≫"
 
@@ -224,7 +225,9 @@ class UMLClass(
                         }
                     }
                     val str =
-                        prop.applicableStereotypes.toStereotypesString() + " $vis " + prop.labelOrName() + " " + prop.typeNameString(false) + " = " + valueStr
+                        prop.applicableStereotypes.toStereotypesString() + " $vis " + prop.labelOrName() + " " + prop.typeNameString(
+                            false
+                        ) + " = " + valueStr
                     Text(text = str, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 } else {
                     val str =

@@ -260,7 +260,7 @@ data class Nameable<T : NamedElement>(
     override fun render(umlElement: T, fReqSelf: FocusRequester) {
         StingBasedInput(
             propViewElement = propViewElement,
-            initialValue = umlElement.name,
+            initialValue = umlElement.name ?: "null",
             focusRequester = fReqSelf,
             focusOrderReceiver = {
                 // TODO
@@ -281,7 +281,7 @@ data class Labelable<T : NamedElement>(
     override fun render(umlElement: T, fReqSelf: FocusRequester) {
         StingBasedInput(
             propViewElement = propViewElement,
-            initialValue = umlElement.label,
+            initialValue = umlElement.label ?: "null",
             focusRequester = fReqSelf,
             focusOrderReceiver = {
                 // TODO

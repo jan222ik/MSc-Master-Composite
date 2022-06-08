@@ -49,9 +49,9 @@ fun main() {
                 ),
                 link = null
             ),
-            DiagramStateHolders.UMLRef.ArrowRef(
-                sourceReferencedQualifierName = "testuml::TestClassWithProperties",
-                targetReferencedQualifierName = "testuml::TestClass",
+            DiagramStateHolders.UMLRef.ArrowRef.GeneralRef(
+                memberEndName0 = "testuml::TestClassWithProperties",
+                memberEndName1 = "testuml::TestClass",
                 index = 0,
                 sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.5f),
                 targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.5f)
@@ -95,16 +95,16 @@ fun main() {
                 ),
                 link = null
             ),
-            DiagramStateHolders.UMLRef.ArrowRef(
-                sourceReferencedQualifierName = "testuml::TestClassWithProperties",
-                targetReferencedQualifierName = "testuml::TestClass",
+            DiagramStateHolders.UMLRef.ArrowRef.GeneralRef(
+                memberEndName0 = "testuml::TestClassWithProperties",
+                memberEndName1 = "testuml::TestClass",
                 index = 0,
                 sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.5f),
                 targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.5f)
             ),
-            DiagramStateHolders.UMLRef.ArrowRef(
-                sourceReferencedQualifierName = "testuml::AnotherClass",
-                targetReferencedQualifierName = "testuml::TestClass",
+            DiagramStateHolders.UMLRef.ArrowRef.GeneralRef(
+                memberEndName0 = "testuml::AnotherClass",
+                memberEndName1 = "testuml::TestClass",
                 index = 0,
                 sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.25f),
                 targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.25f)

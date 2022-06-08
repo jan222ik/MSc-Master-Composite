@@ -84,6 +84,22 @@ sealed class ModelTreeItem(
                         tmmTPackageImport = tmmModelItem
                     )
                 }
+                is TMM.ModelTree.Ecore.TAssociation -> AssociationItem(
+                    level = level,
+                    tmmTAssociation = tmmModelItem
+                )
+                is TMM.ModelTree.Ecore.TConnector -> ConnectorItem(
+                    level = level,
+                    tmmTConnector = tmmModelItem
+                )
+                is TMM.ModelTree.Ecore.TConstraint -> ConstraintItem(
+                    level = level,
+                    tmmTConstraint = tmmModelItem
+                )
+                is TMM.ModelTree.Ecore.TEnumeration -> EnumerationItem(
+                    level = level,
+                    tmmTEnumeration = tmmModelItem
+                )
                 else -> {
                     logger.debug { "Item can not be converted to a element in the tree. ${tmmModelItem.javaClass}" }
                     null
@@ -163,7 +179,7 @@ sealed class ModelTreeItem(
             }
 
         override val displayName: String
-            get() = tmmTPackage.umlPackage.name
+            get() = tmmTPackage.displayName
     }
 
     class ClassItem(
@@ -183,7 +199,7 @@ sealed class ModelTreeItem(
             }
 
         override val displayName: String
-            get() = tmmTClass.umlClass.name
+            get() = tmmTClass.displayName
     }
 
     class ImportItem(
@@ -207,6 +223,92 @@ sealed class ModelTreeItem(
 
     }
 
+    //is TMM.ModelTree.Ecore.TAssociation -> TODO()
+    class AssociationItem(
+        level: Int,
+        val tmmTAssociation: TMM.ModelTree.Ecore.TAssociation
+    ) : ModelTreeItem(
+        level = level,
+        tmmModelItem = tmmTAssociation
+    ) {
+        override val displayName: String
+            get() = tmmTAssociation.displayName
+
+        override val icon: (@Composable (modifier: Modifier) -> Unit)
+            get() = @Composable {
+                // TODO check if composite
+                Image(
+                    painterResource("drawables/uml_icons/Association.gif"),
+                    contentDescription = null,
+                    modifier = it
+                )
+            }
+
+    }
+    //is TMM.ModelTree.Ecore.TConnector -> TODO()
+    class ConnectorItem(
+        level: Int,
+        val tmmTConnector: TMM.ModelTree.Ecore.TConnector
+    ) : ModelTreeItem(
+        level = level,
+        tmmModelItem = tmmTConnector
+    ) {
+        override val displayName: String
+            get() = tmmTConnector.displayName
+
+        override val icon: (@Composable (modifier: Modifier) -> Unit)
+            get() = @Composable {
+                Image(
+                    painterResource("drawables/uml_icons/BindingConnector.gif"),
+                    contentDescription = null,
+                    modifier = it
+                )
+            }
+
+    }
+    //is TMM.ModelTree.Ecore.TConstraint -> TODO()
+    class ConstraintItem(
+        level: Int,
+        val tmmTConstraint: TMM.ModelTree.Ecore.TConstraint
+    ) : ModelTreeItem(
+        level = level,
+        tmmModelItem = tmmTConstraint
+    ) {
+        override val displayName: String
+            get() = tmmTConstraint.displayName
+
+        override val icon: (@Composable (modifier: Modifier) -> Unit)
+            get() = @Composable {
+                Image(
+                    painterResource("drawables/uml_icons/Constraint.gif"),
+                    contentDescription = null,
+                    modifier = it
+                )
+            }
+
+    }
+    //is TMM.ModelTree.Ecore.TEnumeration -> TODO()
+    class EnumerationItem(
+        level: Int,
+        val tmmTEnumeration: TMM.ModelTree.Ecore.TEnumeration
+    ) : ModelTreeItem(
+        level = level,
+        tmmModelItem = tmmTEnumeration
+    ) {
+        override val displayName: String
+            get() = tmmTEnumeration.displayName
+
+        override val icon: (@Composable (modifier: Modifier) -> Unit)
+            get() = @Composable {
+                Image(
+                    painterResource("drawables/uml_icons/Enumeration.gif"),
+                    contentDescription = null,
+                    modifier = it
+                )
+            }
+
+    }
+
     class PropertyItem(
         level: Int,
         val tmmTProperty: TMM.ModelTree.Ecore.TProperty
@@ -215,7 +317,7 @@ sealed class ModelTreeItem(
         tmmModelItem = tmmTProperty
     ) {
         override val displayName: String
-            get() = tmmTProperty.property.let { it.name ?: "null" }
+            get() = tmmTProperty.displayName
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
                 Image(

@@ -291,6 +291,7 @@ abstract class MovableAndResizeableComponent(
     }
 
     abstract fun showsElement(element: Element?): Boolean
+    open fun showsElementFromAssoc(element: Element?, lastMemberEnd: Boolean): Boolean = false
 
 }
 

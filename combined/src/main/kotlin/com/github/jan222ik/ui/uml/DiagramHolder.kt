@@ -20,6 +20,7 @@ import com.github.jan222ik.ui.adjusted.arrow.ArrowType
 import com.github.jan222ik.ui.feature.main.diagram.canvas.DNDCreation
 import com.github.jan222ik.ui.feature.main.diagram.canvas.DiagramType
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
+import mu.KLogging
 import org.eclipse.uml2.uml.*
 
 data class DiagramHolder(
@@ -57,18 +58,50 @@ sealed class DiagramStateHolders {
     )
     sealed class UMLRef : DiagramStateHolders() {
 
-        class ArrowRef(
-            val sourceReferencedQualifierName: String,
-            val targetReferencedQualifierName: String,
-            val index: Int,
-            val sourceAnchor: Anchor,
-            val targetAnchor: Anchor
-        ) : UMLRef()
+        @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+        @JsonSubTypes(
+            JsonSubTypes.Type(value = UMLRef.ArrowRef.GeneralRef::class, name = "UMLRef.ArrowRef.General"),
+            JsonSubTypes.Type(value = UMLRef.ArrowRef.AssocRef::class, name = "UMLRef.ArrowRef.Assoc"),
+            JsonSubTypes.Type(value = UMLRef.ArrowRef.ConnectorRef::class, name = "UMLRef.ArrowRef.Connector")
+        )
+        sealed class ArrowRef : UMLRef() {
+            abstract val memberEndName0: String
+            abstract val memberEndName1: String
+            abstract val index: Int
+            abstract val sourceAnchor: Anchor
+            abstract val targetAnchor: Anchor
+
+            class GeneralRef(
+                override val memberEndName0: String,
+                override val memberEndName1: String,
+                override val index: Int,
+                override val sourceAnchor: Anchor,
+                override val targetAnchor: Anchor,
+            ) : ArrowRef()
+
+            class AssocRef(
+                override val memberEndName0: String,
+                override val memberEndName1: String,
+                override val index: Int,
+                override val sourceAnchor: Anchor,
+                override val targetAnchor: Anchor
+            ) : ArrowRef()
+
+            class ConnectorRef(
+                override val memberEndName0: String,
+                override val memberEndName1: String,
+                override val index: Int,
+                override val sourceAnchor: Anchor,
+                override val targetAnchor: Anchor
+            ) : ArrowRef()
+        }
 
         @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
         @JsonSubTypes(
             JsonSubTypes.Type(value = UMLRef.ComposableRef.ClassRef::class, name = "UMLRef.ComposableRef.ClassRef"),
             JsonSubTypes.Type(value = UMLRef.ComposableRef.PackageRef::class, name = "UMLRef.ComposableRef.PackageRef"),
+            JsonSubTypes.Type(value = UMLRef.ComposableRef.ParametricNestedClassRef::class, name = "UMLRef.ComposableRef.ParametricNestedClassRef"),
+            JsonSubTypes.Type(value = UMLRef.ComposableRef.ParametricNestedPropertyRef::class, name = "UMLRef.ComposableRef.ParametricNestedPropertyRef"),
         )
         sealed class ComposableRef : UMLRef() {
             abstract val referencedQualifiedName: String
@@ -89,8 +122,38 @@ sealed class DiagramStateHolders {
                     ),
                 )
                 sealed class UMLClassRefFilter {
-                    data class Compartment(val name: CompartmentEnum, val elementsNames: List<String>) : UMLClassRefFilter()
+                    data class Compartment(val name: CompartmentEnum, val elementsNames: List<String>) :
+                        UMLClassRefFilter()
                 }
+            }
+
+            class ParametricNestedClassRef(
+                override val referencedQualifiedName: String,
+                override val shape: BoundingRectState,
+                override val link: String?,
+                val nestedContent: List<UMLRef>
+            ) : UMLRef.ComposableRef() {
+                @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+                @JsonSubTypes(
+                    JsonSubTypes.Type(
+                        value = ParametricNestedClassRef.UMLClassRefFilter.Compartment::class,
+                        name = "UMLClassRefFilter.Compartment"
+                    ),
+                )
+                sealed class UMLClassRefFilter {
+                    data class Compartment(val name: CompartmentEnum, val elementsNames: List<String>) :
+                        UMLClassRefFilter()
+                }
+            }
+
+            class ParametricNestedPropertyRef(
+                override val referencedQualifiedName: String,
+                override val shape: BoundingRectState,
+                override val link: String?,
+                val nestedContent: List<UMLRef>,
+                val isPortSized: Boolean
+            ) : UMLRef.ComposableRef() {
+
             }
 
             class PackageRef(
@@ -112,8 +175,8 @@ class DiagramHolderObservable(
     val diagramType: DiagramType,
     val location: String,
     initContent: List<DiagramStateHolders.UMLRef>,
-    umlRoot: TMM.FS.UmlProjectFile,
-    commandStackHandler: CommandStackHandler,
+    val umlRoot: TMM.FS.UmlProjectFile,
+    val commandStackHandler: CommandStackHandler,
     val upwardsDiagramLink: String?
 ) {
     val diagramName = ValidatedTextState(initial = initName, NonTransformer())
@@ -121,8 +184,16 @@ class DiagramHolderObservable(
     val arrows: MutableState<List<Arrow>> = mutableStateOf(emptyList())
     val elements: MutableState<List<MovableAndResizeableComponent>> = mutableStateOf(emptyList())
 
+    companion object : KLogging()
+
     init {
-        val (arrowRef, elementRef) = initContent.partition { it is DiagramStateHolders.UMLRef.ArrowRef }
+        val (elementList, arrowsList) = resolveTree(initContent)
+        elements.value = elementList
+        arrows.value = arrowsList
+    }
+
+    fun resolveTree(umlRefs: List<DiagramStateHolders.UMLRef>): Pair<List<MovableAndResizeableComponent>, List<Arrow>> {
+        val (arrowRef, elementRef) = umlRefs.partition { it is DiagramStateHolders.UMLRef.ArrowRef }
         val tmmAsList = umlRoot.toList().filterIsInstance<TMM.ModelTree.Ecore>()
         val initElements = elementRef
             .map { umlRef ->
@@ -131,36 +202,55 @@ class DiagramHolderObservable(
                             .find { it.element is NamedElement && it.element.qualifiedName == umlRef.referencedQualifiedName }
             }
             .mapNotNull {
-                it.second
                 val c = it.second?.element
                 if (c != null && c is Class) {
-                    val composableRef = it.first as DiagramStateHolders.UMLRef.ComposableRef.ClassRef
-                    UMLClassFactory.createInstance(
-                        umlClass = c,
-                        initBoundingRect = composableRef.shape,
-                        onMoveOrResize = { moveResizeCommand ->
-                            DNDCreation.logger.debug { "Update Arrows after UMLClass movement" }
-                            val updateArrowPathCommands = updateArrows(moveResizeCommand, c)
-                            if (updateArrowPathCommands.isEmpty()) {
-                                commandStackHandler.add(moveResizeCommand)
-                            } else {
-                                commandStackHandler.add(CompoundCommand(updateArrowPathCommands + moveResizeCommand))
+                    val onMoveOrResize: (MoveOrResizeCommand) -> Unit = { moveResizeCommand ->
+                        logger.debug { "Update Arrows after UMLClass movement" }
+                        val updateArrowPathCommands = updateArrows(moveResizeCommand, c)
+                        if (updateArrowPathCommands.isEmpty()) {
+                            commandStackHandler.add(moveResizeCommand)
+                        } else {
+                            commandStackHandler.add(CompoundCommand(updateArrowPathCommands + moveResizeCommand))
+                        }
+                    }
+                    val deleteCommand: (MovableAndResizeableComponent) -> RemoveFromDiagramCommand = { toDelete ->
+                        val command = object : RemoveFromDiagramCommand() {
+                            override suspend fun execute(handler: JobHandler) {
+                                elements.value = elements.value - toDelete
                             }
-                        },
-                        deleteCommand = { toDelete ->
-                            val command = object : RemoveFromDiagramCommand() {
-                                override suspend fun execute(handler: JobHandler) {
-                                    elements.value = elements.value - toDelete
-                                }
 
-                                override suspend fun undo() {
-                                    elements.value = elements.value + toDelete
-                                }
+                            override suspend fun undo() {
+                                elements.value = elements.value + toDelete
                             }
-                            command
-                        },
-                        filters = composableRef.filters
-                    )
+                        }
+                        command
+                    }
+                    when (val composableRef = it.first) {
+                        is DiagramStateHolders.UMLRef.ComposableRef.ClassRef -> {
+                            UMLClassFactory.createInstance(
+                                umlClass = c,
+                                initBoundingRect = composableRef.shape,
+                                onMoveOrResize = onMoveOrResize,
+                                deleteCommand = deleteCommand,
+                                filters = composableRef.filters
+                            )
+                        }
+                        is DiagramStateHolders.UMLRef.ComposableRef.ParametricNestedClassRef -> {
+                            UMLClassFactory.createNestableInstance(
+                                umlClass = c,
+                                initBoundingRect = composableRef.shape,
+                                onMoveOrResize = onMoveOrResize,
+                                deleteCommand = deleteCommand,
+                                nestedContent = resolveTree(composableRef.nestedContent)
+                            )
+                        }
+                        is DiagramStateHolders.UMLRef.ComposableRef.ParametricNestedPropertyRef -> {
+                            logger.warn { "This case should not exist!!!" }
+                            null
+                        }
+                        else -> null
+                    }
+
                 } else
                     if (c != null && c is Package) {
                         val composableRef = it.first as DiagramStateHolders.UMLRef.ComposableRef.PackageRef
@@ -192,36 +282,63 @@ class DiagramHolderObservable(
                         )
                     } else null
             }
-        elements.value = initElements
+
         println("elements.value = ${elements.value}")
         println("arrowRef = ${arrowRef}")
 
         val allDirectedRelationShip = tmmAsList.filterElementIsInstance<DirectedRelationship>()
+        val allAssociations = tmmAsList.filterElementIsInstance<Association>()
         println("allDirectedRelationShip = ${allDirectedRelationShip}")
         arrowRef as List<DiagramStateHolders.UMLRef.ArrowRef>
         val initArrows = arrowRef
             .map { aRef ->
-                allDirectedRelationShip
-                    .find { dirRel ->
-                        dirRel.sources
-                            .filterIsInstance<NamedElement>()
-                            .any { it.qualifiedName == aRef.sourceReferencedQualifierName }
-                                && dirRel.targets
-                            .filterIsInstance<NamedElement>()
-                            .any {
-                                it.qualifiedName == aRef.targetReferencedQualifierName
-                            }
-                    } to aRef
+                when (aRef) {
+                    is DiagramStateHolders.UMLRef.ArrowRef.GeneralRef -> {
+                        allDirectedRelationShip
+                            .find { dirRel ->
+                                dirRel.sources
+                                    .filterIsInstance<NamedElement>()
+                                    .any { it.qualifiedName == aRef.memberEndName0 }
+                                        && dirRel.targets
+                                    .filterIsInstance<NamedElement>()
+                                    .any {
+                                        it.qualifiedName == aRef.memberEndName1
+                                    }
+                            } to aRef
+                    }
+                    is DiagramStateHolders.UMLRef.ArrowRef.AssocRef -> {
+                        (allAssociations
+                            .find { assoc ->
+                                assoc.memberEnds
+                                    .filterIsInstance<NamedElement>()
+                                    .let {
+                                        it.any { it.name == aRef.memberEndName0 } &&
+                                                it.any { it.name == aRef.memberEndName1 }
+                                    }
+                            } to aRef).also { println("assocRef = ${it}") }
+                    }
+                    is DiagramStateHolders.UMLRef.ArrowRef.ConnectorRef -> TODO()
+                }
             }
             .mapNotNull {
                 if (it.first == null) {
                     println("No element $it")
                     null
-                } else it as Pair<DirectedRelationship, DiagramStateHolders.UMLRef.ArrowRef>
+                } else it as Pair<Relationship, DiagramStateHolders.UMLRef.ArrowRef>
             }
             .mapNotNull { (rel, ref) ->
-                val general = elements.value.firstOrNull { it.showsElement(rel.targets.first()) }
-                val special = elements.value.firstOrNull { it.showsElement(rel.sources.first()) }
+                val firstTarget = when (rel) {
+                    is DirectedRelationship -> rel.targets.first()
+                    is Association -> rel.memberEnds.first()
+                    else -> error("Not supported type of Relationship")
+                }
+                val firstSource = when (rel) {
+                    is DirectedRelationship -> rel.sources.first()
+                    is Association -> rel.memberEnds.last()
+                    else -> error("Not supported type of Relationship")
+                }
+                val general = initElements.firstOrNull { it.showsElement(firstTarget) || it.showsElementFromAssoc(firstTarget, false) }
+                val special = initElements.lastOrNull { it.showsElement(firstSource) || it.showsElementFromAssoc(firstSource, true)}
                 if (special != null && general != null) {
                     val fourPointArrowOffsetPath = Arrow.fourPointArrowOffsetPath(
                         sourceAnchor = ref.sourceAnchor,
@@ -244,12 +361,24 @@ class DiagramHolderObservable(
                     arrow
                 } else null
             }
-        arrows.value = initArrows
+        return initElements to initArrows
     }
 
     fun updateArrows(moveResizeCommand: MoveOrResizeCommand, data: Element): List<UpdateArrowPathCommand> {
-        val filteredSources = arrows.value.filter { it.data.sources.contains(data) }
-        val filteredTargets = arrows.value.filter { it.data.targets.contains(data) }
+        val filteredSources = arrows.value.filter {
+            val sources = when (it.data) {
+                is DirectedRelationship -> it.data.sources
+                is Association -> it.data.memberEnds
+                else -> error("Not supported type of Relationship")
+            }
+            sources.contains(data) }
+        val filteredTargets = arrows.value.filter {
+            val targets = when (it.data) {
+                is DirectedRelationship -> it.data.targets
+                is Association -> it.data.memberEnds
+                else -> error("Not supported type of Relationship")
+            }
+            targets.contains(data) }
         DNDCreation.logger.debug { "sources: $filteredSources, tragets: $filteredTargets" }
         if (filteredSources.isEmpty() && filteredTargets.isEmpty()) {
             return emptyList()

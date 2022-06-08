@@ -7,6 +7,7 @@ import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.feature.main.diagram.canvas.DiagramType
 import com.github.jan222ik.ui.uml.DiagramStateHolders.UMLRef.ComposableRef.ClassRef.UMLClassRefFilter
 import java.io.File
+import javax.sound.sampled.Port
 
 object PcSystemDiagrams {
 
@@ -66,74 +67,96 @@ object PcSystemDiagrams {
     )
 
     val pcConfigModel = "PC_System::Configuration::PC_ConfigurationModel"
-    val ModelLibraries = DiagramHolder(
-        name = "ModelLibraries",
-        diagramType = DiagramType.BLOCK_DEFINITION,
-        upwardsDiagramLink = pcConfigModel,
-        location = "PC_System::Configuration::Model Libraries",
-        content = trioFormation(
-            top = d64,
-            left = d64,
-            general = "PC_System::Configuration::Model Libraries::HDisk",
-            specification1 = "PC_System::Configuration::Model Libraries::MedStoreDisk",
-            specification2 = "PC_System::Configuration::Model Libraries::MaxStoreDisk"
-        ) + trioFormation(
-            top = d64,
-            left = d128.times(4),
-            general = "PC_System::Configuration::Model Libraries::HDController",
-            specification1 = "PC_System::Configuration::Model Libraries::MaxStoreC",
-            specification2 = "PC_System::Configuration::Model Libraries::MedStoreC"
-        ) + trioFormation(
-            top = d128.times(3),
-            left = d64,
-            general = "PC_System::Configuration::Model Libraries::CPU",
-            specification1 = "PC_System::Configuration::Model Libraries::CPUS",
-            specification2 = "PC_System::Configuration::Model Libraries::CPUD"
-        ) + trioFormation(
-            top = d128.times(3),
-            left = d128.times(4),
-            general = "PC_System::Configuration::Model Libraries::OS",
-            specification1 = "PC_System::Configuration::Model Libraries::OSAlpha",
-            specification2 = "PC_System::Configuration::Model Libraries::OSBeta"
-        ) + trioFormation(
-            top = d128.times(6),
-            left = d64,
-            general = "PC_System::Configuration::Model Libraries::MB",
-            specification1 = "PC_System::Configuration::Model Libraries::MBSilver",
-            specification2 = "PC_System::Configuration::Model Libraries::MBDiamond"
-        ) + trioFormation(
-            top = d128.times(6),
-            left = d128.times(4),
-            general = "PC_System::Configuration::Model Libraries::Screen",
-            specification1 = "PC_System::Configuration::Model Libraries::ScreenA",
-            specification2 = "PC_System::Configuration::Model Libraries::ScreenC",
-            anchorOffsetsAtGeneral = packFloats(0.25f, 0.75f)
-        ) + listOf(
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "PC_System::Configuration::Model Libraries::ScreenB",
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(d128.times(5), d128.times(7)),
-                    width = d128,
-                    height = d64
-                ),
-                filters = emptyList(),
-                link = null
-            ),
-            DiagramStateHolders.UMLRef.ArrowRef(
-                sourceReferencedQualifierName = "PC_System::Configuration::Model Libraries::ScreenB",
-                targetReferencedQualifierName = "PC_System::Configuration::Model Libraries::Screen",
-                index = 1,
-                sourceAnchor = Anchor(
-                    side = AnchorSide.N,
-                    fromTopLeftOffsetPercentage = 0.5f,
-                ),
-                targetAnchor = Anchor(
-                    side = AnchorSide.S,
-                    fromTopLeftOffsetPercentage = 0.5f
+    val ModelLibraries = kotlin.run {
+        val xCol0 = d64
+        val xCol1 = d128.times(5)
+        val yRow0 = d64
+        val yRow1 = d128.times(3) + d64
+        val yRow2 = d128.times(6) + d128
+        DiagramHolder(
+            name = "ModelLibraries",
+            diagramType = DiagramType.BLOCK_DEFINITION,
+            upwardsDiagramLink = pcConfigModel,
+            location = "PC_System::Configuration::Model Libraries",
+            content = trioFormation(
+                top = yRow0,
+                left = xCol0,
+                general = "PC_System::Configuration::Model Libraries::HDisk",
+                specification1 = "PC_System::Configuration::Model Libraries::MedStoreDisk",
+                specification2 = "PC_System::Configuration::Model Libraries::MaxStoreDisk"
+            ) + trioFormation(
+                top = yRow0,
+                left = xCol1,
+                general = "PC_System::Configuration::Model Libraries::HDController",
+                specification1 = "PC_System::Configuration::Model Libraries::MaxStoreC",
+                specification2 = "PC_System::Configuration::Model Libraries::MedStoreC"
+            ) + trioFormation(
+                top = yRow1,
+                left = xCol0,
+                general = "PC_System::Configuration::Model Libraries::CPU",
+                specification1 = "PC_System::Configuration::Model Libraries::CPUS",
+                specification2 = "PC_System::Configuration::Model Libraries::CPUD"
+            ) + trioFormation(
+                top = yRow1,
+                left = xCol1,
+                general = "PC_System::Configuration::Model Libraries::OS",
+                specification1 = "PC_System::Configuration::Model Libraries::OSAlpha",
+                specification2 = "PC_System::Configuration::Model Libraries::OSBeta"
+            ) + trioFormation(
+                top = yRow2,
+                left = xCol0,
+                general = "PC_System::Configuration::Model Libraries::MB",
+                specification1 = "PC_System::Configuration::Model Libraries::MBSilver",
+                specification2 = "PC_System::Configuration::Model Libraries::MBDiamond"
+            ) + kotlin.run {
+                val spaceTween: Float = d128 + d64.times(2)
+                val width: Float = d256 - d32
+                val height: Float = d128
+                val vSpace: Float = d64
+
+                trioFormation(
+                    top = yRow2,
+                    left = xCol1,
+                    general = "PC_System::Configuration::Model Libraries::Screen",
+                    specification1 = "PC_System::Configuration::Model Libraries::ScreenA",
+                    specification2 = "PC_System::Configuration::Model Libraries::ScreenC",
+                    anchorOffsetsAtGeneral = packFloats(0.25f, 0.75f),
+                    spaceTween = spaceTween,
+                    width = width,
+                    height = height,
+                    vSpace = vSpace
+                ) + listOf(
+                    DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
+                        referencedQualifiedName = "PC_System::Configuration::Model Libraries::ScreenB",
+                        shape = BoundingRectState(
+                            topLeftPacked = packFloats(
+                                xCol1 + width + spaceTween.minus(width).div(2),
+                                yRow2 + height + vSpace
+                            ),
+                            width = width,
+                            height = height
+                        ),
+                        filters = emptyList(),
+                        link = null
+                    ),
+                    DiagramStateHolders.UMLRef.ArrowRef.GeneralRef(
+                        memberEndName0 = "PC_System::Configuration::Model Libraries::ScreenB",
+                        memberEndName1 = "PC_System::Configuration::Model Libraries::Screen",
+                        index = 1,
+                        sourceAnchor = Anchor(
+                            side = AnchorSide.N,
+                            fromTopLeftOffsetPercentage = 0.5f,
+                        ),
+                        targetAnchor = Anchor(
+                            side = AnchorSide.S,
+                            fromTopLeftOffsetPercentage = 0.5f
+                        )
+                    )
                 )
-            )
+            }
         )
-    )
+    }
+
 
     fun trioFormation(
         top: Float,
@@ -141,13 +164,14 @@ object PcSystemDiagrams {
         general: String,
         specification1: String,
         specification2: String,
-        anchorOffsetsAtGeneral: Long = packFloats(0.33f, 0.66f)
+        anchorOffsetsAtGeneral: Long = packFloats(0.33f, 0.66f),
+        spaceTween: Float = d64,
+        width: Float = d256 - d32,
+        height: Float = d128,
+        vSpace: Float = d64
     ): List<DiagramStateHolders.UMLRef> {
-        val width = d256
-        val height = d128
-        val vSpace = d64
         val lowerRowY = top + height + vSpace
-        val topRowInsetX = left + width.div(2) + d32
+        val topRowInsetX = left + width.div(2) + spaceTween.div(2)
         val targetFirst = unpackFloat1(anchorOffsetsAtGeneral)
         val targetSecond = unpackFloat2(anchorOffsetsAtGeneral)
         return listOf(
@@ -174,16 +198,16 @@ object PcSystemDiagrams {
             DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
                 referencedQualifiedName = specification2,
                 shape = BoundingRectState(
-                    topLeftPacked = packFloats(topRowInsetX + width, lowerRowY),
+                    topLeftPacked = packFloats(topRowInsetX + width.div(2) + spaceTween.div(2), lowerRowY),
                     width = width,
                     height = height
                 ),
                 filters = emptyList(),
                 link = null
             ),
-            DiagramStateHolders.UMLRef.ArrowRef(
-                sourceReferencedQualifierName = specification1,
-                targetReferencedQualifierName = general,
+            DiagramStateHolders.UMLRef.ArrowRef.GeneralRef(
+                memberEndName0 = specification1,
+                memberEndName1 = general,
                 index = 0,
                 sourceAnchor = Anchor(
                     side = AnchorSide.N,
@@ -194,9 +218,9 @@ object PcSystemDiagrams {
                     fromTopLeftOffsetPercentage = targetFirst
                 )
             ),
-            DiagramStateHolders.UMLRef.ArrowRef(
-                sourceReferencedQualifierName = specification2,
-                targetReferencedQualifierName = general,
+            DiagramStateHolders.UMLRef.ArrowRef.GeneralRef(
+                memberEndName0 = specification2,
+                memberEndName1 = general,
                 index = 0,
                 sourceAnchor = Anchor(
                     side = AnchorSide.N,
@@ -210,182 +234,219 @@ object PcSystemDiagrams {
         )
     }
 
-    val productArchitecture = DiagramHolder(
-        name = "ProductArchitecture",
-        upwardsDiagramLink = pcConfigModel,
-        diagramType = DiagramType.BLOCK_DEFINITION,
-        location = "PC_System::Configuration::Product Architecture",
-        content = listOf(
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "PC_System::Configuration::Product Architecture::Configuration Model",
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(d256, d64),
-                    width = d256,
-                    height = d128
-                ),
-                filters = listOf(
-                    UMLClassRefFilter.Compartment(
-                        CompartmentEnum.ATTRIBUTES, listOf(
-                            "maxPrice",
-                            "usage",
-                            "efficiency"
+    val productArchitecture = kotlin.run {
+        val topLevelY = d64
+        val topLevelHeight = d128
+        val secondLevelY = topLevelY + topLevelHeight + d64
+        val secondLevelHeight = d128
+        val thirdLevelY = secondLevelY + secondLevelHeight + d64
+        val thirdLevelHeight = d128
+        val thirdLevelWidth = d256 - d64
+        val lowestLevelY = thirdLevelY + thirdLevelHeight + d64
+        val lowestLevelHeight = d128
+        var idx = 0
+        fun nextThirdRowOffset(): Float {
+            val offset = d64.times(idx) + thirdLevelWidth.times(idx)
+            idx += 1
+            return offset
+        }
+
+        var cpuX: Float
+        var hdUnitX: Float
+        val thirdLevel = kotlin.run {
+            listOf(
+                DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
+                    referencedQualifiedName = "PC_System::Configuration::Product Architecture::InternetConn",
+                    shape = BoundingRectState(
+                        topLeftPacked = packFloats(nextThirdRowOffset(), thirdLevelY),
+                        width = thirdLevelWidth,
+                        height = thirdLevelHeight
+                    ),
+                    filters = listOf(
+                        UMLClassRefFilter.Compartment(
+                            CompartmentEnum.ATTRIBUTES, listOf(
+                                "price",
+                                "auxiliary"
+                            )
                         )
-                    )
+                    ),
+                    link = null
                 ),
-                link = null
-            ),
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "PC_System::Configuration::Product Architecture::PC",
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(d256, d64),
-                    width = d256,
-                    height = d128
-                ),
-                filters = listOf(
-                    UMLClassRefFilter.Compartment(
-                        CompartmentEnum.ATTRIBUTES, listOf(
-                            "price"
+                DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
+                    referencedQualifiedName = "PC_System::Configuration::Product Architecture::HDUnit",
+                    shape = BoundingRectState(
+                        topLeftPacked = packFloats(nextThirdRowOffset().also { hdUnitX = it }, thirdLevelY),
+                        width = thirdLevelWidth,
+                        height = thirdLevelHeight
+                    ),
+                    filters = listOf(
+                        UMLClassRefFilter.Compartment(
+                            CompartmentEnum.ATTRIBUTES, listOf(
+                                "price"
+                            )
                         )
-                    )
+                    ),
+                    link = null
                 ),
-                link = null
-            ),
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "PC_System::Configuration::Product Architecture::InternetConn",
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(d256, d64),
-                    width = d256,
-                    height = d128
-                ),
-                filters = listOf(
-                    UMLClassRefFilter.Compartment(
-                        CompartmentEnum.ATTRIBUTES, listOf(
-                            "price",
-                            "auxiliary"
+                DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
+                    referencedQualifiedName = "PC_System::Configuration::Product Architecture::Application",
+                    shape = BoundingRectState(
+                        topLeftPacked = packFloats(nextThirdRowOffset(), thirdLevelY),
+                        width = thirdLevelWidth,
+                        height = thirdLevelHeight
+                    ),
+                    filters = listOf(
+                        UMLClassRefFilter.Compartment(
+                            CompartmentEnum.ATTRIBUTES, listOf(
+                                "hdcapacity",
+                                "price"
+                            )
                         )
-                    )
+                    ),
+                    link = null
                 ),
-                link = null
-            ),
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "PC_System::Configuration::Product Architecture::Application",
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(d256, d64),
-                    width = d256,
-                    height = d128
-                ),
-                filters = listOf(
-                    UMLClassRefFilter.Compartment(
-                        CompartmentEnum.ATTRIBUTES, listOf(
-                            "hdcapacity",
-                            "price"
+                DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
+                    referencedQualifiedName = "PC_System::Configuration::Model Libraries::MB",
+                    shape = BoundingRectState(
+                        topLeftPacked = packFloats(nextThirdRowOffset().also { cpuX = it }, thirdLevelY),
+                        width = thirdLevelWidth,
+                        height = thirdLevelHeight
+                    ),
+                    filters = listOf(
+                        UMLClassRefFilter.Compartment(
+                            CompartmentEnum.ATTRIBUTES, emptyList()
                         )
-                    )
+                    ),
+                    link = null
                 ),
-                link = null
-            ),
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "PC_System::Configuration::Product Architecture::HDUnit",
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(d256, d64),
-                    width = d256,
-                    height = d128
-                ),
-                filters = listOf(
-                    UMLClassRefFilter.Compartment(
-                        CompartmentEnum.ATTRIBUTES, listOf(
-                            "price"
+                DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
+                    referencedQualifiedName = "PC_System::Configuration::Model Libraries::Screen",
+                    shape = BoundingRectState(
+                        topLeftPacked = packFloats(nextThirdRowOffset(), thirdLevelY),
+                        width = thirdLevelWidth,
+                        height = thirdLevelHeight
+                    ),
+                    filters = listOf(
+                        UMLClassRefFilter.Compartment(
+                            CompartmentEnum.ATTRIBUTES, emptyList()
                         )
-                    )
+                    ),
+                    link = null
                 ),
-                link = null
-            ),
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "PC_System::Configuration::Model Libraries::MB",
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(d256, d64),
-                    width = d256,
-                    height = d128
+                DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
+                    referencedQualifiedName = "PC_System::Configuration::Model Libraries::OS",
+                    shape = BoundingRectState(
+                        topLeftPacked = packFloats(nextThirdRowOffset(), thirdLevelY),
+                        width = thirdLevelWidth,
+                        height = thirdLevelHeight
+                    ),
+                    filters = listOf(
+                        UMLClassRefFilter.Compartment(
+                            CompartmentEnum.ATTRIBUTES, emptyList()
+                        )
+                    ),
+                    link = null
+                )
+            )
+        }
+        val lowestLevelWidth = thirdLevelWidth
+        val lowestLevel = kotlin.run {
+            listOf(
+                DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
+                    referencedQualifiedName = "PC_System::Configuration::Model Libraries::HDisk",
+                    shape = BoundingRectState(
+                        topLeftPacked = packFloats(hdUnitX.minus(thirdLevelWidth.div(2)).minus(d32), lowestLevelY),
+                        width = lowestLevelWidth,
+                        height = lowestLevelHeight
+                    ),
+                    filters = listOf(
+                        UMLClassRefFilter.Compartment(
+                            CompartmentEnum.ATTRIBUTES, emptyList()
+                        )
+                    ),
+                    link = null
                 ),
-                filters = listOf(
-                    UMLClassRefFilter.Compartment(
-                        CompartmentEnum.ATTRIBUTES, emptyList()
-                    )
+                DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
+                    referencedQualifiedName = "PC_System::Configuration::Model Libraries::HDController",
+                    shape = BoundingRectState(
+                        topLeftPacked = packFloats(hdUnitX.plus(thirdLevelWidth.div(2)).plus(d32), lowestLevelY),
+                        width = lowestLevelWidth,
+                        height = lowestLevelHeight
+                    ),
+                    filters = listOf(
+                        UMLClassRefFilter.Compartment(
+                            CompartmentEnum.ATTRIBUTES, emptyList()
+                        )
+                    ),
+                    link = null
                 ),
-                link = null
-            ),
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "PC_System::Configuration::Model Libraries::Screen",
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(d256, d64),
-                    width = d256,
-                    height = d128
+                DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
+                    referencedQualifiedName = "PC_System::Configuration::Model Libraries::CPU",
+                    shape = BoundingRectState(
+                        topLeftPacked = packFloats(cpuX, lowestLevelY),
+                        width = lowestLevelWidth,
+                        height = lowestLevelHeight
+                    ),
+                    filters = listOf(
+                        UMLClassRefFilter.Compartment(
+                            CompartmentEnum.ATTRIBUTES, emptyList()
+                        )
+                    ),
+                    link = null
+                )
+            )
+        }
+
+        val topLevel = kotlin.run {
+            listOf(
+                DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
+                    referencedQualifiedName = "PC_System::Configuration::Product Architecture::ConfigurationModel",
+                    shape = BoundingRectState(
+                        topLeftPacked = packFloats(d256, topLevelY),
+                        width = d256,
+                        height = topLevelHeight
+                    ),
+                    filters = listOf(
+                        UMLClassRefFilter.Compartment(
+                            CompartmentEnum.ATTRIBUTES, listOf(
+                                "maxPrice",
+                                "usage",
+                                "efficiency"
+                            )
+                        )
+                    ),
+                    link = null
                 ),
-                filters = listOf(
-                    UMLClassRefFilter.Compartment(
-                        CompartmentEnum.ATTRIBUTES, emptyList()
-                    )
-                ),
-                link = null
-            ),
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "PC_System::Configuration::Model Libraries::OS",
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(d256, d64),
-                    width = d256,
-                    height = d128
-                ),
-                filters = listOf(
-                    UMLClassRefFilter.Compartment(
-                        CompartmentEnum.ATTRIBUTES, emptyList()
-                    )
-                ),
-                link = null
-            ),
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "PC_System::Configuration::Model Libraries::HDisk",
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(d256, d64),
-                    width = d256,
-                    height = d128
-                ),
-                filters = listOf(
-                    UMLClassRefFilter.Compartment(
-                        CompartmentEnum.ATTRIBUTES, emptyList()
-                    )
-                ),
-                link = null
-            ),
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "PC_System::Configuration::Model Libraries::HDController",
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(d256, d64),
-                    width = d256,
-                    height = d128
-                ),
-                filters = listOf(
-                    UMLClassRefFilter.Compartment(
-                        CompartmentEnum.ATTRIBUTES, emptyList()
-                    )
-                ),
-                link = null
-            ),
-            DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
-                referencedQualifiedName = "PC_System::Configuration::Model Libraries::CPU",
-                shape = BoundingRectState(
-                    topLeftPacked = packFloats(d256, d64),
-                    width = d256,
-                    height = d128
-                ),
-                filters = listOf(
-                    UMLClassRefFilter.Compartment(
-                        CompartmentEnum.ATTRIBUTES, emptyList()
-                    )
-                ),
-                link = null
-            ),
+            )
+        }
+        val secondLevel = kotlin.run {
+            listOf(
+                DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
+                    referencedQualifiedName = "PC_System::Configuration::Product Architecture::PC",
+                    shape = BoundingRectState(
+                        topLeftPacked = packFloats(d256, secondLevelY),
+                        width = d256,
+                        height = secondLevelHeight
+                    ),
+                    filters = listOf(
+                        UMLClassRefFilter.Compartment(
+                            CompartmentEnum.ATTRIBUTES, listOf(
+                                "price"
+                            )
+                        )
+                    ),
+                    link = null
+                )
+            )
+        }
+        DiagramHolder(
+            name = "ProductArchitecture",
+            upwardsDiagramLink = pcConfigModel,
+            diagramType = DiagramType.BLOCK_DEFINITION,
+            location = "PC_System::Configuration::Product Architecture",
+            content = topLevel + secondLevel + thirdLevel + lowestLevel
         )
-    )
+    }
 
     val interconnectionsPackage = DiagramHolder(
         name = "Interconnections Overview",
@@ -456,6 +517,79 @@ object PcSystemDiagrams {
                     ),
                     link = null
                 ),
+                DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
+                    memberEndName0 = "input",
+                    memberEndName1 = "configurationmodel",
+                    index = 0,
+                    sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.5f),
+                    targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.33f)
+                ),
+                DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
+                    memberEndName0 = "output",
+                    memberEndName1 = "configurationmodel",
+                    index = 0,
+                    sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.5f),
+                    targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.66f)
+                )
+            )
+        )
+    }
+
+    val pcTotalPrice = kotlin.run {
+        val block = "PC_System::Configuration::Product Architecture::PC"
+        DiagramHolder(
+            name = "PCtotalPrice",
+            upwardsDiagramLink = null,
+            diagramType = DiagramType.PARAMETRIC,
+            location = block,
+            content = listOf(
+                DiagramStateHolders.UMLRef.ComposableRef.ParametricNestedClassRef(
+                    referencedQualifiedName = block,
+                    shape = BoundingRectState(
+                        topLeftPacked = packFloats(d32, d32),
+                        width = d256.times(10),
+                        height = d128.times(6)
+                    ),
+                    link = null,
+                    nestedContent = listOf(
+                        DiagramStateHolders.UMLRef.ComposableRef.ParametricNestedPropertyRef(
+                            referencedQualifiedName = "$block::price",
+                            shape = BoundingRectState(
+                                topLeftPacked = packFloats(0f, 0f),
+                                width = d256,
+                                height = d64
+                            ),
+                            link = null,
+                            nestedContent = listOf(),
+                            isPortSized = false
+                        ),
+                        DiagramStateHolders.UMLRef.ComposableRef.ParametricNestedPropertyRef(
+                            referencedQualifiedName = "$block::internetCon",
+                            shape = BoundingRectState(
+                                topLeftPacked = packFloats(0f, d64 + d32),
+                                width = d256,
+                                height = d64
+                            ),
+                            link = null,
+                            nestedContent = listOf(
+                                DiagramStateHolders.UMLRef.ComposableRef.ParametricNestedPropertyRef(
+                                    referencedQualifiedName = "$block::internetCon::price",
+                                    shape = BoundingRectState(
+                                        topLeftPacked = packFloats(0f, 0f),
+                                        width = d256,
+                                        height = d64
+                                    ),
+                                    link = null,
+                                    nestedContent = listOf(
+
+                                    ),
+                                    isPortSized = true
+                                )
+                            ),
+                            isPortSized = false
+                        )
+                    )
+                )
             )
         )
     }
@@ -471,9 +605,11 @@ object PcSystemDiagrams {
                 productArchitecture,
                 interconnectionsPackage,
                 interconnections,
-                inputs
+                inputs,
+                pcTotalPrice
             )
         )
         diagramsLoader.loadFromFile().tapInvalid { println(it.e) }
     }
 }
+

@@ -2,6 +2,7 @@ package com.github.jan222ik.ui.feature.main.diagram.canvas
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,7 +40,8 @@ import org.eclipse.uml2.uml.Generalization
 @Composable
 fun EditorTabComponent(stateOut: EditorTabViewModel, projectTreeHandler: ProjectTreeHandler) {
     val state = remember(stateOut.id) { stateOut }
-    val logger = remember { NamedKLogging("com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabComponent").logger }
+    val logger =
+        remember { NamedKLogging("com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabComponent").logger }
     val commandStackHandler = LocalCommandStackHandler.current
 
     Box(
@@ -73,7 +75,7 @@ fun EditorTabComponent(stateOut: EditorTabViewModel, projectTreeHandler: Project
         }
         NavigateDiagramUPButton(
             modifier = Modifier.align(Alignment.TopStart),
-            text = observableDiagram.upwardsDiagramLink ?: "Not configured",
+            text = observableDiagram.upwardsDiagramLink?.split("::")?.lastOrNull(),
             enabled = observableDiagram.upwardsDiagramLink != null,
             onClick = {
                 logger.debug { "TODO: Navigate to '${observableDiagram.upwardsDiagramLink}'" }
@@ -85,6 +87,14 @@ fun EditorTabComponent(stateOut: EditorTabViewModel, projectTreeHandler: Project
                         )
                     }
                 }
+            },
+            icon = {
+                observableDiagram.upwardsDiagramLink?.let { location ->
+                    FileTree.treeHandler.value?.metamodelRoot?.findDiagramElementByLocation(location)?.target?.let {
+                        Icon(painter = it.initDiagram.diagramType.iconAsPainter(), contentDescription = null)
+                    }
+                }
+
             }
         )
     }
@@ -108,8 +118,8 @@ class DNDEditorActions(
             true
         } else if (data is Generalization) {
             logger.debug { "Accept drop for state name: ${state.id} Item data: -> $data" }
-            val general = state.observableDiagram.elements.value.firstOrNull { it.showsElement(data.general) }
-            val special = state.observableDiagram.elements.value.firstOrNull { it.showsElement(data.specific) }
+            val general = state.observableDiagram.elements.value.firstOrNull { it.showsElement(data.general) || it.showsElementFromAssoc(element = data.general, false) }
+            val special = state.observableDiagram.elements.value.firstOrNull { it.showsElement(data.specific) || it.showsElementFromAssoc(element = data.specific, true)}
             if (special != null && general != null) {
                 val initSourceAnchor = Anchor(AnchorSide.N, 0.5f)
                 val initTargetAnchor = Anchor(AnchorSide.S, 0.5f)

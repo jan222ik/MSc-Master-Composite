@@ -25,7 +25,7 @@ import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.ui.value.Space
 
 @Composable
-fun NavigateDiagramUPButton(modifier: Modifier, text: String, enabled: Boolean, onClick: () -> Unit) {
+fun NavigateDiagramUPButton(modifier: Modifier, text: String?, icon: @Composable (() -> Unit)?, enabled: Boolean, onClick: () -> Unit) {
     Surface(
         modifier = modifier.clickable(onClick = onClick),
         color = EditorColors.backgroundGray.takeUnless { !enabled } ?: EditorColors.dividerGray,
@@ -56,7 +56,10 @@ fun NavigateDiagramUPButton(modifier: Modifier, text: String, enabled: Boolean, 
                 imageVector = Icons.Filled.ArrowUpward,
                 contentDescription = null
             )
-            Text(text = text)
+            if (text != null) {
+                icon?.invoke()
+            }
+            Text(text = text ?: "Not configured")
         }
     }
 }
