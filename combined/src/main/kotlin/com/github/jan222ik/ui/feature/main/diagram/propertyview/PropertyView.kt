@@ -30,6 +30,8 @@ import com.github.jan222ik.ui.value.descriptions.DescriptiveElements
 import com.github.jan222ik.ui.value.descriptions.IPropertyViewElement
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.uml2.uml.*
+import org.eclipse.uml2.uml.internal.impl.EnumerationImpl
+import org.eclipse.uml2.uml.internal.impl.PrimitiveTypeImpl
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -160,8 +162,23 @@ object PropertyViewConfigs {
             PlaceholderElement(DescriptiveElements.defaultValue) {
                 it.ownedElements.filterIsInstance<ValueSpecification>().firstOrNull()?.stringValue() ?: ""
             },
+            PlaceholderElement(DescriptiveElements.type) {
+                it.typeNameString()
+            }
         )
     )
+}
+
+fun org.eclipse.uml2.uml.Property.typeNameString(): String {
+    val t = this.type
+    val s = when (t) {
+        is PrimitiveTypeImpl -> {
+            t.toString().split("#").lastOrNull()?.removeSuffix(")")
+        }
+        is EnumerationImpl -> t.name ?: t.label
+        else -> "undefined"
+    }
+    return s ?: "undefined"
 }
 
 data class PropertyViewConfig<T : EObject>(val elements: List<IPropertyViewConfigElement<T>>)
