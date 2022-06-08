@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
 import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
+import com.github.jan222ik.ui.components.menu.DemoMenuContributions
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.SharedCommands
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
@@ -120,7 +121,7 @@ class UMLClass(
 
     override fun getMenuContributions(): List<MenuContribution> {
         return listOf(
-            MenuContribution.Contentful.MenuItem(displayName = "Option 1"),
+            DemoMenuContributions.links(hasLink = false),
             MenuContribution.Contentful.MenuItem(
                 displayName = "Delete from Diagram",
                 command = deleteSelfCommand
