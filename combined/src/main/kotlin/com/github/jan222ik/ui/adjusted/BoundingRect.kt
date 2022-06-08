@@ -23,8 +23,8 @@ class BoundingRect(
     override val debugName: String = Random.nextInt().toString()
 ) : IBoundingShape {
     override val topLeft: MutableState<Offset> = mutableStateOf(initTopLeft)
-    val width: MutableState<Float> = mutableStateOf(initWidth)
-    val height: MutableState<Float> = mutableStateOf(initHeight)
+    override val width: MutableState<Float> = mutableStateOf(initWidth)
+    override val height: MutableState<Float> = mutableStateOf(initHeight)
     fun drawWireframe(
         drawScope: DrawScope,
         color: Color = Color.Cyan,

@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastMaxBy
 import com.github.jan222ik.ui.adjusted.arrow.Arrow
 import com.github.jan222ik.ui.adjusted.scroll.CanvasScrollState
 import com.github.jan222ik.ui.components.menu.MenuContribution
@@ -67,12 +68,13 @@ fun ScrollableCanvas(
     }
 
     // Scrollbars
-    val hScrollAdapter = remember(maxViewportSize, viewport.value) {
+    val hScrollAdapter = remember(elements, maxViewportSize, viewport.value) {
+        val maxWidth = min(elements.map { it.boundingShape.topLeft.value.x + it.boundingShape.width.value }.maxOf { it } + 64f, maxViewportSize.width)
         ScrollableScrollbarAdapter(
             scrollState = CanvasScrollState(
-                initial = maxViewportSize.width.minus(viewport.value.origin.x.plus(viewport.value.size.width))
+                initial = maxWidth.minus(viewport.value.origin.x.plus(viewport.value.size.width))
                     .roundToInt(),
-                maxDimensionValue = maxViewportSize.width.minus(viewport.value.size.width).roundToInt(),
+                maxDimensionValue = maxWidth.minus(viewport.value.size.width).roundToInt(),
                 onScroll = {
                     viewport.value = viewport.value.applyPan(
                         pan = Offset.Zero.copy(x = it),
@@ -84,11 +86,13 @@ fun ScrollableCanvas(
         )
     }
     val vScrollAdapter = remember(maxViewportSize, viewport.value) {
+        val maxHeight = min(elements.map { it.boundingShape.topLeft.value.y + it.boundingShape.height.value }.maxOf { it } + 64f, maxViewportSize.height)
+
         ScrollableScrollbarAdapter(
             scrollState = CanvasScrollState(
-                initial = maxViewportSize.height.minus(viewport.value.origin.y.plus(viewport.value.size.height))
+                initial = maxHeight.minus(viewport.value.origin.y.plus(viewport.value.size.height))
                     .roundToInt(),
-                maxDimensionValue = maxViewportSize.height.minus(viewport.value.size.height).roundToInt(),
+                maxDimensionValue = maxHeight.minus(viewport.value.size.height).roundToInt(),
                 onScroll = {
                     viewport.value = viewport.value.applyPan(
                         pan = Offset.Zero.copy(y = it),

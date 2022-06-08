@@ -5,6 +5,8 @@ import androidx.compose.ui.geometry.Offset
 
 interface IBoundingShape {
     val topLeft: MutableState<Offset>
+    val width: MutableState<Float>
+    val height: MutableState<Float>
     val debugName: String
 
     fun isVisibleInViewport(viewport: Viewport) : Boolean
