@@ -69,7 +69,7 @@ class CanvasScrollState(
 
     private val scrollableState = ScrollableState {
         val absolute = (value + it + accumulator)
-        val newValue = absolute.coerceIn(0f, maxValue.toFloat())
+        val newValue = absolute.coerceIn(0f, maxValue.toFloat().coerceAtLeast(0f))
         val changed = absolute != newValue
         val consumed = newValue - value
         val consumedInt = consumed.roundToInt()

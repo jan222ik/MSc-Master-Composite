@@ -8,10 +8,7 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -25,6 +22,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
+import com.github.jan222ik.ui.adjusted.helper.AlignmentHelper
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.components.menu.MenuItemList
 import com.github.jan222ik.ui.feature.LocalJobHandler
@@ -34,6 +32,7 @@ import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.ui.value.Space
 import com.github.jan222ik.util.KeyHelpers
 import com.github.jan222ik.util.KeyHelpers.consumeOnKey
+import kotlinx.coroutines.launch
 import mu.KLogging
 import org.eclipse.uml2.uml.Element
 import java.awt.Cursor
@@ -65,13 +64,13 @@ abstract class MovableAndResizeableComponent(
         pointerHoverIcon(PointerIcon(Cursor(if (se2nw) Cursor.SE_RESIZE_CURSOR else Cursor.SW_RESIZE_CURSOR)))
 
     @Composable
-    internal abstract fun content(projectTreeHandler: ProjectTreeHandler)
+    internal abstract fun content(projectTreeHandler: ProjectTreeHandler, helper: AlignmentHelper)
 
     internal abstract fun getMenuContributions(): List<MenuContribution>
 
     @OptIn(ExperimentalComposeUiApi::class)
     @Composable
-    override fun render(projectTreeHandler: ProjectTreeHandler, offset: Offset) {
+    override fun render(projectTreeHandler: ProjectTreeHandler, offset: Offset, helper: AlignmentHelper) {
         Box(
             modifier = Modifier
                 .defaultMinSize(minSize.width, minSize.height)
@@ -87,6 +86,7 @@ abstract class MovableAndResizeableComponent(
                 },
             contentAlignment = Alignment.Center
         ) {
+            val scope = rememberCoroutineScope()
             Card(
                 modifier = Modifier
                     .fillMaxSize()
@@ -112,6 +112,9 @@ abstract class MovableAndResizeableComponent(
                         detectDragGestures(
                             onDragStart = {
                                 if (EditorManager.allowEdit.value) {
+                                    scope.launch {
+                                        helper.movingBox.emit(boundingShape)
+                                    }
                                     preMoveOrResize = boundingShape.toState()
                                 }
                             },
@@ -123,12 +126,18 @@ abstract class MovableAndResizeableComponent(
                                         boundingShape.toState()
                                     )
                                 }
+                                helper.clear()
+                            },
+                            onDragCancel = {
+                                helper.clear()
                             }
                         ) { change, dragAmount ->
                             if (EditorManager.allowEdit.value) {
                                 change.consumeAllChanges()
+                                helper.updateDirection(change, dragAmount)
                                 boundingShape.move(dragAmount)
                                 selected = true
+                                helper.onPointerChange(boundingShape.topLeft.value)
                             }
                         }
                     }
@@ -163,7 +172,7 @@ abstract class MovableAndResizeableComponent(
                         }
                     }
                 }
-                content(projectTreeHandler)
+                content(projectTreeHandler, helper)
             }
             if (EditorManager.allowEdit.value) {
                 ResizeHandle(

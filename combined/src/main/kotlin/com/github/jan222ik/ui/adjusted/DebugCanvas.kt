@@ -24,7 +24,7 @@ import com.github.jan222ik.ui.adjusted.arrow.Arrow
 import com.github.jan222ik.ui.feature.main.menu_tool_bar.mapPair
 
 object DebugCanvas {
-    val blockUXTestEdit = mutableStateOf(true)
+    val blockUXTestEdit = mutableStateOf(false)
     val showWireframes = mutableStateOf(false)
     val debugCanvasVisible = mutableStateOf(false)
 

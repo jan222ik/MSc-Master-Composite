@@ -12,6 +12,7 @@ import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
 import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
 import com.github.jan222ik.ui.adjusted.arrow.Arrow
+import com.github.jan222ik.ui.adjusted.helper.AlignmentHelper
 import com.github.jan222ik.ui.components.menu.DemoMenuContributions
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.tree.FileTree
@@ -32,12 +33,12 @@ class NestableUMLClass(
     lateinit var deleteSelfCommand: RemoveFromDiagramCommand
 
     @Composable
-    override fun content(projectTreeHandler: ProjectTreeHandler) {
+    override fun content(projectTreeHandler: ProjectTreeHandler, helper: AlignmentHelper) {
         Column {
             Text(text = umlClass.label ?: umlClass.name, Modifier.align(Alignment.CenterHorizontally))
             HorizontalDivider(modifier = Modifier.fillMaxWidth(), color = Color.Black)
             nestedContent.first.forEach {
-                FileTree.treeHandler.value?.let { it1 -> it.render(it1, offset = Offset.Zero) }
+                FileTree.treeHandler.value?.let { it1 -> it.render(it1, offset = Offset.Zero, helper = helper) }
             }
         }
     }

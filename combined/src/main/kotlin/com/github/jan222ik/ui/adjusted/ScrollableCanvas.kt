@@ -23,11 +23,13 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastMaxBy
 import com.github.jan222ik.ui.adjusted.arrow.Arrow
+import com.github.jan222ik.ui.adjusted.helper.AlignmentHelper
+import com.github.jan222ik.ui.adjusted.helper.ElementDrawCalls.drawAlignmentLine
 import com.github.jan222ik.ui.adjusted.scroll.CanvasScrollState
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.eclipse.uml2.uml.Element
 import kotlin.math.max
 import kotlin.math.min
@@ -69,7 +71,9 @@ fun ScrollableCanvas(
 
     // Scrollbars
     val hScrollAdapter = remember(elements, maxViewportSize, viewport.value) {
-        val maxWidth = min(elements.map { it.boundingShape.topLeft.value.x + it.boundingShape.width.value }.maxOf { it } + 64f, maxViewportSize.width)
+        val maxWidth =
+            min(elements.map { it.boundingShape.topLeft.value.x + it.boundingShape.width.value }.maxOf { it } + 64f,
+                maxViewportSize.width)
         ScrollableScrollbarAdapter(
             scrollState = CanvasScrollState(
                 initial = maxWidth.minus(viewport.value.origin.x.plus(viewport.value.size.width))
@@ -86,7 +90,9 @@ fun ScrollableCanvas(
         )
     }
     val vScrollAdapter = remember(maxViewportSize, viewport.value) {
-        val maxHeight = min(elements.map { it.boundingShape.topLeft.value.y + it.boundingShape.height.value }.maxOf { it } + 64f, maxViewportSize.height)
+        val maxHeight =
+            min(elements.map { it.boundingShape.topLeft.value.y + it.boundingShape.height.value }.maxOf { it } + 64f,
+                maxViewportSize.height)
 
         ScrollableScrollbarAdapter(
             scrollState = CanvasScrollState(
@@ -129,7 +135,10 @@ fun ScrollableCanvas(
                     selectedBoundingBoxes = selectedBoundingBoxes,
                     dragOverRect = dragOverRect,
                 )
-
+                val scope = rememberCoroutineScope()
+                val boxes = remember(elements) { MutableStateFlow(elements.map { it.boundingShape }) }
+                val helper = remember(scope, boxes) { AlignmentHelper(scope, boxes.value) }
+                val lines = helper.alignmentLines.collectAsState()
 
                 Box(
                     modifier = Modifier
@@ -180,23 +189,29 @@ fun ScrollableCanvas(
                                     top = -viewport.value.origin.y
                                 ) {
 
-                                        elements
-                                            .filter { it.boundingShape.isVisibleInViewport(viewport.value) }
-                                            .map { it.boundingShape }
-                                            .forEach {
-                                                if (it is BoundingRect) {
-                                                    it.drawWireframe(
-                                                        drawScope = this,
-                                                        fill = selectedBoundingBoxes.value.contains(it),
-                                                        showBox = DebugCanvas.showWireframes.value,
-                                                        showText = DebugCanvas.showWireframeName.value
-                                                    )
-                                                }
+                                    elements
+                                        .filter { it.boundingShape.isVisibleInViewport(viewport.value) }
+                                        .map { it.boundingShape }
+                                        .forEach {
+                                            if (it is BoundingRect) {
+                                                it.drawWireframe(
+                                                    drawScope = this,
+                                                    fill = selectedBoundingBoxes.value.contains(it),
+                                                    showBox = DebugCanvas.showWireframes.value,
+                                                    showText = DebugCanvas.showWireframeName.value
+                                                )
                                             }
+                                        }
 
                                     arrows
                                         .filter {
-                                            it.offsetPath.value.any { BoundingRect(initTopLeft = it, 0f, 0f).isVisibleInViewport(viewport.value) }
+                                            it.offsetPath.value.any {
+                                                BoundingRect(
+                                                    initTopLeft = it,
+                                                    0f,
+                                                    0f
+                                                ).isVisibleInViewport(viewport.value)
+                                            }
                                         }
                                         .forEach {
                                             with(it) { drawArrow(drawDebugPoints = DebugCanvas.showPathOffsetPoints.value) }
@@ -208,17 +223,30 @@ fun ScrollableCanvas(
                                 if (dragStartOffset.value != null) {
                                     drawSelectionPlane(rect = dragOverRect.value)
                                 }
+
+
+                                helper.movingBox.value?.let { box ->
+                                    lines.value.forEach {
+                                        drawAlignmentLine(it, box)
+                                    }
+                                }
+
+
                             }
                         }
                         .then(canvasThenModifier)
                 ) {
                     if (!DebugCanvas.hideElements.value) {
                         elements
-                            .filter { it.boundingShape.isVisibleInViewport(viewport.value) }
+                            //.filter { it.boundingShape.isVisibleInViewport(viewport.value) }
                             .forEach {
                                 val topLeft =
                                     remember(it.boundingShape.topLeft.value) { it.boundingShape.topLeft.value }
-                                it.render(projectTreeHandler = projectTreeHandler, topLeft.minus(viewport.value.origin))
+                                it.render(
+                                    projectTreeHandler = projectTreeHandler,
+                                    offset = topLeft.minus(viewport.value.origin),
+                                    helper = helper
+                                )
                             }
                     }
                 }
@@ -273,7 +301,7 @@ class DemoComposable(
     }
 ) {
     @Composable
-    override fun content(projectTreeHandler: ProjectTreeHandler) {
+    override fun content(projectTreeHandler: ProjectTreeHandler, helper: AlignmentHelper) {
         Text("Test ${boundingShape.debugName}", modifier = Modifier.padding(4.dp))
     }
 

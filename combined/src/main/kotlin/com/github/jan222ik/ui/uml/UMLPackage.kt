@@ -27,6 +27,7 @@ import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
 import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
 import com.github.jan222ik.ui.adjusted.MovableBaseUI
+import com.github.jan222ik.ui.adjusted.helper.AlignmentHelper
 import com.github.jan222ik.ui.components.menu.DemoMenuContributions
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
@@ -58,7 +59,7 @@ class UMLPackage(
 
     @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
     @Composable
-    override fun content(projectTreeHandler: ProjectTreeHandler) {
+    override fun content(projectTreeHandler: ProjectTreeHandler, helper: AlignmentHelper) {
         val tmmClassPath = remember(
             umlPackage,
             projectTreeHandler,

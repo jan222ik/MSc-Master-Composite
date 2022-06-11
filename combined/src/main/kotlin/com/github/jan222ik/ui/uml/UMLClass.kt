@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
 import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
+import com.github.jan222ik.ui.adjusted.helper.AlignmentHelper
 import com.github.jan222ik.ui.components.menu.DemoMenuContributions
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.SharedCommands
@@ -46,7 +47,7 @@ class UMLClass(
 
     @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
     @Composable
-    override fun content(projectTreeHandler: ProjectTreeHandler) {
+    override fun content(projectTreeHandler: ProjectTreeHandler, helper: AlignmentHelper) {
         val tmmClassPath = remember(
             umlClass,
             projectTreeHandler,

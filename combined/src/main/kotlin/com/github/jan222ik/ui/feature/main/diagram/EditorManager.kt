@@ -8,7 +8,7 @@ import com.github.jan222ik.ui.uml.DiagramHolder
 import java.lang.Math.abs
 
 object EditorManager {
-    val allowEdit = mutableStateOf(false)
+    val allowEdit = mutableStateOf(true)
     val diagrams = mutableStateOf(emptyList<DiagramHolder>())
 
     val openTabs = mutableStateOf(emptyList<EditorTabViewModel>())

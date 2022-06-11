@@ -16,8 +16,8 @@ import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.commands.MoveOrResizeCommand
 import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
+import com.github.jan222ik.ui.adjusted.helper.AlignmentHelper
 import com.github.jan222ik.ui.components.menu.MenuContribution
-import com.github.jan222ik.ui.feature.main.tree.FileTreeItem
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import org.eclipse.uml2.uml.Element
 import java.io.File
@@ -27,7 +27,7 @@ class DemoCanvasElement(
     onNextUIConfig: (self: MovableAndResizeableComponent, old: BoundingRectState, new: BoundingRectState) -> Unit
 ) : MovableAndResizeableComponent(uiConfig, onNextUIConfig) {
     @Composable
-    override fun content(projectTreeHandler: ProjectTreeHandler) {
+    override fun content(projectTreeHandler: ProjectTreeHandler, helper: AlignmentHelper) {
         Text("Test [Selected:${this@DemoCanvasElement.selected}]")
     }
 
@@ -94,7 +94,7 @@ fun main() {
             ProjectTreeHandler(
                 false,
                 metamodelRoot = TMM.FS.Directory(File(""), emptyList())
-            ), offset = Offset.Zero
+            ), offset = Offset.Zero, helper = AlignmentHelper(scope, listOf(movableAndResizeableComponent.boundingShape))
         )
 
     }

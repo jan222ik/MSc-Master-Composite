@@ -2,6 +2,8 @@ package com.github.jan222ik.model.validation
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.text.input.TextFieldValue
+import arrow.core.NonEmptyList
+import arrow.core.Validated
 import com.github.jan222ik.model.validation.transformations.ITransformation
 import com.github.jan222ik.model.validation.transformations.Transformer
 
@@ -32,7 +34,7 @@ class ValidatedTextState<R>(
     }
 
     private fun validate(nextTfv: TextFieldValue, notifyValid: Boolean) {
-        val validateAll = transformation.transform(nextTfv.text)
+        val validateAll: Validated<NonEmptyList<IValidationError>, R> = transformation.transform(nextTfv.text)
         validateAll.toEither()
             .tapLeft { errs ->
                 errors = errs
