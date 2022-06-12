@@ -124,18 +124,20 @@ class DNDEditorActions(
                 val initSourceAnchor = Anchor(AnchorSide.N, 0.5f)
                 val initTargetAnchor = Anchor(AnchorSide.S, 0.5f)
                 val arrow = Arrow(
+                    initArrowType = ArrowType.GENERALIZATION,
+                    initSourceAnchor = initSourceAnchor,
+                    initTargetAnchor = initSourceAnchor,
                     initOffsetPath = Arrow.fourPointArrowOffsetPath(
                         sourceBoundingShape = special.boundingShape,
                         targetBoundingShape = general.boundingShape,
                         sourceAnchor = initSourceAnchor,
                         targetAnchor = initTargetAnchor
                     ),
-                    initArrowType = ArrowType.GENERALIZATION,
                     data = data,
-                    initSourceAnchor = initSourceAnchor,
-                    initTargetAnchor = initSourceAnchor,
                     initSourceBoundingShape = special.boundingShape,
-                    initTargetBoundingShape = general.boundingShape
+                    initTargetBoundingShape = general.boundingShape,
+                    member0ArrowTypeOverride = null,
+                    member1ArrowTypeOverride = null
                 )
                 val addCommand = state.getAddCommandForArrow(arrow)
                 println("arrow = ${arrow}")

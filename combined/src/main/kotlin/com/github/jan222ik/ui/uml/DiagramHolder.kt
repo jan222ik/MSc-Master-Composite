@@ -84,8 +84,22 @@ sealed class DiagramStateHolders {
                 override val memberEndName1: String,
                 override val index: Int,
                 override val sourceAnchor: Anchor,
-                override val targetAnchor: Anchor
-            ) : ArrowRef()
+                override val targetAnchor: Anchor,
+                val memberEnd0Aggregation: Aggregation,
+                val memberEnd1Aggregation: Aggregation,
+            ) : ArrowRef() {
+                enum class Aggregation {
+                    COMPOSITE, SHARED, NONE;
+
+                    fun asKindInt(): Int {
+                        return when (this) {
+                            COMPOSITE -> AggregationKind.COMPOSITE
+                            SHARED -> AggregationKind.SHARED
+                            NONE -> AggregationKind.NONE
+                        }
+                    }
+                }
+            }
 
             class ConnectorRef(
                 override val memberEndName0: String,
@@ -100,8 +114,14 @@ sealed class DiagramStateHolders {
         @JsonSubTypes(
             JsonSubTypes.Type(value = UMLRef.ComposableRef.ClassRef::class, name = "UMLRef.ComposableRef.ClassRef"),
             JsonSubTypes.Type(value = UMLRef.ComposableRef.PackageRef::class, name = "UMLRef.ComposableRef.PackageRef"),
-            JsonSubTypes.Type(value = UMLRef.ComposableRef.ParametricNestedClassRef::class, name = "UMLRef.ComposableRef.ParametricNestedClassRef"),
-            JsonSubTypes.Type(value = UMLRef.ComposableRef.ParametricNestedPropertyRef::class, name = "UMLRef.ComposableRef.ParametricNestedPropertyRef"),
+            JsonSubTypes.Type(
+                value = UMLRef.ComposableRef.ParametricNestedClassRef::class,
+                name = "UMLRef.ComposableRef.ParametricNestedClassRef"
+            ),
+            JsonSubTypes.Type(
+                value = UMLRef.ComposableRef.ParametricNestedPropertyRef::class,
+                name = "UMLRef.ComposableRef.ParametricNestedPropertyRef"
+            ),
         )
         sealed class ComposableRef : UMLRef() {
             abstract val referencedQualifiedName: String
@@ -235,6 +255,7 @@ class DiagramHolderObservable(
                                 filters = composableRef.filters
                             )
                         }
+
                         is DiagramStateHolders.UMLRef.ComposableRef.ParametricNestedClassRef -> {
                             UMLClassFactory.createNestableInstance(
                                 umlClass = c,
@@ -244,10 +265,12 @@ class DiagramHolderObservable(
                                 nestedContent = resolveTree(composableRef.nestedContent)
                             )
                         }
+
                         is DiagramStateHolders.UMLRef.ComposableRef.ParametricNestedPropertyRef -> {
                             logger.warn { "This case should not exist!!!" }
                             null
                         }
+
                         else -> null
                     }
 
@@ -306,17 +329,19 @@ class DiagramHolderObservable(
                                     }
                             } to aRef
                     }
+
                     is DiagramStateHolders.UMLRef.ArrowRef.AssocRef -> {
                         (allAssociations
                             .find { assoc ->
                                 assoc.memberEnds
-                                    .filterIsInstance<NamedElement>()
-                                    .let {
-                                        it.any { it.name == aRef.memberEndName0 } &&
-                                                it.any { it.name == aRef.memberEndName1 }
+                                    .filter { it is NamedElement }
+                                    .let { propertyList ->
+                                        propertyList.any { it.name == aRef.memberEndName0 && it.aggregation.value == aRef.memberEnd1Aggregation.asKindInt() } &&
+                                                propertyList.any { it.name == aRef.memberEndName1 && it.aggregation.value == aRef.memberEnd0Aggregation.asKindInt() }
                                     }
                             } to aRef).also { println("assocRef = ${it}") }
                     }
+
                     is DiagramStateHolders.UMLRef.ArrowRef.ConnectorRef -> TODO()
                 }
             }
@@ -337,8 +362,18 @@ class DiagramHolderObservable(
                     is Association -> rel.memberEnds.last()
                     else -> error("Not supported type of Relationship")
                 }
-                val general = initElements.firstOrNull { it.showsElement(firstTarget) || it.showsElementFromAssoc(firstTarget, false) }
-                val special = initElements.lastOrNull { it.showsElement(firstSource) || it.showsElementFromAssoc(firstSource, true)}
+                val general = initElements.firstOrNull {
+                    it.showsElement(firstTarget) || it.showsElementFromAssoc(
+                        firstTarget,
+                        false
+                    )
+                }
+                val special = initElements.lastOrNull {
+                    it.showsElement(firstSource) || it.showsElementFromAssoc(
+                        firstSource,
+                        true
+                    )
+                }
                 if (special != null && general != null) {
                     val fourPointArrowOffsetPath = Arrow.fourPointArrowOffsetPath(
                         sourceAnchor = ref.sourceAnchor,
@@ -356,7 +391,15 @@ class DiagramHolderObservable(
                         initOffsetPath = fourPointArrowOffsetPath,
                         data = rel,
                         initSourceBoundingShape = special.boundingShape,
-                        initTargetBoundingShape = general.boundingShape
+                        initTargetBoundingShape = general.boundingShape,
+                        member0ArrowTypeOverride = when (ref) {
+                            is DiagramStateHolders.UMLRef.ArrowRef.AssocRef -> ref.memberEnd0Aggregation
+                            else -> null
+                        },
+                        member1ArrowTypeOverride = when (ref) {
+                            is DiagramStateHolders.UMLRef.ArrowRef.AssocRef -> ref.memberEnd1Aggregation
+                            else -> null
+                        },
                     )
                     arrow
                 } else null
@@ -371,14 +414,16 @@ class DiagramHolderObservable(
                 is Association -> it.data.memberEnds
                 else -> error("Not supported type of Relationship")
             }
-            sources.contains(data) }
+            sources.contains(data)
+        }
         val filteredTargets = arrows.value.filter {
             val targets = when (it.data) {
                 is DirectedRelationship -> it.data.targets
                 is Association -> it.data.memberEnds
                 else -> error("Not supported type of Relationship")
             }
-            targets.contains(data) }
+            targets.contains(data)
+        }
         DNDCreation.logger.debug { "sources: $filteredSources, tragets: $filteredTargets" }
         if (filteredSources.isEmpty() && filteredTargets.isEmpty()) {
             return emptyList()

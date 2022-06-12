@@ -5,9 +5,9 @@ import androidx.compose.ui.util.unpackFloat1
 import androidx.compose.ui.util.unpackFloat2
 import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.feature.main.diagram.canvas.DiagramType
+import com.github.jan222ik.ui.uml.DiagramStateHolders.UMLRef.ArrowRef.AssocRef.Aggregation
 import com.github.jan222ik.ui.uml.DiagramStateHolders.UMLRef.ComposableRef.ClassRef.UMLClassRefFilter
 import java.io.File
-import javax.sound.sampled.Port
 
 object PcSystemDiagrams {
 
@@ -66,7 +66,7 @@ object PcSystemDiagrams {
         upwardsDiagramLink = null
     )
 
-    val pcConfigModel = "PC_System::Configuration::PC_ConfigurationModel"
+    private const val pcConfigModel = "PC_System::Configuration::PC_ConfigurationModel"
     val ModelLibraries = kotlin.run {
         val xCol0 = d64
         val xCol1 = d128.times(5)
@@ -288,6 +288,24 @@ object PcSystemDiagrams {
                     ),
                     link = null
                 ),
+                DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
+                    memberEndName0 = "hdunit",
+                    memberEndName1 = "hdisk",
+                    index = 0,
+                    sourceAnchor = Anchor(side = AnchorSide.N, 0.5f),
+                    targetAnchor = Anchor(side = AnchorSide.S, 0.5f),
+                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd1Aggregation = Aggregation.NONE
+                ),
+                DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
+                    memberEndName0 = "hdunit",
+                    memberEndName1 = "hdcontroller",
+                    index = 0,
+                    sourceAnchor = Anchor(side = AnchorSide.N, 0.5f),
+                    targetAnchor = Anchor(side = AnchorSide.S, 0.5f),
+                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd1Aggregation = Aggregation.NONE
+                ),
                 DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
                     referencedQualifiedName = "PC_System::Configuration::Product Architecture::Application",
                     shape = BoundingRectState(
@@ -318,6 +336,15 @@ object PcSystemDiagrams {
                         )
                     ),
                     link = null
+                ),
+                DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
+                    memberEndName0 = "mb",
+                    memberEndName1 = "cpu",
+                    index = 0,
+                    sourceAnchor = Anchor(side = AnchorSide.N, 0.5f),
+                    targetAnchor = Anchor(side = AnchorSide.S, 0.5f),
+                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd1Aggregation = Aggregation.NONE
                 ),
                 DiagramStateHolders.UMLRef.ComposableRef.ClassRef(
                     referencedQualifiedName = "PC_System::Configuration::Model Libraries::Screen",
@@ -417,6 +444,15 @@ object PcSystemDiagrams {
                     ),
                     link = null
                 ),
+                DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
+                    memberEndName0 = "configurationmodel",
+                    memberEndName1 = "pc",
+                    index = 0,
+                    sourceAnchor = Anchor(side = AnchorSide.N, 0.5f),
+                    targetAnchor = Anchor(side = AnchorSide.S, 0.5f),
+                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd1Aggregation = Aggregation.NONE
+                )
             )
         }
         val secondLevel = kotlin.run {
@@ -436,6 +472,60 @@ object PcSystemDiagrams {
                         )
                     ),
                     link = null
+                ),
+                DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
+                    memberEndName0 = "pc",
+                    memberEndName1 = "internetconn",
+                    index = 0,
+                    sourceAnchor = Anchor(side = AnchorSide.N, 0.5f),
+                    targetAnchor = Anchor(side = AnchorSide.S, 0.5f),
+                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd1Aggregation = Aggregation.NONE
+                ),
+                DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
+                    memberEndName0 = "pc",
+                    memberEndName1 = "hdunit",
+                    index = 0,
+                    sourceAnchor = Anchor(side = AnchorSide.N, 0.5f),
+                    targetAnchor = Anchor(side = AnchorSide.S, 0.5f),
+                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd1Aggregation = Aggregation.NONE
+                ),
+                DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
+                    memberEndName0 = "pc",
+                    memberEndName1 = "mb",
+                    index = 0,
+                    sourceAnchor = Anchor(side = AnchorSide.N, 0.5f),
+                    targetAnchor = Anchor(side = AnchorSide.S, 0.5f),
+                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd1Aggregation = Aggregation.NONE
+                ),
+                DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
+                    memberEndName0 = "pc",
+                    memberEndName1 = "screen",
+                    index = 0,
+                    sourceAnchor = Anchor(side = AnchorSide.N, 0.5f),
+                    targetAnchor = Anchor(side = AnchorSide.S, 0.5f),
+                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd1Aggregation = Aggregation.NONE
+                ),
+                DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
+                    memberEndName0 = "pc",
+                    memberEndName1 = "os",
+                    index = 0,
+                    sourceAnchor = Anchor(side = AnchorSide.N, 0.5f),
+                    targetAnchor = Anchor(side = AnchorSide.S, 0.5f),
+                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd1Aggregation = Aggregation.NONE
+                ),
+                DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
+                    memberEndName0 = "pc",
+                    memberEndName1 = "application",
+                    index = 0,
+                    sourceAnchor = Anchor(side = AnchorSide.N, 0.5f),
+                    targetAnchor = Anchor(side = AnchorSide.S, 0.5f),
+                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd1Aggregation = Aggregation.NONE
                 )
             )
         }
@@ -522,14 +612,18 @@ object PcSystemDiagrams {
                     memberEndName1 = "configurationmodel",
                     index = 0,
                     sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.5f),
-                    targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.33f)
+                    targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.33f),
+                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd1Aggregation = Aggregation.NONE
                 ),
                 DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
                     memberEndName0 = "output",
                     memberEndName1 = "configurationmodel",
                     index = 0,
                     sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.5f),
-                    targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.66f)
+                    targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.66f),
+                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd1Aggregation = Aggregation.NONE
                 )
             )
         )
