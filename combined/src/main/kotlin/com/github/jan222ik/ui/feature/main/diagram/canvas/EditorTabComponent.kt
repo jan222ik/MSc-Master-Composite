@@ -58,8 +58,8 @@ fun EditorTabComponent(stateOut: EditorTabViewModel, projectTreeHandler: Project
         )
 
         val observableDiagram = remember(state, state.id, state.observableDiagram) { state.observableDiagram }
-        val arrows = remember(observableDiagram) { observableDiagram.arrows.value }
-        val elements = remember(observableDiagram) { observableDiagram.elements.value }
+        val arrows =  observableDiagram.arrows
+        val elements = observableDiagram.elements
         state.id.let { id ->
             ScrollableCanvas(
                 id = id,
@@ -118,8 +118,8 @@ class DNDEditorActions(
             true
         } else if (data is Generalization) {
             logger.debug { "Accept drop for state name: ${state.id} Item data: -> $data" }
-            val general = state.observableDiagram.elements.value.firstOrNull { it.showsElement(data.general) || it.showsElementFromAssoc(element = data.general, false) }
-            val special = state.observableDiagram.elements.value.firstOrNull { it.showsElement(data.specific) || it.showsElementFromAssoc(element = data.specific, true)}
+            val general = state.observableDiagram.elements.firstOrNull { it.showsElement(data.general) || it.showsElementFromAssoc(element = data.general, false) }
+            val special = state.observableDiagram.elements.firstOrNull { it.showsElement(data.specific) || it.showsElementFromAssoc(element = data.specific, true)}
             if (special != null && general != null) {
                 val initSourceAnchor = Anchor(AnchorSide.N, 0.5f)
                 val initTargetAnchor = Anchor(AnchorSide.S, 0.5f)

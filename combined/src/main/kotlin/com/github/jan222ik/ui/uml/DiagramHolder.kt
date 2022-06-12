@@ -1,7 +1,9 @@
 package com.github.jan222ik.ui.uml
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
@@ -201,15 +203,15 @@ class DiagramHolderObservable(
 ) {
     val diagramName = ValidatedTextState(initial = initName, NonTransformer())
 
-    val arrows: MutableState<List<Arrow>> = mutableStateOf(emptyList())
-    val elements: MutableState<List<MovableAndResizeableComponent>> = mutableStateOf(emptyList())
+    val arrows: SnapshotStateList<Arrow> = mutableStateListOf()
+    val elements: SnapshotStateList<MovableAndResizeableComponent> = mutableStateListOf()
 
     companion object : KLogging()
 
     init {
         val (elementList, arrowsList) = resolveTree(initContent)
-        elements.value = elementList
-        arrows.value = arrowsList
+        elements.addAll(elementList)
+        arrows.addAll(arrowsList)
     }
 
     fun resolveTree(umlRefs: List<DiagramStateHolders.UMLRef>): Pair<List<MovableAndResizeableComponent>, List<Arrow>> {
@@ -236,11 +238,11 @@ class DiagramHolderObservable(
                     val deleteCommand: (MovableAndResizeableComponent) -> RemoveFromDiagramCommand = { toDelete ->
                         val command = object : RemoveFromDiagramCommand() {
                             override suspend fun execute(handler: JobHandler) {
-                                elements.value = elements.value - toDelete
+                                elements.remove(toDelete)
                             }
 
                             override suspend fun undo() {
-                                elements.value = elements.value + toDelete
+                                elements.add(toDelete)
                             }
                         }
                         command
@@ -293,11 +295,11 @@ class DiagramHolderObservable(
                             deleteCommand = { toDelete ->
                                 val command = object : RemoveFromDiagramCommand() {
                                     override suspend fun execute(handler: JobHandler) {
-                                        elements.value = elements.value - toDelete
+                                        elements.remove(toDelete)
                                     }
 
                                     override suspend fun undo() {
-                                        elements.value = elements.value + toDelete
+                                        elements.add(toDelete)
                                     }
                                 }
                                 command
@@ -306,7 +308,7 @@ class DiagramHolderObservable(
                     } else null
             }
 
-        println("elements.value = ${elements.value}")
+        println("elements.value = ${elements}")
         println("arrowRef = ${arrowRef}")
 
         val allDirectedRelationShip = tmmAsList.filterElementIsInstance<DirectedRelationship>()
@@ -408,7 +410,7 @@ class DiagramHolderObservable(
     }
 
     fun updateArrows(moveResizeCommand: MoveOrResizeCommand, data: Element): List<UpdateArrowPathCommand> {
-        val filteredSources = arrows.value.filter {
+        val filteredSources = arrows.filter {
             val sources = when (it.data) {
                 is DirectedRelationship -> it.data.sources
                 is Association -> it.data.memberEnds
@@ -416,7 +418,7 @@ class DiagramHolderObservable(
             }
             sources.contains(data)
         }
-        val filteredTargets = arrows.value.filter {
+        val filteredTargets = arrows.filter {
             val targets = when (it.data) {
                 is DirectedRelationship -> it.data.targets
                 is Association -> it.data.memberEnds

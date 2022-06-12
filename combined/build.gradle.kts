@@ -26,6 +26,7 @@ dependencies {
     implementation(compose.uiTooling)
     implementation(compose.foundation)
     implementation("org.jetbrains.compose.ui:ui-util:1.1.0-alpha05")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.6.2")
 
     // Module dependencies
     implementation(project(":canvas"))
