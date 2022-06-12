@@ -60,7 +60,7 @@ object Notifications : KLogging() {
                                     decayState.value?.toFloat()?.let { it2 -> animateFloatAsState(it2) }
                                 }
                             Card(
-                                backgroundColor = Color(0xFF383a42),
+                                backgroundColor = Color(0xFF27282e),
                                 contentColor = Color.White,
                                 modifier = Modifier
                                     .padding(end = Space.dp32, bottom = Space.dp32)
