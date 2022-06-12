@@ -1,8 +1,6 @@
 package com.github.jan222ik.ui.uml
 
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
 import com.fasterxml.jackson.annotation.JsonSubTypes

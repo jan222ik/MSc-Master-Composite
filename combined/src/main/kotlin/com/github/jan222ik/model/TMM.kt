@@ -14,6 +14,7 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.window.singleWindowApplication
 import com.github.jan222ik.ecore.EcoreModelLoader
+import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.validation.ValidatedTextState
 import com.github.jan222ik.model.validation.transformations.ToPatternTransformer
 import com.github.jan222ik.ui.uml.DiagramHolder
@@ -25,6 +26,7 @@ import java.io.File
 import java.util.regex.Pattern
 
 sealed class TMM {
+    @get:Composable
     abstract val displayName: String
 
     var parent: TMM? = null
@@ -58,9 +60,7 @@ sealed class TMM {
             is FS.Directory -> "Folder"
             is FS.TreeFile -> "File"
             is FS.UmlProjectFile -> "Model File"
-            is ModelTree.Diagram -> "${
-                initDiagram.diagramType.name.toLowerCase(Locale.current).capitalize(Locale.current)
-            }-Diagram"
+            is ModelTree.Diagram -> "${this.observed.value.diagramType.displayableName()}-Diagram"
             is ModelTree.Ecore.TClass -> "Class"
             is ModelTree.Ecore.TGeneralisation -> "Generalization"
             is ModelTree.Ecore.TPackage -> "Package"
@@ -147,6 +147,7 @@ sealed class TMM {
             }
         }
 
+        @get:Composable
         override val displayName: String
             get() = when (this) {
                 is Directory -> this.file.name
@@ -220,16 +221,19 @@ sealed class TMM {
             }
         }
 
+        @get:Composable
         override val displayName: String
             get() = when (this) {
-                is Diagram -> this.initDiagram.name
+                is Diagram -> observed.value.diagramName.tfv.text
                 is Ecore.TClass -> this.umlClass.name
                 is Ecore.TGeneralisation -> this.generalization.general.name
                 is Ecore.TPackage -> this.umlPackage.name
                 is Ecore.TPackageImport -> this.packageImport.importedPackage.name
                 is Ecore.TProperty -> this.property.name ?: property.type.name.let { ":$it" }
                 is Ecore.TUNKNOWN -> "<<UNKNOWN ELEMENT>>"
-                is Ecore.TAssociation -> this.association.name?.let { "<Association> $it" } ?: "A_${association.memberEnds.let { it.first().name  + "_" + it.last().name }}"
+                is Ecore.TAssociation -> this.association.name?.let { "<Association> $it" }
+                    ?: "A_${association.memberEnds.let { it.first().name + "_" + it.last().name }}"
+
                 is Ecore.TConnector -> this.connector.name
                 is Ecore.TConnectorEnd -> this.connectorEnd.definingEnd.name
                 is Ecore.TConstraint -> this.constraint.name
@@ -316,7 +320,14 @@ sealed class TMM {
             )
         }
 
-        class Diagram(val initDiagram: DiagramHolder) : ModelTree(), IBreadCrumbDisplayableMarker
+        class Diagram(val initDiagram: DiagramHolder) : ModelTree(), IBreadCrumbDisplayableMarker {
+            val observed = lazy {
+                initDiagram.toObservable(
+                    umlRoot = getProjectUMLElement(),
+                    commandStackHandler = CommandStackHandler.INSTANCE
+                )
+            }
+        }
     }
 }
 
@@ -458,20 +469,24 @@ fun TMM.viewer(level: Int, showFS: Boolean, highlight: Pattern, searchFor: (Elem
                         }
                         this.children.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
                     }
+
                     is TMM.FS.TreeFile -> {
                         if (showFS) {
                             Text("File: ${this.file.name}")
                         }
                     }
+
                     is TMM.FS.UmlProjectFile -> {
                         if (showFS) {
                             Text("UML File: ${this.file.name}")
                         }
                         this.children.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
                     }
+
                     is TMM.ModelTree.Diagram -> {
                         Text("Diagram")
                     }
+
                     is TMM.ModelTree.Ecore -> {
                         val mod = Modifier.clickable { searchFor(this.element) }
                         when (this) {
@@ -479,22 +494,27 @@ fun TMM.viewer(level: Int, showFS: Boolean, highlight: Pattern, searchFor: (Elem
                                 Text("Class: ${umlClass.name}", mod)
                                 ownedElements.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
                             }
+
                             is TMM.ModelTree.Ecore.TProperty -> {
                                 Text("Property: ${property.name}", mod)
                                 ownedElements.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
                             }
+
                             is TMM.ModelTree.Ecore.TPackage -> {
                                 Text("Package: ${umlPackage.name}", mod)
                                 ownedElements.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
                             }
+
                             is TMM.ModelTree.Ecore.TGeneralisation -> {
                                 Text("Generalization: ${generalization.toString()}", mod)
                                 ownedElements.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
                             }
+
                             is TMM.ModelTree.Ecore.TPackageImport -> {
                                 Text("PackageImport: ${packageImport.importedPackage.name}", mod)
                                 ownedElements.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }
                             }
+
                             is TMM.ModelTree.Ecore.TUNKNOWN -> {
                                 Text("Unknown: $element", mod)
                                 ownedElements.forEach { it.viewer(level.inc(), showFS, highlight, searchFor) }

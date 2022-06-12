@@ -13,8 +13,6 @@ import com.github.jan222ik.model.validation.IValidationError
 import com.github.jan222ik.model.validation.ValidatedTextState
 import com.github.jan222ik.model.validation.ValidationItem
 import com.github.jan222ik.model.validation.valudations.Rules
-import com.github.jan222ik.ui.value.R
-import io.javalin.core.validation.ValidationError
 
 @Stable
 @Immutable

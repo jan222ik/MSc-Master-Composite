@@ -25,7 +25,8 @@ fun StingBasedInput(
     iTransformation: ITransformation<String, String> = remember { NonTransformer() },
     isReadOnly: Boolean = false,
     focusRequester: FocusRequester,
-    focusOrderReceiver: FocusOrder.() -> Unit
+    focusOrderReceiver: FocusOrder.() -> Unit,
+    onValidValue: ((String, Boolean) -> Unit)? = null
 ) {
     Column {
         TitleWithTooltip(propViewElement)
@@ -33,7 +34,7 @@ fun StingBasedInput(
             ValidatedTextState(
                 initial = initialValue,
                 transformation = iTransformation,
-                onValidValue = null
+                onValidValue = onValidValue
             )
         }
         TextField(

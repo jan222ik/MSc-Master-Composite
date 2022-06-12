@@ -17,7 +17,7 @@ abstract class TreeDisplayableItem(
     abstract val onPrimaryAction: (MouseClickScope.(idx: Int) -> Unit)?
     abstract val onDoublePrimaryAction: MouseClickScope.() -> Unit
     abstract val onSecondaryAction: MouseClickScope.(LazyListState, Int, ITreeContextFor) -> Unit
-    abstract val displayName: String
+    abstract val displayName: @Composable () -> String
     abstract val canExpand: Boolean
 
     abstract val children: SnapshotStateList<TreeDisplayableItem>

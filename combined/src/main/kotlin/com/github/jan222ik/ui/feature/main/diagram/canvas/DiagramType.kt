@@ -18,4 +18,10 @@ enum class DiagramType {
         }
         return painter
     }
+
+    fun displayableName() : String = when (this) {
+        PACKAGE -> "Package"
+        PARAMETRIC -> "Parametric"
+        BLOCK_DEFINITION -> "Block"
+    }
 }

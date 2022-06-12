@@ -70,7 +70,8 @@ fun EditorTabComponent(stateOut: EditorTabViewModel, projectTreeHandler: Project
                 ),
                 elements = elements,
                 arrows = arrows,
-                projectTreeHandler = projectTreeHandler
+                projectTreeHandler = projectTreeHandler,
+                tmmDiagram = state.tmmDiagram
             )
         }
         NavigateDiagramUPButton(

@@ -35,7 +35,8 @@ sealed class ModelTreeItem(
     override val canExpand: Boolean
         get() = tmmModelItem.ownedElements.isNotEmpty() && tmmModelItem.ownedElements.any { it !is TMM.ModelTree.Ecore.TUNKNOWN }
 
-    override val children: SnapshotStateList<TreeDisplayableItem> = emptyList<TreeDisplayableItem>().toMutableStateList()
+    override val children: SnapshotStateList<TreeDisplayableItem> =
+        emptyList<TreeDisplayableItem>().toMutableStateList()
 
     companion object : KLogging() {
         fun parseItem(
@@ -50,6 +51,7 @@ sealed class ModelTreeItem(
                         umlValue = tmmModelItem
                     )
                 }
+
                 is TMM.ModelTree.Ecore.TClass -> {
                     logger.debug { "Class ${tmmModelItem.umlClass.qualifiedName}" }
                     ClassItem(
@@ -57,6 +59,7 @@ sealed class ModelTreeItem(
                         tmmTClass = tmmModelItem
                     )
                 }
+
                 is TMM.ModelTree.Ecore.TGeneralisation -> {
                     logger.debug { "Generalization" }
                     GeneralizationItem(
@@ -64,6 +67,7 @@ sealed class ModelTreeItem(
                         tmmTGeneralisation = tmmModelItem
                     )
                 }
+
                 is TMM.ModelTree.Ecore.TPackage -> {
                     logger.debug { "Package ${tmmModelItem.umlPackage.uri}" }
                     PackageItem(
@@ -71,6 +75,7 @@ sealed class ModelTreeItem(
                         tmmTPackage = tmmModelItem
                     )
                 }
+
                 is TMM.ModelTree.Ecore.TProperty -> {
                     logger.debug { "Property" }
                     PropertyItem(
@@ -78,6 +83,7 @@ sealed class ModelTreeItem(
                         tmmTProperty = tmmModelItem
                     )
                 }
+
                 is TMM.ModelTree.Ecore.TPackageImport -> {
                     logger.debug { "PackageImport" }
                     ImportItem(
@@ -85,22 +91,27 @@ sealed class ModelTreeItem(
                         tmmTPackageImport = tmmModelItem
                     )
                 }
+
                 is TMM.ModelTree.Ecore.TAssociation -> AssociationItem(
                     level = level,
                     tmmTAssociation = tmmModelItem
                 )
+
                 is TMM.ModelTree.Ecore.TConnector -> ConnectorItem(
                     level = level,
                     tmmTConnector = tmmModelItem
                 )
+
                 is TMM.ModelTree.Ecore.TConstraint -> ConstraintItem(
                     level = level,
                     tmmTConstraint = tmmModelItem
                 )
+
                 is TMM.ModelTree.Ecore.TEnumeration -> EnumerationItem(
                     level = level,
                     tmmTEnumeration = tmmModelItem
                 )
+
                 else -> {
                     logger.debug { "Item can not be converted to a element in the tree. ${tmmModelItem.javaClass}" }
                     null
@@ -151,7 +162,7 @@ sealed class ModelTreeItem(
             )
         }
 
-    fun contextMenuContributions() : List<MenuContribution> {
+    fun contextMenuContributions(): List<MenuContribution> {
         return listOf(
             DemoMenuContributions.diagramContributionsFor(this)
         )
@@ -178,8 +189,9 @@ sealed class ModelTreeItem(
                 )
             }
 
-        override val displayName: String
-            get() = tmmTPackage.displayName
+
+        override val displayName: @Composable () -> String
+            get() = @Composable { tmmTPackage.displayName }
     }
 
     class ClassItem(
@@ -198,8 +210,9 @@ sealed class ModelTreeItem(
                 )
             }
 
-        override val displayName: String
-            get() = tmmTClass.displayName
+
+        override val displayName: @Composable () -> String
+            get() = @Composable { tmmTClass.displayName }
     }
 
     class ImportItem(
@@ -209,8 +222,8 @@ sealed class ModelTreeItem(
         level = level,
         tmmModelItem = tmmTPackageImport
     ) {
-        override val displayName: String
-            get() = tmmTPackageImport.packageImport.importingNamespace.name
+        override val displayName: @Composable () -> String
+            get() = @Composable { tmmTPackageImport.packageImport.importingNamespace.name }
 
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
@@ -231,8 +244,9 @@ sealed class ModelTreeItem(
         level = level,
         tmmModelItem = tmmTAssociation
     ) {
-        override val displayName: String
-            get() = tmmTAssociation.displayName
+
+        override val displayName: @Composable () -> String
+            get() = @Composable { tmmTAssociation.displayName }
 
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
@@ -245,6 +259,7 @@ sealed class ModelTreeItem(
             }
 
     }
+
     //is TMM.ModelTree.Ecore.TConnector -> TODO()
     class ConnectorItem(
         level: Int,
@@ -253,8 +268,9 @@ sealed class ModelTreeItem(
         level = level,
         tmmModelItem = tmmTConnector
     ) {
-        override val displayName: String
-            get() = tmmTConnector.displayName
+
+        override val displayName: @Composable () -> String
+            get() = @Composable { tmmTConnector.displayName }
 
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
@@ -266,6 +282,7 @@ sealed class ModelTreeItem(
             }
 
     }
+
     //is TMM.ModelTree.Ecore.TConstraint -> TODO()
     class ConstraintItem(
         level: Int,
@@ -274,8 +291,9 @@ sealed class ModelTreeItem(
         level = level,
         tmmModelItem = tmmTConstraint
     ) {
-        override val displayName: String
-            get() = tmmTConstraint.displayName
+
+        override val displayName: @Composable () -> String
+            get() = @Composable { tmmTConstraint.displayName }
 
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
@@ -287,6 +305,7 @@ sealed class ModelTreeItem(
             }
 
     }
+
     //is TMM.ModelTree.Ecore.TEnumeration -> TODO()
     class EnumerationItem(
         level: Int,
@@ -295,8 +314,9 @@ sealed class ModelTreeItem(
         level = level,
         tmmModelItem = tmmTEnumeration
     ) {
-        override val displayName: String
-            get() = tmmTEnumeration.displayName
+
+        override val displayName: @Composable () -> String
+            get() = @Composable { tmmTEnumeration.displayName }
 
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
@@ -316,8 +336,9 @@ sealed class ModelTreeItem(
         level = level,
         tmmModelItem = tmmTProperty
     ) {
-        override val displayName: String
-            get() = tmmTProperty.displayName
+
+        override val displayName: @Composable () -> String
+            get() = @Composable { tmmTProperty.displayName }
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
                 Image(
@@ -335,8 +356,8 @@ sealed class ModelTreeItem(
         level = level,
         tmmModelItem = TODO()
     ) {
-        override val displayName: String
-            get() = "TODO ValueSpecification"
+        override val displayName: @Composable () -> String
+            get() = @Composable { "TODO ValueSpecification" }
     }
 
     class GeneralizationItem(
@@ -355,8 +376,8 @@ sealed class ModelTreeItem(
                 )
             }
 
-        override val displayName: String
-            get() = "<Generalization> ${tmmTGeneralisation.generalization.general.name}"
+        override val displayName: @Composable () -> String
+            get() = @Composable { "<Generalization> ${tmmTGeneralisation.generalization.general.name}" }
     }
 
 }
@@ -370,8 +391,8 @@ class DiagramTreeItem(
 ) {
     companion object : KLogging()
 
-    override val displayName: String
-        get() = diagram.initDiagram.name
+    override val displayName: @Composable () -> String
+        get() = @Composable { diagram.observed.value.diagramName.tfv.text }
 
     override val canExpand: Boolean
         get() = false
@@ -389,7 +410,9 @@ class DiagramTreeItem(
             EditorManager.moveToOrOpenDiagram(diagram, CommandStackHandler.INSTANCE)
         }
 
-    override val children: SnapshotStateList<TreeDisplayableItem> = emptyList<TreeDisplayableItem>().toMutableStateList()
+    override val children: SnapshotStateList<TreeDisplayableItem> =
+        emptyList<TreeDisplayableItem>().toMutableStateList()
+
     override fun getTMM(): TMM = diagram
 
     override val icon: (@Composable (modifier: Modifier) -> Unit)

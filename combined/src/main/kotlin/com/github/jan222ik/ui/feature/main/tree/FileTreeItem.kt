@@ -58,8 +58,9 @@ data class FileTreeItem(
         get() = { state, idx, treeContextProvider ->
             logger.debug { "TODO: Secondary Action" }
         }
-    override val displayName: String
-        get() = tmmElement.file.name
+
+    override val displayName: @Composable () -> String
+        get() = @Composable { tmmElement.file.name }
 
     override val canExpand: Boolean
         get() = tmmElement !is TMM.FS.TreeFile

@@ -58,7 +58,7 @@ object EditorManager {
         if (firstIdx != -1) {
             onEditorSwitch(firstIdx)
         } else {
-            val toObservable = tmmDiagram.initDiagram.toObservable(tmmDiagram.getProjectUMLElement(), commandStackHandler)
+            val toObservable = tmmDiagram.observed.value
             openTabs.value = openTabs.value + EditorTabViewModel(tmmDiagram = tmmDiagram, observableDiagram = toObservable)
             onEditorSwitch(openTabs.value.lastIndex)
         }

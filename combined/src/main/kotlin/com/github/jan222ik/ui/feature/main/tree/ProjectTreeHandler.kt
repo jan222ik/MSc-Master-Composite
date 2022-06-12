@@ -323,7 +323,7 @@ class ProjectTreeHandler(
                             }
                         }
                     ),
-                text = item.name,
+                text = item.name.invoke(),
                 color = when {
                     focus?.hasFocus == true && isSelected -> Color.White
                     else -> Color.Unspecified
@@ -339,7 +339,7 @@ class ProjectTreeHandler(
     ) {
         val icon: @Composable ((modifier: Modifier) -> Unit)?
             get() = actual.icon
-        val name: String
+        val name: @Composable () -> String
             get() = actual.displayName
 
         val level: Int

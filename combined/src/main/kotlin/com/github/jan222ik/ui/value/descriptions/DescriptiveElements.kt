@@ -71,4 +71,9 @@ object DescriptiveElements {
         title = "Aggregation",
         tooltip = "aggregation: Specifies the kind of aggregation that applies to the Property"
     )
+    val diagramType = PropertyViewDemoElement(
+        title = "Type:",
+        tooltip = "type: Type of the diagram."
+    )
+    val diagramName = PropertyViewDemoElement(title = "Name:", tooltip = "name: The name of diagram")
 }

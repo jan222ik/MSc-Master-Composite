@@ -120,7 +120,7 @@ fun TreeItem2(item: TreeDisplayableItem) {
                         }
                     }
                 ),
-            text = item.displayName
+            text = item.displayName.invoke()
         )
     }
 }
