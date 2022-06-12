@@ -49,7 +49,7 @@ object PaletteContents {
 
     fun categoryBlock(isInternal: Boolean) = PaletteCategory(
         name = "Blocks",
-        options = if (isInternal) listOf(
+        options = if (!isInternal) listOf(
             PaletteOption(name = "AbstractDefinition"),
             PaletteOption(name = "Actor"),
             PaletteOption(name = "Association (Directed)"),

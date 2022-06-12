@@ -72,7 +72,7 @@ fun ScrollableCanvas(
     // Scrollbars
     val hScrollAdapter = remember(elements, maxViewportSize, viewport.value) {
         val maxWidth =
-            min(elements.map { it.boundingShape.topLeft.value.x + it.boundingShape.width.value }.maxOf { it } + 64f,
+            min(elements.map { it.boundingShape.topLeft.value.x + it.boundingShape.width.value }.maxOfOrNull { it }.let { it ?: 0f } + 64f,
                 maxViewportSize.width)
         ScrollableScrollbarAdapter(
             scrollState = CanvasScrollState(
@@ -91,7 +91,7 @@ fun ScrollableCanvas(
     }
     val vScrollAdapter = remember(maxViewportSize, viewport.value) {
         val maxHeight =
-            min(elements.map { it.boundingShape.topLeft.value.y + it.boundingShape.height.value }.maxOf { it } + 64f,
+            min(elements.map { it.boundingShape.topLeft.value.y + it.boundingShape.height.value }.maxOfOrNull { it }.let { it ?: 0f } + 64f,
                 maxViewportSize.height)
 
         ScrollableScrollbarAdapter(

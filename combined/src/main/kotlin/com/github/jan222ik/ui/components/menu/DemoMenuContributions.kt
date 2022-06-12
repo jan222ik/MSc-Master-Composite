@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Remove
+import com.github.jan222ik.model.command.commands.CreateDiagramCommand
 import com.github.jan222ik.ui.feature.main.diagram.canvas.DiagramType
 import com.github.jan222ik.ui.feature.main.tree.ModelTreeItem
 
@@ -37,27 +38,29 @@ object DemoMenuContributions {
     fun diagramContributionsFor(item: ModelTreeItem): MenuContribution.Contentful {
         val isPackage = item is ModelTreeItem.PackageItem
         val isBlock = item is ModelTreeItem.ClassItem
+        fun DiagramType.menuContribution(): MenuContribution.Contentful.MenuItem {
+            return MenuContribution.Contentful.MenuItem(
+                icon = DrawableIcon.viaPainterConstruction { iconAsPainter() },
+                displayName = name,
+                command = CreateDiagramCommand(
+                    rootTMM = item.tmmModelItem,
+                    diagramType = this
+                )
+            )
+        }
+
         return MenuContribution.Contentful.NestedMenuItem(
             icon = null,
             displayName = "New diagram",
             nestedItems = kotlin.run {
                 if (isPackage) {
                     listOf(
-                        MenuContribution.Contentful.MenuItem(
-                            icon = DrawableIcon.viaPainterConstruction { DiagramType.PACKAGE.iconAsPainter() },
-                            displayName = DiagramType.PACKAGE.name
-                        ),
-                        MenuContribution.Contentful.MenuItem(
-                            icon = DrawableIcon.viaPainterConstruction { DiagramType.BLOCK_DEFINITION.iconAsPainter() },
-                            displayName = DiagramType.BLOCK_DEFINITION.name
-                        )
+                        DiagramType.PACKAGE.menuContribution(),
+                        DiagramType.BLOCK_DEFINITION.menuContribution()
                     )
                 } else if (isBlock) {
                     listOf(
-                        MenuContribution.Contentful.MenuItem(
-                            icon = DrawableIcon.viaPainterConstruction { DiagramType.PARAMETRIC.iconAsPainter() },
-                            displayName = DiagramType.PARAMETRIC.name
-                        )
+                        DiagramType.PARAMETRIC.menuContribution()
                     )
                 } else emptyList()
             }

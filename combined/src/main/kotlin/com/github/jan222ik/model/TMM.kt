@@ -329,6 +329,7 @@ data class TMMPath<T : TMM>(
         newNodes.add(0, parent)
         return this.copy(nodes = newNodes)
     }
+
 }
 
 fun Element.convertToTreeItem(tmpDiagrams: List<DiagramHolder>): TMM.ModelTree {

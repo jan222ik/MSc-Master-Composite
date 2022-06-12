@@ -71,4 +71,8 @@ object EditorManager {
     fun moveForward() {
         onEditorSwitch(abs(selectedIdx.value.inc().rem(openTabs.value.size)))
     }
+
+    fun closeEditorForDiagram(diagram: TMM.ModelTree.Diagram) {
+        onEditorClose(openTabs.value.indexOfFirst { it.tmmDiagram == diagram })
+    }
 }
