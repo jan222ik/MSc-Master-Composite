@@ -101,7 +101,13 @@ class Arrow(
                                 pivot = Offset.Zero
                             ) {
                                 rotate(90f + 180f, pivot = Offset.Zero) {
-                                    arrowHeadForOverride(member1ArrowTypeOverride)
+                                    @Exhaustive
+                                    when (arrowType.value) {
+                                        ArrowType.GENERALIZATION -> Unit
+                                        ArrowType.ASSOCIATION_DIRECTED -> {
+                                            arrowHeadForOverride(member1ArrowTypeOverride)
+                                        }
+                                    }
                                 }
                             }
                             if (data is Association) {

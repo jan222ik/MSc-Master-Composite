@@ -776,8 +776,8 @@
     } ]
   }, {
     "type" : "UMLRef.ArrowRef.Assoc",
-    "memberEndName0" : "input",
-    "memberEndName1" : "configurationmodel",
+    "memberEndName0" : "configurationmodel",
+    "memberEndName1" : "input",
     "index" : 0,
     "sourceAnchor" : {
       "side" : "N",
@@ -787,12 +787,12 @@
       "side" : "S",
       "fromTopLeftOffsetPercentage" : 0.33
     },
-    "memberEnd0Aggregation" : "COMPOSITE",
+    "memberEnd0Aggregation" : "SHARED",
     "memberEnd1Aggregation" : "NONE"
   }, {
     "type" : "UMLRef.ArrowRef.Assoc",
-    "memberEndName0" : "output",
-    "memberEndName1" : "configurationmodel",
+    "memberEndName0" : "configurationmodel",
+    "memberEndName1" : "output",
     "index" : 0,
     "sourceAnchor" : {
       "side" : "N",
@@ -802,7 +802,7 @@
       "side" : "S",
       "fromTopLeftOffsetPercentage" : 0.66
     },
-    "memberEnd0Aggregation" : "COMPOSITE",
+    "memberEnd0Aggregation" : "SHARED",
     "memberEnd1Aggregation" : "NONE"
   } ]
 }, {

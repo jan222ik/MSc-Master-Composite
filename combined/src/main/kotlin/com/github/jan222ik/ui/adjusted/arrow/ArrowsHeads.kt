@@ -81,7 +81,12 @@ object ArrowsHeads {
             lineTo(x = 0f, y = height)
             lineTo(x = arrowBaseWidth.div(3), y = arrowBaseWidth.div(baseWidthYDiv))
         }
-        drawPath(path, color, style = if (fill) Fill else Stroke())
+        if (!fill) {
+            drawPath(path, Color.White, style = Fill)
+            drawPath(path, color, style = Stroke())
+        } else {
+            drawPath(path, color, style = Fill)
+        }
     }
 }
 

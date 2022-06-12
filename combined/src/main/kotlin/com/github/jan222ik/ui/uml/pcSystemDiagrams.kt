@@ -608,21 +608,21 @@ object PcSystemDiagrams {
                     link = null
                 ),
                 DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
-                    memberEndName0 = "input",
-                    memberEndName1 = "configurationmodel",
+                    memberEndName0 = "configurationmodel",
+                    memberEndName1 = "input",
                     index = 0,
                     sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.5f),
                     targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.33f),
-                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd0Aggregation = Aggregation.SHARED,
                     memberEnd1Aggregation = Aggregation.NONE
                 ),
                 DiagramStateHolders.UMLRef.ArrowRef.AssocRef(
-                    memberEndName0 = "output",
-                    memberEndName1 = "configurationmodel",
+                    memberEndName0 = "configurationmodel",
+                    memberEndName1 = "output",
                     index = 0,
                     sourceAnchor = Anchor(side = AnchorSide.N, fromTopLeftOffsetPercentage = 0.5f),
                     targetAnchor = Anchor(side = AnchorSide.S, fromTopLeftOffsetPercentage = 0.66f),
-                    memberEnd0Aggregation = Aggregation.COMPOSITE,
+                    memberEnd0Aggregation = Aggregation.SHARED,
                     memberEnd1Aggregation = Aggregation.NONE
                 )
             )
