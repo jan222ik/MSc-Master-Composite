@@ -8,6 +8,11 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.TMMPath
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import net.bytebuddy.implementation.bind.annotation.Super
 
 @ExperimentalFoundationApi
 abstract class TreeDisplayableItem(
@@ -21,6 +26,9 @@ abstract class TreeDisplayableItem(
     abstract val canExpand: Boolean
 
     abstract val children: SnapshotStateList<TreeDisplayableItem>
+
+    @Composable
+    open fun tmmChildObserver() {}
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is TreeDisplayableItem) return false
@@ -50,11 +58,14 @@ abstract class TreeDisplayableItem(
     }
 
     fun expandAll() {
-        if (canExpand) {
-            if (children.isEmpty()) {
-                onDoublePrimaryAction.invoke(com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext)
+        CoroutineScope(SupervisorJob()).launch {
+            if (canExpand) {
+                if (children.isEmpty()) {
+                    onDoublePrimaryAction.invoke(com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext)
+                }
+                delay(150)
+                children.onEach { it.expandAll() }
             }
-            children.onEach { it.expandAll() }
         }
     }
 

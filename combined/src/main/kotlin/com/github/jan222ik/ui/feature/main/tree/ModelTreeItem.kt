@@ -5,6 +5,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.MouseClickScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
@@ -19,6 +21,10 @@ import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.ui.components.menu.DemoMenuContributions
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mu.KLogging
 import org.eclipse.uml2.uml.ValueSpecification
 import kotlin.math.roundToInt
@@ -120,6 +126,16 @@ sealed class ModelTreeItem(
         }
     }
 
+    @Composable
+    override fun tmmChildObserver() {
+        remember(tmmModelItem.ownedElements) {
+            if (children.isNotEmpty()) {
+                children.clear()
+                children.addAll(tmmModelItem.ownedElements.mapNotNull { it.toViewTreeElement(level.inc()) })
+            }
+        }
+    }
+
     fun getElement(): org.eclipse.uml2.uml.Element {
         return tmmModelItem.element
     }
@@ -142,7 +158,6 @@ sealed class ModelTreeItem(
 
     override val onSecondaryAction: MouseClickScope.(LazyListState, Int, ITreeContextFor) -> Unit
         get() = action@{ state, idx, treeContextProvider ->
-            logger.debug { "TODO: Secondary Action" }
             treeContextProvider.setContextFor(
                 object : PopupPositionProvider {
                     override fun calculatePosition(
@@ -151,7 +166,7 @@ sealed class ModelTreeItem(
                         layoutDirection: LayoutDirection,
                         popupContentSize: IntSize
                     ): IntOffset {
-                        val find = state.layoutInfo.visibleItemsInfo.find { it.index == idx }
+                        val find = state.layoutInfo.visibleItemsInfo.find { it.key == idx }
                         return IntOffset(
                             x = anchorBounds.width.times(0.75f).roundToInt(),
                             y = find?.let { it.offset.minus(it.size).plus(popupContentSize.height.div(2)) } ?: 0

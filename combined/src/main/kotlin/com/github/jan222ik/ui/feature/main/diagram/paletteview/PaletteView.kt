@@ -47,7 +47,7 @@ fun PaletteView(activeEditorTab: EditorTabViewModel) {
                         Row(
                             modifier = Modifier.dndDraggable(
                                 handler = dndHandler,
-                                dataProvider = { null },
+                                dataProvider = { it.name },
                                 onDragCancel = { snapBack -> snapBack.invoke() },
                                 onDragFinished = { _, snapBack -> snapBack.invoke() }
                             )

@@ -45,6 +45,7 @@ import com.github.jan222ik.util.KeyHelpers
 import com.github.jan222ik.util.KeyHelpers.consumeOnKey
 import mu.KLogging
 import java.io.InvalidClassException
+import java.util.concurrent.atomic.AtomicInteger
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -178,7 +179,7 @@ class ProjectTreeHandler(
         }
 
         Box {
-            var count = 0
+            val count = remember { AtomicInteger(0) }
             viewTreeElementRoot = remember(metamodelRoot) { metamodelRoot.toViewTreeElement(0) }
             LazyColumn(
                 modifier = Modifier
@@ -203,7 +204,11 @@ class ProjectTreeHandler(
                 fun renderRecursive(item: TreeDisplayableItem) {
                     val treeItem = TreeItem(actual = item, treeHandler = this@ProjectTreeHandler)
                     item {
-                        TreeItemRow(itemIdx = count.also { count += 1 }, item = treeItem, lazyListState)
+                        val itemIdx =  remember { count.getAndIncrement() }
+                        if (EditorManager.allowEdit.value) {
+                            item.tmmChildObserver()
+                        }
+                        TreeItemRow(itemIdx = itemIdx, item = treeItem, lazyListState)
                     }
                     treeItem.children.forEach(::renderRecursive)
                 }

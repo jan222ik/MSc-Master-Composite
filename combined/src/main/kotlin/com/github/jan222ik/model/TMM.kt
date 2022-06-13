@@ -221,6 +221,17 @@ sealed class TMM {
             }
         }
 
+        fun closestPackage(): TMM.ModelTree.Ecore.TPackage {
+            val p = parent
+            return if (p is TMM.ModelTree.Ecore.TPackage) {
+                p
+            } else {
+                if (p is TMM.ModelTree) {
+                    p.closestPackage()
+                } else throw ClassCastException("Should not happen to be in this case")
+            }
+        }
+
         @get:Composable
         override val displayName: String
             get() = when (this) {
@@ -256,6 +267,14 @@ sealed class TMM {
             ), IHasChildren<TMM.ModelTree>, IBreadCrumbDisplayableMarker {
                 override val children: SnapshotStateList<ModelTree>
                     get() = ownedElements
+
+                fun createOwnedClass(name: String, isAbstract: Boolean): TClass {
+                    val createOwnedClass = umlPackage.createOwnedClass(name, isAbstract)
+                    val newTMM = TClass(umlClass = createOwnedClass, initOwnedElements = emptyList())
+                    newTMM.parent = this
+                    ownedElements.add(newTMM)
+                    return newTMM
+                }
             }
 
             class TModel(
