@@ -19,6 +19,7 @@ import androidx.compose.ui.window.PopupPositionProvider
 import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.ui.components.menu.DemoMenuContributions
+import com.github.jan222ik.ui.components.menu.DrawableIcon
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import kotlinx.coroutines.Dispatchers
@@ -219,7 +220,7 @@ sealed class ModelTreeItem(
         override val icon: (@Composable (modifier: Modifier) -> Unit)
             get() = @Composable {
                 Image(
-                    painterResource("drawables/uml_icons/Block.gif"),
+                    DrawableIcon.Block.painter.invoke(),
                     contentDescription = null,
                     modifier = it
                 )

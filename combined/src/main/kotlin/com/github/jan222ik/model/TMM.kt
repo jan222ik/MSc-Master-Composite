@@ -9,13 +9,11 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.capitalize
-import androidx.compose.ui.text.intl.Locale
-import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.window.singleWindowApplication
 import com.github.jan222ik.ecore.EcoreModelLoader
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.validation.ValidatedTextState
+import com.github.jan222ik.model.validation.transformations.NonTransformer
 import com.github.jan222ik.model.validation.transformations.ToPatternTransformer
 import com.github.jan222ik.ui.uml.DiagramHolder
 import com.github.jan222ik.ui.uml.DiagramsLoader
@@ -240,7 +238,7 @@ sealed class TMM {
                 is Ecore.TGeneralisation -> this.generalization.general.name
                 is Ecore.TPackage -> this.umlPackage.name
                 is Ecore.TPackageImport -> this.packageImport.importedPackage.name
-                is Ecore.TProperty -> this.property.name ?: property.type.name.let { ":$it" }
+                is Ecore.TProperty -> this.name.tfv.text.takeUnless { it.isEmpty() } ?: property.type?.name?.let { ":$it" } ?: "null"
                 is Ecore.TUNKNOWN -> "<<UNKNOWN ELEMENT>>"
                 is Ecore.TAssociation -> this.association.name?.let { "<Association> $it" }
                     ?: "A_${association.memberEnds.let { it.first().name + "_" + it.last().name }}"
@@ -275,6 +273,7 @@ sealed class TMM {
                     ownedElements.add(newTMM)
                     return newTMM
                 }
+
             }
 
             class TModel(
@@ -289,6 +288,31 @@ sealed class TMM {
                 element = umlClass,
                 initOwnedElements = initOwnedElements
             ), IHasChildren<TMM.ModelTree>, IBreadCrumbDisplayableMarker {
+
+                val name = ValidatedTextState<String>(
+                    initial = umlClass.name ?: "",
+                    transformation = NonTransformer()
+                )
+                fun createOwnedProperty(): TProperty {
+                    val prop = umlClass.createOwnedAttribute("Property", null)
+                    val newTmm = TMM.ModelTree.Ecore.TProperty(
+                        property = prop,
+                        initOwnedElements = emptyList()
+                    )
+                    newTmm.parent = this
+                    ownedElements.add(newTmm)
+                    return newTmm
+                }
+
+                fun createGeneralization(classifier: Classifier): TGeneralisation {
+                    val generalization = umlClass.createGeneralization(classifier)
+                    val newTMM = TGeneralisation(generalization = generalization, initOwnedElements = emptyList())
+                    newTMM.parent = this
+                    ownedElements.add(newTMM)
+                    return newTMM
+                }
+
+
                 override val children: SnapshotStateList<ModelTree>
                     get() = ownedElements
             }
@@ -296,7 +320,12 @@ sealed class TMM {
             class TProperty(val property: Property, initOwnedElements: List<ModelTree>) : Ecore(
                 element = property,
                 initOwnedElements = initOwnedElements
-            )
+            ) {
+                val name = ValidatedTextState<String>(
+                    initial = property.name ?: "",
+                    transformation = NonTransformer()
+                )
+            }
 
             class TGeneralisation(val generalization: Generalization, initOwnedElements: List<ModelTree>) : Ecore(
                 element = generalization,

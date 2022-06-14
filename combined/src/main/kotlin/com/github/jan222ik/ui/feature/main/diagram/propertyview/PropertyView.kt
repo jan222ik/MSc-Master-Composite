@@ -53,7 +53,7 @@ fun PropertyView(
                     is TMM.ModelTree.Ecore.TClass -> renderConfig(
                         PropertyViewConfigs.pvForClass
                     ) { it, foc ->
-                        it.render(data = selectedElement.umlClass, fReqSelf = foc)
+                        it.render(data = selectedElement, fReqSelf = foc)
                     }
 
                     is TMM.ModelTree.Ecore.TPackage -> renderConfig(
@@ -66,7 +66,7 @@ fun PropertyView(
                     is TMM.ModelTree.Ecore.TProperty -> renderConfig(
                         PropertyViewConfigs.pvForProperty,
                     ) { it, foc ->
-                        it.render(data = selectedElement.property, fReqSelf = foc)
+                        it.render(data = selectedElement, fReqSelf = foc)
                     }
 
                     is TMM.ModelTree.Diagram -> renderConfig(
@@ -148,45 +148,45 @@ object PropertyViewConfigs {
             Nameable(DescriptiveElements.name),
             Labelable(DescriptiveElements.label),
             PlaceholderElement(DescriptiveElements.uri),
-            Visibility(DescriptiveElements.visibility),
+            Visibility(DescriptiveElements.visibility, convert = { it } ),
             ReadOnlyStringElement(DescriptiveElements.location) { it.nestingPackage?.qualifiedName.toString() }
         )
     )
 
-    val pvForClass: PropertyViewConfig<org.eclipse.uml2.uml.Class> = PropertyViewConfig(
+    val pvForClass: PropertyViewConfig<TMM.ModelTree.Ecore.TClass> = PropertyViewConfig(
         elements = listOf(
-            Nameable(DescriptiveElements.name),
-            Labelable(DescriptiveElements.label),
-            ReadOnlyStringElement(DescriptiveElements.qualifiedName) { it.qualifiedName },
-            PlaceholderElementBool(DescriptiveElements.isAbstract) { it.isAbstract },
-            PlaceholderElementBool(DescriptiveElements.isActive) { it.isActive },
-            Visibility(DescriptiveElements.visibility),
+            ExternalValidatedState(DescriptiveElements.name, externalValidatedState = { it.name }),
+            //Labelable(DescriptiveElements.label),
+            ReadOnlyStringElement(DescriptiveElements.qualifiedName) { it.umlClass.qualifiedName },
+            PlaceholderElementBool(DescriptiveElements.isAbstract) { it.umlClass.isAbstract },
+            PlaceholderElementBool(DescriptiveElements.isActive) { it.umlClass.isActive },
+            Visibility(DescriptiveElements.visibility, convert = { it.umlClass }),
             // Owned attributes
             // Owned operations
             // Owned reception
         )
     )
 
-    val pvForProperty: PropertyViewConfig<Property> = PropertyViewConfig(
+    val pvForProperty: PropertyViewConfig<TMM.ModelTree.Ecore.TProperty> = PropertyViewConfig(
         elements = listOf(
-            Nameable(DescriptiveElements.name),
-            Labelable(DescriptiveElements.label),
-            PlaceholderElementBool(DescriptiveElements.isDerived) { it.isDerived },
-            PlaceholderElementBool(DescriptiveElements.isReadOnly) { it.isReadOnly },
-            PlaceholderElementBool(DescriptiveElements.isUnique) { it.isUnique },
-            PlaceholderElementBool(DescriptiveElements.isOrdered) { it.isOrdered },
-            PlaceholderElementBool(DescriptiveElements.isStatic) { it.isStatic },
-            Visibility(DescriptiveElements.visibility),
-            AggregationElement(DescriptiveElements.aggregation) { it.aggregation.literal },
+            ExternalValidatedState(DescriptiveElements.name, externalValidatedState = { it.name }),
+            //Labelable(DescriptiveElements.label),
+            PlaceholderElementBool(DescriptiveElements.isDerived) { it.property.isDerived },
+            PlaceholderElementBool(DescriptiveElements.isReadOnly) { it.property.isReadOnly },
+            PlaceholderElementBool(DescriptiveElements.isUnique) { it.property.isUnique },
+            PlaceholderElementBool(DescriptiveElements.isOrdered) { it.property.isOrdered },
+            PlaceholderElementBool(DescriptiveElements.isStatic) { it.property.isStatic },
+            Visibility(DescriptiveElements.visibility, convert = { it.property }),
+            AggregationElement(DescriptiveElements.aggregation) { it.property.aggregation.literal },
             PlaceholderElement(DescriptiveElements.multiplicity) {
-                val memberEnd = it.association?.memberEnds?.firstOrNull()
+                val memberEnd = it.property.association?.memberEnds?.firstOrNull()
                 memberEnd?.let { "[${it.lower}, ${it.upper}]" } ?: ""
             },
             PlaceholderElement(DescriptiveElements.defaultValue) {
-                it.ownedElements.filterIsInstance<ValueSpecification>().firstOrNull()?.stringValue() ?: ""
+                it.property.ownedElements.filterIsInstance<ValueSpecification>().firstOrNull()?.stringValue() ?: ""
             },
             PlaceholderElement(DescriptiveElements.type) {
-                it.typeNameString()
+                it.property.typeNameString()
             }
         )
     )
@@ -231,7 +231,7 @@ data class ExternalValidatedState<T>(
     override val propViewElement: IPropertyViewElement,
     val externalValidatedState: (T) -> ValidatedTextState<String>,
     val isReadOnly: Boolean = false
-): IPropertyViewConfigElement<T> {
+) : IPropertyViewConfigElement<T> {
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     override fun render(data: T, fReqSelf: FocusRequester) {
@@ -278,7 +278,7 @@ data class PlaceholderElement<T>(
     }
 }
 
-data class AggregationElement<T : EObject>(
+data class AggregationElement<T>(
     override val propViewElement: IPropertyViewElement,
     val extractValueAsString: (T) -> String
 ) : IPropertyViewConfigElement<T> {
@@ -298,7 +298,7 @@ data class AggregationElement<T : EObject>(
     }
 }
 
-data class PlaceholderElementBool<T : EObject>(
+data class PlaceholderElementBool<T>(
     override val propViewElement: IPropertyViewElement,
     val extractValueAsBoolean: (T) -> Boolean
 ) : IPropertyViewConfigElement<T> {
@@ -383,8 +383,9 @@ data class Labelable<T : NamedElement>(
 
 }
 
-data class Visibility<T : NamedElement>(
-    override val propViewElement: IPropertyViewElement
+data class Visibility<T, N : NamedElement>(
+    override val propViewElement: IPropertyViewElement,
+    val convert: (T) -> N
 ) : IPropertyViewConfigElement<T> {
 
 
@@ -396,7 +397,7 @@ data class Visibility<T : NamedElement>(
         ExpandedDropDownSelection(
             propViewElement = DescriptiveElements.visibility,
             items = visibilityItems,
-            initialValue = data.visibility.literal,
+            initialValue = convert(data).visibility.literal,
             onSelectionChanged = {},
             transformation = NonTransformer(validations = listOf(inCollection(list = visibilityItems))),
             isReadOnly = !EditorManager.allowEdit.value

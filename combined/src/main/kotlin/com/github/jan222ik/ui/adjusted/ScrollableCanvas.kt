@@ -5,8 +5,8 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.scrollable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -20,10 +20,16 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.isPrimaryPressed
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.unit.*
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
 import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.notifications.Notification
 import com.github.jan222ik.model.notifications.Notifications
@@ -31,11 +37,19 @@ import com.github.jan222ik.ui.adjusted.arrow.Arrow
 import com.github.jan222ik.ui.adjusted.helper.AlignmentHelper
 import com.github.jan222ik.ui.adjusted.helper.ElementDrawCalls.drawAlignmentLine
 import com.github.jan222ik.ui.adjusted.scroll.CanvasScrollState
+import com.github.jan222ik.ui.components.menu.DemoMenuContributions
 import com.github.jan222ik.ui.components.menu.MenuContribution
+import com.github.jan222ik.ui.components.menu.MenuItemList
+import com.github.jan222ik.ui.feature.LocalJobHandler
+import com.github.jan222ik.ui.feature.LocalWindowScope
 import com.github.jan222ik.ui.feature.SharedCommands
-import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
+import com.github.jan222ik.ui.feature.main.keyevent.detectTapMouseGestures
 import com.github.jan222ik.ui.feature.main.tree.FileTree
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
+import com.github.jan222ik.ui.value.EditorColors
+import com.github.jan222ik.util.KeyHelpers
+import com.github.jan222ik.util.KeyHelpers.consumeOnKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.eclipse.uml2.uml.Element
@@ -81,7 +95,8 @@ fun ScrollableCanvas(
     // Scrollbars
     val hScrollAdapter = remember(elements, maxViewportSize, viewport.value) {
         val maxWidth =
-            min(elements.map { it.boundingShape.topLeft.value.x + it.boundingShape.width.value }.maxOfOrNull { it }.let { it ?: 0f } + 64f,
+            min(elements.map { it.boundingShape.topLeft.value.x + it.boundingShape.width.value }.maxOfOrNull { it }
+                .let { it ?: 0f } + 64f,
                 maxViewportSize.width)
         ScrollableScrollbarAdapter(
             scrollState = CanvasScrollState(
@@ -100,7 +115,8 @@ fun ScrollableCanvas(
     }
     val vScrollAdapter = remember(maxViewportSize, viewport.value) {
         val maxHeight =
-            min(elements.map { it.boundingShape.topLeft.value.y + it.boundingShape.height.value }.maxOfOrNull { it }.let { it ?: 0f } + 64f,
+            min(elements.map { it.boundingShape.topLeft.value.y + it.boundingShape.height.value }.maxOfOrNull { it }
+                .let { it ?: 0f } + 64f,
                 maxViewportSize.height)
 
         ScrollableScrollbarAdapter(
@@ -148,16 +164,64 @@ fun ScrollableCanvas(
                 val boxes = remember(elements) { MutableStateFlow(elements.map { it.boundingShape }) }
                 val helper = remember(scope, boxes) { AlignmentHelper(scope, boxes.value) }
                 val lines = helper.alignmentLines.collectAsState()
+                val showContextMenu = remember { mutableStateOf<Offset?>(null) }
+                val windowScope = LocalWindowScope.current
+                val layoutPos = remember { mutableStateOf(Offset.Zero) }
 
-                fun MouseClickScope.handleClick() {
-                    if (this.buttons.isPrimaryPressed) {
+                fun handleClick(pointerEvent: PointerEvent, offset: Offset) {
+                    if (pointerEvent.buttons.isPrimaryPressed) {
                         SharedCommands.forceOpenProperties?.invoke()
                         FileTree.treeHandler.value?.setTreeSelection(listOf(tmmDiagram))
                     } else {
-                        if (buttons.isSecondaryPressed) {
-                            // TODO Menu Contribution
-                            scope.launch {
-                                Notifications.addNotification(Notification("TODO", "Impl buttons.isSecondaryPressed for diagram in ScrollableCanvas", 3000L))
+                        if (pointerEvent.buttons.isSecondaryPressed) {
+                            showContextMenu.value = pointerEvent.changes.last().position
+                        }
+                    }
+                }
+
+                if (showContextMenu.value != null) {
+                    Popup(
+                        onDismissRequest = { showContextMenu.value = null },
+                        onPreviewKeyEvent = {
+                            KeyHelpers.onKeyDown(it) {
+                                consumeOnKey(Key.Escape) {
+                                    showContextMenu.value = null
+                                }
+                            }
+                        },
+                        focusable = true,
+                        popupPositionProvider = object : PopupPositionProvider {
+                            override fun calculatePosition(
+                                anchorBounds: IntRect,
+                                windowSize: IntSize,
+                                layoutDirection: LayoutDirection,
+                                popupContentSize: IntSize
+                            ): IntOffset {
+                                return showContextMenu.value?.round()
+                                    ?.let { it.copy(y = it.y + popupContentSize.height) } ?: IntOffset.Zero
+                            }
+
+                        }
+                    ) {
+                        Card(
+                            border = BorderStroke(1.dp, EditorColors.dividerGray)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(4.dp),
+                            ) {
+                                MenuItemList(
+                                    jobHandler = LocalJobHandler.current, width = 300.dp,
+                                    items = listOf(
+                                        DemoMenuContributions.diagramNewElementMenuConfig(
+                                            tmmRoot = tmmDiagram,
+                                            inDiagramOffset = showContextMenu.value,
+                                            state = EditorManager.activeEditorTab.value,
+                                            onDismiss = {
+                                                showContextMenu.value = null
+                                            }
+                                        )
+                                    ),
+                                )
                             }
                         }
                     }
@@ -167,13 +231,14 @@ fun ScrollableCanvas(
                     modifier = Modifier
                         .fillMaxSize()
                         .addIf(DebugCanvas.conditionalClipValue.value, Modifier.clipToBounds())
-                        .mouseCombinedClickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() },
-                            onClick = MouseClickScope::handleClick,
-                            onDoubleClick = MouseClickScope::handleClick,
-                            onLongClick = MouseClickScope::handleClick
-                        )
+                        .onPlaced { layoutPos.value = it.positionInWindow() }
+                        .pointerInput(Unit) {
+                            detectTapMouseGestures(
+                                onDoubleTap = ::handleClick,
+                                onLongPress = ::handleClick,
+                                onTap = ::handleClick
+                            )
+                        }
                         .pointerInput(Unit) {
                             detectTransformGestures { centroid, pan, zoom, rotation ->
                                 viewport.value = viewport.value.applyPan(pan, maxViewportSize)
@@ -259,6 +324,16 @@ fun ScrollableCanvas(
                                     lines.value.forEach {
                                         drawAlignmentLine(it, box)
                                     }
+                                }
+
+                                DemoMenuContributions.arrowFrom.value?.let {
+                                    val mousePosition = windowScope.window.mousePosition
+                                    drawLine(
+                                        color = Color.Red, start = it.start.boundingShape.topLeft.value, end = Offset(
+                                            mousePosition.x.toFloat(),
+                                            mousePosition.y.toFloat()
+                                        ).minus(layoutPos.value)
+                                    )
                                 }
 
 

@@ -1,18 +1,24 @@
 package com.github.jan222ik.ui.components.menu
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.res.painterResource
 import com.github.jan222ik.model.command.ICommand
 import com.github.jan222ik.model.command.commands.NotImplementedCommand
 
 sealed class DrawableIcon {
     data class viaPainterConstruction(val painter: @Composable () -> Painter) : DrawableIcon()
     data class viaImgVector(val vector: ImageVector) : DrawableIcon()
+    companion object {
+        val Property = viaPainterConstruction { painterResource("drawables/uml_icons/Property.gif") }
+        val Block = viaPainterConstruction { painterResource("drawables/uml_icons/Block.gif") }
+    }
 }
 
-fun ImageVector.toDrawableIcon() : DrawableIcon {
+fun ImageVector.toDrawableIcon(): DrawableIcon {
     return DrawableIcon.viaImgVector(this)
 }
 

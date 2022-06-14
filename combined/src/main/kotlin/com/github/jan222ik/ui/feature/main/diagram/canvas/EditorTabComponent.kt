@@ -22,8 +22,10 @@ import com.github.jan222ik.ui.adjusted.arrow.Arrow
 import com.github.jan222ik.ui.adjusted.arrow.ArrowType
 import com.github.jan222ik.ui.components.dnd.DnDAction
 import com.github.jan222ik.ui.components.dnd.dndDropTarget
+import com.github.jan222ik.ui.components.menu.DemoMenuContributions
 import com.github.jan222ik.ui.feature.LocalCommandStackHandler
 import com.github.jan222ik.ui.feature.LocalDropTargetHandler
+import com.github.jan222ik.ui.feature.SharedCommands
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.feature.main.tree.FileTree
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
@@ -36,7 +38,6 @@ import mu.KLogging
 import mu.NamedKLogging
 import org.eclipse.uml2.uml.Class
 import org.eclipse.uml2.uml.Generalization
-import org.eclipse.uml2.uml.internal.impl.ClassImpl
 
 @Composable
 fun EditorTabComponent(stateOut: EditorTabViewModel, projectTreeHandler: ProjectTreeHandler) {
@@ -159,18 +160,7 @@ class DNDEditorActions(
         } else if (data is String) {
             when (data) {
                 "Block" -> {
-                    val posInComponent = pos.toOffset().minus(state.coords)
-                    val dataPoint = state.viewport.value.origin + posInComponent
-                    val newTmm = state.tmmDiagram.closestPackage().createOwnedClass(
-                        name = "Block",
-                        isAbstract = false
-                    )
-                    val newObj = DNDCreation.dropClass(
-                        data = newTmm.umlClass,
-                        dataPoint = dataPoint, commandStackHandler, state
-                    )
-                    val addCommand = state.getAddCommandFor(newObj)
-                    commandStackHandler.add(addCommand)
+                    DemoMenuContributions.createUMLClassInTMMDiagram(state.tmmDiagram, pos.toOffset(), state)
                     true
                 }
 

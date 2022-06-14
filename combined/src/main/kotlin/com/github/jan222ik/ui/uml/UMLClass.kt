@@ -17,14 +17,25 @@ import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.github.jan222ik.model.TMM
+import com.github.jan222ik.model.command.CommandStackHandler
+import com.github.jan222ik.model.command.ICommand
+import com.github.jan222ik.model.command.commands.AddToDiagramCommand
+import com.github.jan222ik.model.command.commands.NotImplementedCommand
 import com.github.jan222ik.model.command.commands.RemoveFromDiagramCommand
 import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.MovableAndResizeableComponent
+import com.github.jan222ik.ui.adjusted.arrow.Arrow
+import com.github.jan222ik.ui.adjusted.arrow.ArrowType
 import com.github.jan222ik.ui.adjusted.helper.AlignmentHelper
 import com.github.jan222ik.ui.components.menu.DemoMenuContributions
+import com.github.jan222ik.ui.components.menu.DrawableIcon
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.SharedCommands
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
+import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
 import com.github.jan222ik.ui.feature.main.keyevent.mouseCombinedClickable
+import com.github.jan222ik.ui.feature.main.tree.FileTree
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.util.HorizontalDivider
 import mu.KLogging
@@ -64,6 +75,61 @@ class UMLClass(
                 onClick = {
                     if (buttons.isPrimaryPressed) {
                         println("Clicked")
+                        DemoMenuContributions.arrowFrom.value?.let { data ->
+                            val other = data.start as UMLClass
+                            val thisY = this@UMLClass.boundingShape.topLeft.value.y
+                            val sAnchor = Anchor(
+                                side = AnchorSide.S,
+                                fromTopLeftOffsetPercentage = 0.5f
+                            )
+                            val nAnchor = Anchor(
+                                side = AnchorSide.N,
+                                fromTopLeftOffsetPercentage = 0.5f
+                            )
+
+                            val initTargetAnchor = if (thisY > other.boundingShape.topLeft.value.y) {
+                                nAnchor
+                            } else sAnchor
+                            val initSourceAnchor = if (thisY <= other.boundingShape.topLeft.value.y) {
+                                nAnchor
+                            } else sAnchor
+
+                            val arrowLowerYShape = other.boundingShape.takeUnless { it.topLeft.value.y > thisY } ?: boundingShape
+                            val arrowHigherYShape =  other.boundingShape.takeUnless { it.topLeft.value.y < thisY } ?: boundingShape
+
+                            val tmmClass = projectTreeHandler.metamodelRoot.findModellingElementOrNull(umlClass)?.target as TMM.ModelTree.Ecore.TClass
+                            val otherTMMClass = projectTreeHandler.metamodelRoot.findModellingElementOrNull(other.umlClass) ?.target as TMM.ModelTree.Ecore.TClass
+                            val tmmGeneralization = otherTMMClass.createGeneralization(umlClass)
+                            val arrow = Arrow(
+                                initArrowType = data.type,
+                                initSourceAnchor = initSourceAnchor,
+                                initTargetAnchor = initTargetAnchor,
+                                initOffsetPath = Arrow.fourPointArrowOffsetPath(
+                                    sourceAnchor = initSourceAnchor.takeUnless { arrowHigherYShape == boundingShape } ?: initTargetAnchor,
+                                    targetAnchor = initTargetAnchor.takeUnless { arrowHigherYShape == boundingShape } ?: initSourceAnchor,
+                                    sourceBoundingShape = arrowHigherYShape,
+                                    targetBoundingShape = arrowLowerYShape
+                                ),
+                                data = tmmGeneralization.generalization,
+                                initSourceBoundingShape = other.boundingShape,
+                                initTargetBoundingShape = boundingShape,
+                                member0ArrowTypeOverride = data.member0ArrowTypeOverride,
+                                member1ArrowTypeOverride = data.member1ArrowTypeOverride
+                            )
+                            val addToDiagram = object : AddToDiagramCommand() {
+                                override suspend fun execute(handler: JobHandler) {
+                                    EditorManager.activeEditorTab.value?.addArrow(arrow)
+                                }
+
+                                override suspend fun undo() {
+                                    EditorManager.activeEditorTab.value?.removeArrow(arrow)
+                                }
+
+                            }
+                            CommandStackHandler.INSTANCE.add(addToDiagram)
+                            DemoMenuContributions.arrowFrom.value = null
+                            return@mouseCombinedClickable
+                        }
                         tmmClassPath?.target?.let {
                             projectTreeHandler.setTreeSelection(listOf(it))
                         }
@@ -92,7 +158,7 @@ class UMLClass(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(text = umlClass.appliedStereotypesString())
-                Text(text = umlClass.labelOrName())
+                Text(text = (tmmClassPath?.target as TMM.ModelTree.Ecore.TClass?)?.labelOrName() ?: "")
             }
             HorizontalDivider(Modifier.fillMaxWidth())
             Column(
@@ -122,11 +188,85 @@ class UMLClass(
 
     override fun getMenuContributions(): List<MenuContribution> {
         return listOf(
+            DemoMenuContributions.addProperty(
+                tmmClass = FileTree.treeHandler.value?.metamodelRoot?.findModellingElementOrNull(umlClass)?.target as TMM.ModelTree.Ecore.TClass
+            ),
+            MenuContribution.Contentful.NestedMenuItem(
+                icon = null,
+                displayName = "Arrow to ...",
+                nestedItems = listOf(
+                    MenuContribution.Contentful.MenuItem(
+                        icon = DrawableIcon.viaPainterConstruction(painter = { painterResource("drawables/uml_icons/Generalization.gif") }),
+                        displayName = "Generalization",
+                        command = object : ICommand {
+                            override fun isActive(): Boolean = EditorManager.allowEdit.value
+
+                            override suspend fun execute(handler: JobHandler) {
+                                DemoMenuContributions.arrowFrom.value = DemoMenuContributions.ArrowData(
+                                    start = this@UMLClass,
+                                    type = ArrowType.GENERALIZATION
+                                )
+                                showContextMenu.value = false
+                            }
+
+                            override fun canUndo(): Boolean = EditorManager.allowEdit.value
+
+                            override suspend fun undo() {
+                                TODO("Not yet implemented")
+                            }
+
+                            override fun pushToStack(): Boolean = false
+                        }
+                    ),
+                    MenuContribution.Contentful.MenuItem(
+                        icon = DrawableIcon.viaPainterConstruction(painter = { painterResource("drawables/uml_icons/Association.gif") }),
+                        displayName = "Association",
+                        command = NotImplementedCommand("Create Association")
+                    ),
+                    MenuContribution.Contentful.MenuItem(
+                        icon = DrawableIcon.viaPainterConstruction(painter = { painterResource("drawables/uml_icons/Association_composite_directed.gif") }),
+                        displayName = "Directed Association",
+                        command = NotImplementedCommand("Create Directed Association")
+                    ),
+                    MenuContribution.Contentful.MenuItem(
+                        icon = DrawableIcon.viaPainterConstruction(painter = { painterResource("drawables/uml_icons/Association_composite_directed.gif") }),
+                        displayName = "Composite Association",
+                        command = object : ICommand {
+                            override fun isActive(): Boolean = EditorManager.allowEdit.value
+
+                            override suspend fun execute(handler: JobHandler) {
+                                DemoMenuContributions.arrowFrom.value = DemoMenuContributions.ArrowData(
+                                    start = this@UMLClass,
+                                    type = ArrowType.ASSOCIATION_DIRECTED,
+                                    member0ArrowTypeOverride = DiagramStateHolders.UMLRef.ArrowRef.AssocRef.Aggregation.COMPOSITE,
+                                    member1ArrowTypeOverride = DiagramStateHolders.UMLRef.ArrowRef.AssocRef.Aggregation.NONE
+                                )
+                                showContextMenu.value = false
+                            }
+
+                            override fun canUndo(): Boolean = EditorManager.allowEdit.value
+
+                            override suspend fun undo() {
+                                TODO("Not yet implemented")
+                            }
+
+                            override fun pushToStack(): Boolean = false
+                        }
+                    ),
+                    MenuContribution.Contentful.MenuItem(
+                        icon = DrawableIcon.viaPainterConstruction(painter = { painterResource("drawables/uml_icons/Association_shared_directed.gif") }),
+                        displayName = "Shared Association",
+                        command = NotImplementedCommand("Create Shared Association")
+                    )
+                )
+            ),
+            MenuContribution.Separator,
             DemoMenuContributions.links(hasLink = false),
+            MenuContribution.Separator,
             MenuContribution.Contentful.MenuItem(
                 displayName = "Delete from Diagram",
                 command = deleteSelfCommand
-            )
+            ),
         )
     }
 
@@ -153,12 +293,23 @@ class UMLClass(
 
     fun org.eclipse.uml2.uml.NamedElement.labelOrName(default: String = "No name"): String = label ?: name ?: default
 
+    @Composable
+    fun TMM.ModelTree.Ecore.TProperty.labelOrName(): String {
+        return name.tfv.text
+    }
+
+    @Composable
+    fun TMM.ModelTree.Ecore.TClass.labelOrName(): String {
+        return name.tfv.text
+    }
+
     fun org.eclipse.uml2.uml.Property.typeNameString(asBrackets: Boolean = true): String {
         val t = this.type
         val s = when (t) {
             is PrimitiveTypeImpl -> {
                 t.toString().split("#").lastOrNull()?.removeSuffix(")")
             }
+
             is EnumerationImpl -> t.name ?: t.label
             else -> "undefined"
         }
@@ -227,13 +378,13 @@ class UMLClass(
                         }
                     }
                     val str =
-                        prop.applicableStereotypes.toStereotypesString() + " $vis " + prop.labelOrName() + " " + prop.typeNameString(
+                        prop.applicableStereotypes.toStereotypesString() + " $vis " + (tmmProp?.target as TMM.ModelTree.Ecore.TProperty?)?.labelOrName() + " " + prop.typeNameString(
                             false
                         ) + " = " + valueStr
                     Text(text = str, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 } else {
                     val str =
-                        prop.applicableStereotypes.toStereotypesString() + " $vis " + prop.labelOrName() + " " + prop.typeNameString() + " [1]"
+                        prop.applicableStereotypes.toStereotypesString() + " $vis " + (tmmProp?.target as TMM.ModelTree.Ecore.TProperty?)?.labelOrName() + " " + prop.typeNameString() + " [1]"
                     Text(text = str, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 // TODO Multiplicity
