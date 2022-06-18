@@ -129,6 +129,13 @@ abstract class MovableAndResizeableComponent(
                                 helper.clear()
                             },
                             onDragCancel = {
+                                if (EditorManager.allowEdit.value) {
+                                    onNextUIConfig(
+                                        this@MovableAndResizeableComponent,
+                                        preMoveOrResize,
+                                        boundingShape.toState()
+                                    )
+                                }
                                 helper.clear()
                             }
                         ) { change, dragAmount ->

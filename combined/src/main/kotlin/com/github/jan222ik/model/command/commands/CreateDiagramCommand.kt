@@ -11,7 +11,8 @@ import org.eclipse.uml2.uml.NamedElement
 
 class CreateDiagramCommand(
     val rootTMM: TMM.ModelTree.Ecore,
-    val diagramType: DiagramType
+    val diagramType: DiagramType,
+    val onDismiss: () -> Unit
 ) : ICommand {
 
     val diagram = TMM.ModelTree.Diagram(initDiagram = DiagramHolder(
@@ -27,6 +28,7 @@ class CreateDiagramCommand(
     override suspend fun execute(handler: JobHandler) {
         rootTMM.ownedElements.add(diagram)
         EditorManager.moveToOrOpenDiagram(tmmDiagram = diagram, CommandStackHandler.INSTANCE)
+        onDismiss.invoke()
     }
 
     override fun canUndo(): Boolean = true

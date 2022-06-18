@@ -15,6 +15,7 @@ import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.validation.ValidatedTextState
 import com.github.jan222ik.model.validation.transformations.NonTransformer
 import com.github.jan222ik.model.validation.transformations.ToPatternTransformer
+import com.github.jan222ik.ui.feature.main.diagram.propertyview.typeNameString
 import com.github.jan222ik.ui.uml.DiagramHolder
 import com.github.jan222ik.ui.uml.DiagramsLoader
 import com.github.jan222ik.ui.value.Space
@@ -132,7 +133,11 @@ sealed class TMM {
         val children: SnapshotStateList<T>
     }
 
-    interface IBreadCrumbDisplayableMarker
+    interface IBreadCrumbDisplayableMarker {
+        fun markerAsTMM(): TMM = this as TMM
+
+        fun isActive() : Boolean
+    }
 
     sealed class FS(
         val file: File
@@ -161,6 +166,8 @@ sealed class TMM {
             init {
                 // TODO add file watcher for dir contents
             }
+
+            override fun isActive() = children.isNotEmpty()
         }
 
         class UmlProjectFile(file: File) : FS(file = file), IHasChildren<TMM.ModelTree.Ecore.TModel>,
@@ -203,6 +210,8 @@ sealed class TMM {
                 }
                 return this.dInSubRec()
             }
+
+            override fun isActive(): Boolean = children.isNotEmpty()
         }
     }
 
@@ -238,7 +247,9 @@ sealed class TMM {
                 is Ecore.TGeneralisation -> this.generalization.general.name
                 is Ecore.TPackage -> this.umlPackage.name
                 is Ecore.TPackageImport -> this.packageImport.importedPackage.name
-                is Ecore.TProperty -> this.name.tfv.text.takeUnless { it.isEmpty() } ?: property.type?.name?.let { ":$it" } ?: "null"
+                is Ecore.TProperty -> this.name.tfv.text.takeUnless { it.isEmpty() }
+                    ?: property.type?.name?.let { ":$it" } ?: "null"
+
                 is Ecore.TUNKNOWN -> "<<UNKNOWN ELEMENT>>"
                 is Ecore.TAssociation -> this.association.name?.let { "<Association> $it" }
                     ?: "A_${association.memberEnds.let { it.first().name + "_" + it.last().name }}"
@@ -274,6 +285,8 @@ sealed class TMM {
                     return newTMM
                 }
 
+                override fun isActive(): Boolean = children.any { it is IBreadCrumbDisplayableMarker }
+
             }
 
             class TModel(
@@ -293,6 +306,7 @@ sealed class TMM {
                     initial = umlClass.name ?: "",
                     transformation = NonTransformer()
                 )
+
                 fun createOwnedProperty(): TProperty {
                     val prop = umlClass.createOwnedAttribute("Property", null)
                     val newTmm = TMM.ModelTree.Ecore.TProperty(
@@ -312,15 +326,55 @@ sealed class TMM {
                     return newTMM
                 }
 
+                fun createAssociation(
+                    end1isNavigable: Boolean = false,
+                    end1Aggregation: AggregationKind,
+                    end1Name: String,
+                    end1Lower: Int,
+                    end1Upper: Int,
+                    end1Type: Type,
+                    end2isNavigable: Boolean = false,
+                    end2Aggregation: AggregationKind,
+                    end2Name: String,
+                    end2Lower: Int,
+                    end2Upper: Int,
+                ): TAssociation {
+
+                    val association = umlClass.createAssociation(
+                        end1isNavigable,
+                        end1Aggregation,
+                        end1Name,
+                        end1Lower,
+                        end1Upper,
+                        end1Type,
+                        end2isNavigable,
+                        end2Aggregation,
+                        end2Name,
+                        end2Lower,
+                        end2Upper,
+                    )
+
+                    val newTMM = TAssociation(association = association, initOwnedElements = emptyList())
+                    newTMM.parent = this
+                    ownedElements.add(newTMM)
+                    return newTMM
+                }
+
 
                 override val children: SnapshotStateList<ModelTree>
                     get() = ownedElements
+
+                override fun isActive(): Boolean = children.any { it is IBreadCrumbDisplayableMarker }
             }
 
             class TProperty(val property: Property, initOwnedElements: List<ModelTree>) : Ecore(
                 element = property,
                 initOwnedElements = initOwnedElements
             ) {
+                val type = ValidatedTextState<String>(
+                    initial = property.typeNameString() ?: "",
+                    transformation = NonTransformer()
+                )
                 val name = ValidatedTextState<String>(
                     initial = property.name ?: "",
                     transformation = NonTransformer()
@@ -340,7 +394,28 @@ sealed class TMM {
             class TAssociation(val association: Association, initOwnedElements: List<ModelTree>) : Ecore(
                 element = association,
                 initOwnedElements = initOwnedElements
-            )
+            ) {
+                val memberEnd0MultiplicityString = ValidatedTextState<String>(
+                    initial = getMultiplicityStringForMemberAt(0),
+                    transformation = NonTransformer()
+                )
+
+                val memberEnd1MultiplicityString = ValidatedTextState<String>(
+                    initial = getMultiplicityStringForMemberAt(1),
+                    transformation = NonTransformer()
+                )
+
+                fun getMultiplicityStringForMemberAt(idx: Int): String {
+                    val end = association.memberEnds[idx]
+                    if (end.lower == 1 && end.upper == 1) {
+                        return "1"
+                    } else {
+                        val lower = end.lower.takeUnless { it == -1 }?.toString() ?: "*"
+                        val upper = end.upper.takeUnless { it == -1 }?.toString() ?: "*"
+                        return "$lower..$upper"
+                    }
+                }
+            }
 
             class TConnector(val connector: Connector, initOwnedElements: List<ModelTree>) : Ecore(
                 element = connector,
@@ -375,6 +450,8 @@ sealed class TMM {
                     commandStackHandler = CommandStackHandler.INSTANCE
                 )
             }
+
+            override fun isActive() = true
         }
     }
 }

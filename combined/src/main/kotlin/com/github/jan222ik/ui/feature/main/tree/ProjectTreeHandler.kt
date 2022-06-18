@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class)
+@file:OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class)
 
 package com.github.jan222ik.ui.feature.main.tree
 
@@ -28,6 +28,7 @@ import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
+import arrow.core.valid
 import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.TMMPath
 import com.github.jan222ik.ui.components.dnd.dndDraggable

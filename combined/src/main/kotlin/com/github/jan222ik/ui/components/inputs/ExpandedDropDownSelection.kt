@@ -35,7 +35,8 @@ fun ExpandedDropDownSelection(
     initialValue: String,
     onSelectionChanged: (String) -> Unit,
     transformation: ITransformation<String, String>? = null,
-    isReadOnly: Boolean
+    isReadOnly: Boolean,
+    clickableOptions: Map<String, () -> Unit> = emptyMap()
 ) {
     var expanded by remember { mutableStateOf(false) }
     var selectedText by remember(initialValue) { mutableStateOf(initialValue) }
@@ -115,9 +116,13 @@ fun ExpandedDropDownSelection(
                 }
                 items.forEach { label ->
                     DropdownMenuItem(onClick = {
-                        selectedText = label
-                        validate(label)
-                        expanded = false
+                        if (clickableOptions.containsKey(label)) {
+                            clickableOptions.get(label)!!.invoke()
+                        } else {
+                            selectedText = label
+                            validate(label)
+                            expanded = false
+                        }
                     }) {
                         Text(text = label)
                     }

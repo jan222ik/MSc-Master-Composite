@@ -30,7 +30,8 @@ class BoundingRect(
         color: Color = Color.Cyan,
         fill: Boolean,
         showText: Boolean,
-        showBox: Boolean
+        showBox: Boolean,
+        drawX: Boolean = true
     ) {
         drawScope.translate(
             left = topLeft.value.x,
@@ -43,16 +44,18 @@ class BoundingRect(
                     topLeft = Offset.Zero,
                     size = Size(width = width.value, height = height.value)
                 )
-                drawLine(
-                    color = color,
-                    start = Offset.Zero,
-                    end = Offset(width.value, height.value)
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(0f, height.value),
-                    end = Offset(width.value, 0f)
-                )
+                if (drawX) {
+                    drawLine(
+                        color = color,
+                        start = Offset.Zero,
+                        end = Offset(width.value, height.value)
+                    )
+                    drawLine(
+                        color = color,
+                        start = Offset(0f, height.value),
+                        end = Offset(width.value, 0f)
+                    )
+                }
             }
             if (showText) {
                 val textLine = TextLine.make(debugName, Font())
@@ -64,6 +67,12 @@ class BoundingRect(
                 )
             }
         }
+    }
+
+    override fun containtsOffset(offset: Offset): Boolean {
+        val xRange = topLeft.value.x.rangeTo(topLeft.value.x.plus(width.value))
+        val yRange = topLeft.value.y.rangeTo(topLeft.value.y.plus(height.value))
+        return xRange.contains(offset.x)  && yRange.contains(offset.y)
     }
 
     override fun isVisibleInViewport(viewport: Viewport): Boolean {

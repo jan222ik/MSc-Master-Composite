@@ -1,7 +1,6 @@
 package com.github.jan222ik.ui.adjusted.helper
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
@@ -60,7 +59,7 @@ object ElementDrawCalls {
     fun DrawScope.drawAlignmentLine(pair: Pair<AlignmentLine, IBoundingShape>, movingBox: IBoundingShape) {
         val alignmentLine = pair.first
         val shape = pair.second
-        val isInlineWith = alignmentLine.isInlineWith(movingBox, tolerance = 5)
+        val isInlineWith = alignmentLine.isInlineWith(movingBox, tolerance = 1)
         when (alignmentLine) {
             is AlignmentLine.Horizontal -> {
                 if (shape.topLeft.value.x < movingBox.topLeft.value.x) {
@@ -182,6 +181,7 @@ object ElementDrawCalls {
 }
 
 
+/*
 fun main(args: Array<String>) {
     singleWindowApplication {
         val initBoxes = listOf(
@@ -238,3 +238,6 @@ fun main(args: Array<String>) {
     }
 }
 
+
+
+ */

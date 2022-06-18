@@ -1,6 +1,10 @@
 package com.github.jan222ik.ui.value.descriptions
 
 object DescriptiveElements {
+    val memberEnd = PropertyViewDemoElement(
+        title = "Member End",
+        tooltip = "Member End is the element that defines the connections of a Relation"
+    )
     val isAbstract = PropertyViewDemoElement(
         title = "Is abstract:",
         tooltip = "If true, the Classifier does not provide a complete declaration and cna typically not be instantiated. " +

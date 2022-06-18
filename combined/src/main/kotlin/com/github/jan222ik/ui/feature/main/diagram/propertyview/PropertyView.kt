@@ -1,17 +1,16 @@
 package com.github.jan222ik.ui.feature.main.diagram.propertyview
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.VerticalScrollbar
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -19,19 +18,23 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusOrder
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
 import com.github.jan222ik.model.TMM
 import com.github.jan222ik.model.validation.ValidatedTextState
 import com.github.jan222ik.model.validation.transformations.NonTransformer
+import com.github.jan222ik.model.validation.valudations.ListValidations
 import com.github.jan222ik.model.validation.valudations.ListValidations.inCollection
 import com.github.jan222ik.ui.components.inputs.*
 import com.github.jan222ik.ui.components.tooltips.TitleWithTooltip
 import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
+import com.github.jan222ik.ui.value.Space
 import com.github.jan222ik.ui.value.descriptions.DescriptiveElements
 import com.github.jan222ik.ui.value.descriptions.IPropertyViewElement
 import org.eclipse.emf.ecore.EObject
@@ -71,6 +74,12 @@ fun PropertyView(
 
                     is TMM.ModelTree.Diagram -> renderConfig(
                         config = PropertyViewConfigs.pvForDiagram
+                    ) { it, foc ->
+                        it.render(data = selectedElement, fReqSelf = foc)
+                    }
+
+                    is TMM.ModelTree.Ecore.TAssociation -> renderConfig(
+                        config = PropertyViewConfigs.pvForAssociation
                     ) { it, foc ->
                         it.render(data = selectedElement, fReqSelf = foc)
                     }
@@ -148,8 +157,15 @@ object PropertyViewConfigs {
             Nameable(DescriptiveElements.name),
             Labelable(DescriptiveElements.label),
             PlaceholderElement(DescriptiveElements.uri),
-            Visibility(DescriptiveElements.visibility, convert = { it } ),
+            Visibility(DescriptiveElements.visibility, convert = { it }),
             ReadOnlyStringElement(DescriptiveElements.location) { it.nestingPackage?.qualifiedName.toString() }
+        )
+    )
+
+    val pvForAssociation: PropertyViewConfig<TMM.ModelTree.Ecore.TAssociation> = PropertyViewConfig(
+        elements = listOf(
+            MemberEnd(idx = 0),
+            MemberEnd(idx = 1),
         )
     )
 
@@ -185,9 +201,12 @@ object PropertyViewConfigs {
             PlaceholderElement(DescriptiveElements.defaultValue) {
                 it.property.ownedElements.filterIsInstance<ValueSpecification>().firstOrNull()?.stringValue() ?: ""
             },
-            PlaceholderElement(DescriptiveElements.type) {
-                it.property.typeNameString()
-            }
+            ExternalValidatedStateDropDown(
+                DescriptiveElements.type,
+                externalValidatedState = {
+                    it.type
+                }
+            )
         )
     )
 
@@ -203,6 +222,7 @@ object PropertyViewConfigs {
         )
     )
 }
+
 
 fun org.eclipse.uml2.uml.Property.typeNameString(): String {
     val t = this.type
@@ -254,6 +274,87 @@ data class ExternalValidatedState<T>(
                 readOnly = isReadOnly
             )
         }
+    }
+}
+
+data class ExternalValidatedStateDropDown<T>(
+    override val propViewElement: IPropertyViewElement,
+    val externalValidatedState: (T) -> ValidatedTextState<String>,
+    val isReadOnly: Boolean = false
+) : IPropertyViewConfigElement<T> {
+    @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class)
+    @Composable
+    override fun render(data: T, fReqSelf: FocusRequester) {
+        val state = externalValidatedState.invoke(data)
+        val showPopup = remember { mutableStateOf(false) }
+        Column {
+            val options = listOf(
+                "String", "Integer", "Real", "Boolean"
+            )
+            ExpandedDropDownSelection(
+                propViewElement = propViewElement,
+                items = options + "Show more",
+                initialValue = state.tfv.text,
+                onSelectionChanged = { state.onValueChange(TextFieldValue(text = it)) },
+                transformation = NonTransformer(validations = listOf(ListValidations.inCollection(list = options))),
+                isReadOnly = !EditorManager.allowEdit.value,
+                clickableOptions = mapOf(
+                    "Show more" to {
+                        showPopup.value = true
+                    }
+                )
+            )
+            if (showPopup.value) {
+                PopupAlertDialogProvider.AlertDialog(
+                    onDismissRequest = { showPopup.value = false }
+                ) {
+                    Surface {
+                        Column {
+                            Text("The selection for a special type not implemented.")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+data class MemberEnd(
+    override val propViewElement: IPropertyViewElement = DescriptiveElements.memberEnd,
+    val idx: Int
+) : IPropertyViewConfigElement<TMM.ModelTree.Ecore.TAssociation> {
+    @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+    @Composable
+    override fun render(data: TMM.ModelTree.Ecore.TAssociation, fReqSelf: FocusRequester) {
+        val validatedTextState = if (idx == 0) data.memberEnd0MultiplicityString else data.memberEnd1MultiplicityString
+        Card(border = BorderStroke(0.dp, color = Color.Black)) {
+            Column(modifier = Modifier.padding(vertical = Space.dp8, horizontal = Space.dp4)) {
+                TitleWithTooltip(propViewElement, titleAdditions = " $idx")
+                StingBasedInput(
+                    isReadOnly = true,
+                    propViewElement = DescriptiveElements.name,
+                    initialValue = data.association.memberEnds[0].name,
+                    focusRequester = fReqSelf,
+                    focusOrderReceiver = {
+                        // TODO
+                    }
+                )
+                MultiplicitySelection(
+                    propViewElement = DescriptiveElements.multiplicity,
+                    multiplicityItems = defaultMultiplicityStrings,
+                    value = validatedTextState.tfv.text,
+                    hideOtherSwitch = true,
+                    onValueChanged = {
+                        if (idx == 0) {
+                            data.memberEnd0MultiplicityString
+                        } else {
+                            data.memberEnd1MultiplicityString
+                        }.onValueChange(TextFieldValue(text = it))
+                    }
+                )
+            }
+        }
+        Spacer(Modifier.height(Space.dp4))
     }
 }
 

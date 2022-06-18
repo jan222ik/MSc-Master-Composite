@@ -39,6 +39,7 @@ class DemoCanvasElement(
 
 }
 
+/*
 @OptIn(ExperimentalFoundationApi::class)
 fun main() {
     singleWindowApplication(focusable = true) {
@@ -99,3 +100,5 @@ fun main() {
 
     }
 }
+
+ */

@@ -17,6 +17,8 @@ interface IBoundingShape {
 
     fun isVisibleInViewport(viewport: Viewport): Boolean
 
+    fun containtsOffset(offset: Offset): Boolean
+
     fun snapToAlignments(
         horizontalSnap: AlignmentLine.Horizontal?,
         verticalSnap: AlignmentLine.Vertical?,

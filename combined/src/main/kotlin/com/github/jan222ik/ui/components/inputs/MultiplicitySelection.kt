@@ -17,22 +17,29 @@ import com.github.jan222ik.ui.components.tooltips.TitleWithTooltip
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.value.descriptions.IPropertyViewElement
 
+val defaultMultiplicityStrings = listOf(
+    "0..*", "1..*", "0..1", "1"
+)
+
 @ExperimentalComposeUiApi
 @ExperimentalFoundationApi
 @Composable
-fun MultiplicitySelection(propViewElement: IPropertyViewElement) {
+fun MultiplicitySelection(
+    propViewElement: IPropertyViewElement,
+    multiplicityItems: List<String> = defaultMultiplicityStrings,
+    value: String = multiplicityItems.last(),
+    hideOtherSwitch: Boolean = false,
+    onValueChanged: (String) -> Unit = {}
+) {
     var isSimple by remember { mutableStateOf(true) }
     Column {
-        Crossfade(isSimple) { simple ->
+        Crossfade(isSimple || hideOtherSwitch) { simple ->
             if (simple) {
-                val multiplicityItems = listOf(
-                    "0..*", "1..*", "0..1", "1"
-                )
                 ExpandedDropDownSelection(
                     propViewElement = propViewElement,
                     items = multiplicityItems,
-                    initialValue = multiplicityItems.last(),
-                    onSelectionChanged = {},
+                    initialValue = value,
+                    onSelectionChanged = onValueChanged,
                     transformation = NonTransformer(validations = listOf(ListValidations.inCollection(list = multiplicityItems))),
                     isReadOnly = !EditorManager.allowEdit.value,
                 )

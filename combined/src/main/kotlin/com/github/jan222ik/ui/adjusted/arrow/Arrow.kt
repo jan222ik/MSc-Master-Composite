@@ -1,5 +1,6 @@
 package com.github.jan222ik.ui.adjusted.arrow
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -7,11 +8,12 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.rotateRad
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.nativeCanvas
+import com.github.jan222ik.model.TMM
 import com.github.jan222ik.ui.adjusted.BoundingRect
-import com.github.jan222ik.ui.adjusted.arrow.ArrowsHeads.AssociationDiamondHead
+import com.github.jan222ik.ui.adjusted.CompoundBoundingShape
 import com.github.jan222ik.ui.adjusted.util.translate
+import com.github.jan222ik.ui.feature.main.tree.FileTree
 import com.github.jan222ik.ui.uml.Anchor
 import com.github.jan222ik.ui.uml.DiagramStateHolders
 import org.eclipse.uml2.uml.Association
@@ -26,6 +28,7 @@ class Arrow(
     initSourceAnchor: Anchor,
     initTargetAnchor: Anchor,
     initOffsetPath: List<Offset>,
+    initBoundingShape: CompoundBoundingShape,
     val data: Relationship,
     val initSourceBoundingShape: BoundingRect,
     val initTargetBoundingShape: BoundingRect,
@@ -38,7 +41,7 @@ class Arrow(
             targetAnchor: Anchor,
             sourceBoundingShape: BoundingRect,
             targetBoundingShape: BoundingRect
-        ): List<Offset> {
+        ): Pair<List<Offset>, CompoundBoundingShape> {
             val start = with(sourceBoundingShape) {
                 val sW = width.value
                 val sH = height.value
@@ -53,7 +56,35 @@ class Arrow(
             val halfHeightTween = abs(max(start.y, target.y) - min(start.y, target.y)).div(2)
             val inlineStart = Offset(x = start.x, y = start.y - halfHeightTween)
             val inlineTarget = Offset(x = target.x, y = target.y + halfHeightTween)
-            return listOf<Offset>(start, inlineStart, inlineTarget, target)
+
+            val horizontalTopLeftRef = when {
+                inlineStart.x < inlineTarget.x -> inlineStart
+                else -> inlineTarget
+            }
+
+
+            val padding = 5f
+            val compoundBoundingShape = CompoundBoundingShape(
+                children = listOf(
+                    BoundingRect(
+                        initTopLeft = target.copy(x = target.x.minus(padding)),
+                        initWidth = padding.times(2),
+                        initHeight = halfHeightTween.plus(padding)
+                    ),
+                    BoundingRect(
+                        initTopLeft = horizontalTopLeftRef.copy(x = horizontalTopLeftRef.x.minus(padding), y = horizontalTopLeftRef.y.minus(padding)),
+                        initWidth = abs(start.x - target.x).plus(padding.times(2)),
+                        initHeight = padding.times(2)
+                    ),
+                    BoundingRect(
+                        initTopLeft = inlineStart.copy(x = inlineStart.x.minus(padding), y = inlineStart.y.minus(padding)),
+                        initWidth = padding.times(2),
+                        initHeight = halfHeightTween.plus(padding)
+                    )
+                )
+            )
+
+            return listOf<Offset>(start, inlineStart, inlineTarget, target) to compoundBoundingShape
         }
     }
 
@@ -65,6 +96,8 @@ class Arrow(
     val arrowType = mutableStateOf(initArrowType)
     val sourceAnchor = mutableStateOf(initSourceAnchor)
     val targetAnchor = mutableStateOf(initTargetAnchor)
+    val boundingShape = mutableStateOf(initBoundingShape)
+
 
     fun DrawScope.drawArrow(drawDebugPoints: Boolean = true) {
         val color = Color.Black
@@ -169,13 +202,11 @@ class Arrow(
             }
     }
 
+
     fun Association.makeMultiplicityTextLine(idx: Int) : TextLine? {
-        val end = memberEnds[idx]
-        if (end.lower == 1 && end.upper == 1) {
-            return null
-        }
-        val upperText = end.upper.takeUnless { it == -1 }?.toString() ?: "*"
-        return TextLine.make(end.let { "${it.lower}..$upperText" }, Font())
+        val target = FileTree.treeHandler.value?.metamodelRoot?.findModellingElementOrNull(this)?.target as TMM.ModelTree.Ecore.TAssociation
+        val multiplicityState = if (idx == 0) target.memberEnd0MultiplicityString else target.memberEnd1MultiplicityString
+        return TextLine.make(multiplicityState.tfv.text, Font())
     }
 
     fun DrawScope.arrowHeadForOverride(it: DiagramStateHolders.UMLRef.ArrowRef.AssocRef.Aggregation?) {
@@ -196,8 +227,9 @@ class Arrow(
         }
     }
 
-    fun applyPath(path: List<Offset>) {
-        offsetPath.value = path
+    fun applyPath(path: Pair<List<Offset>, CompoundBoundingShape>) {
+        offsetPath.value = path.first
+        boundingShape.value = path.second
     }
 
     override fun toString(): String {

@@ -2,7 +2,6 @@ package com.github.jan222ik.ui.components.tooltips
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.Icon
@@ -22,7 +21,7 @@ import com.github.jan222ik.ui.value.descriptions.IPropertyViewElement
 
 @ExperimentalFoundationApi
 @Composable
-fun TitleWithTooltip(propViewElement: IPropertyViewElement) {
+fun TitleWithTooltip(propViewElement: IPropertyViewElement, titleAdditions: String = "") {
     val visibleState = remember { mutableStateOf(false) }
     TooltipArea(
         tooltip = {
@@ -36,7 +35,7 @@ fun TitleWithTooltip(propViewElement: IPropertyViewElement) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = propViewElement.title)
+            Text(text = propViewElement.title + titleAdditions)
             Icon(
                 imageVector = Icons.Outlined.Info,
                 contentDescription = "Show tooltip",

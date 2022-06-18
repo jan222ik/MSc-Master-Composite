@@ -4,11 +4,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.MouseClickScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
@@ -22,10 +19,7 @@ import com.github.jan222ik.ui.components.menu.DemoMenuContributions
 import com.github.jan222ik.ui.components.menu.DrawableIcon
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext
 import mu.KLogging
 import org.eclipse.uml2.uml.ValueSpecification
 import kotlin.math.roundToInt
@@ -129,10 +123,16 @@ sealed class ModelTreeItem(
 
     @Composable
     override fun tmmChildObserver() {
+        val once = remember { mutableStateOf(false) }
         remember(tmmModelItem.ownedElements) {
-            if (children.isNotEmpty()) {
-                children.clear()
-                children.addAll(tmmModelItem.ownedElements.mapNotNull { it.toViewTreeElement(level.inc()) })
+            if (!once.value) {
+                once.value = true
+            } else {
+                if (children.isNotEmpty()) {
+                    logger.error("Update children")
+                    children.clear()
+                    children.addAll(tmmModelItem.ownedElements.mapNotNull { it.toViewTreeElement(level.inc()) })
+                }
             }
         }
     }
@@ -174,13 +174,21 @@ sealed class ModelTreeItem(
                         )
 
                     }
-                } to contextMenuContributions()
+                } to contextMenuContributions(
+                    onDismiss = {
+                        treeContextProvider.setContextFor(null)
+                        onDoublePrimaryAction.invoke(EmptyClickContext)
+                        if (children.isEmpty()) {
+                            onDoublePrimaryAction.invoke(EmptyClickContext)
+                        }
+                    }
+                )
             )
         }
 
-    fun contextMenuContributions(): List<MenuContribution> {
+    fun contextMenuContributions(onDismiss: () -> Unit): List<MenuContribution> {
         return listOf(
-            DemoMenuContributions.diagramContributionsFor(this)
+            DemoMenuContributions.diagramContributionsFor(this, onDismiss = onDismiss)
         )
     }
 

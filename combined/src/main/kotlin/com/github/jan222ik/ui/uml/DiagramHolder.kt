@@ -98,6 +98,14 @@ sealed class DiagramStateHolders {
                             NONE -> AggregationKind.NONE
                         }
                     }
+
+                    fun toKind(): AggregationKind {
+                        return when (this) {
+                            COMPOSITE -> AggregationKind.COMPOSITE_LITERAL
+                            SHARED -> AggregationKind.SHARED_LITERAL
+                            NONE -> AggregationKind.NONE_LITERAL
+                        }
+                    }
                 }
             }
 
@@ -388,7 +396,8 @@ class DiagramHolderObservable(
                         },
                         initSourceAnchor = ref.sourceAnchor,
                         initTargetAnchor = ref.targetAnchor,
-                        initOffsetPath = fourPointArrowOffsetPath,
+                        initOffsetPath = fourPointArrowOffsetPath.first,
+                        initBoundingShape = fourPointArrowOffsetPath.second,
                         data = rel,
                         initSourceBoundingShape = special.boundingShape,
                         initTargetBoundingShape = general.boundingShape,
@@ -408,21 +417,30 @@ class DiagramHolderObservable(
     }
 
     fun updateArrows(moveResizeCommand: MoveOrResizeCommand, data: Element): List<UpdateArrowPathCommand> {
-        val filteredSources = arrows.filter {
-            val sources = when (it.data) {
-                is DirectedRelationship -> it.data.sources
-                is Association -> it.data.memberEnds
+
+        val filteredSources = arrows.filter {arr ->
+            val arrowRelationship = arr.data
+            val sources = when (arrowRelationship) {
+                is DirectedRelationship -> arrowRelationship.sources.contains(data)
+                is Association -> (data as Class).associations.let { l ->
+                    l.find { it == arrowRelationship }?.memberEnds?.get(1)
+                        ?.let { it.type?.equals(data) == true && it.aggregation == arr.member0ArrowTypeOverride?.toKind() } ?: false
+                }
                 else -> error("Not supported type of Relationship")
             }
-            sources.contains(data)
+            sources
         }
-        val filteredTargets = arrows.filter {
-            val targets = when (it.data) {
-                is DirectedRelationship -> it.data.targets
-                is Association -> it.data.memberEnds
+        val filteredTargets = arrows.filter {arr ->
+            val arrowRelationship = arr.data
+            val targets = when (arrowRelationship) {
+                is DirectedRelationship -> arrowRelationship.targets.contains(data)
+                is Association -> (data as Class).associations.let { l ->
+                    l.find { it == arrowRelationship }?.memberEnds?.get(0)
+                        ?.let { it.type?.equals(data) == true && it.aggregation == arr.member1ArrowTypeOverride?.toKind() } ?: false
+                }
                 else -> error("Not supported type of Relationship")
             }
-            targets.contains(data)
+            targets
         }
         DNDCreation.logger.debug { "sources: $filteredSources, tragets: $filteredTargets" }
         if (filteredSources.isEmpty() && filteredTargets.isEmpty()) {
@@ -436,6 +454,7 @@ class DiagramHolderObservable(
                     targetBoundingShape = it.initTargetBoundingShape
                 )
             }
+
             val targetOffsets = filteredTargets.map {
                 it to Arrow.fourPointArrowOffsetPath(
                     sourceAnchor = it.sourceAnchor.value,
@@ -447,7 +466,7 @@ class DiagramHolderObservable(
             val commands = sourceOffsets.plus(targetOffsets).map {
                 UpdateArrowPathCommand(
                     target = it.first,
-                    before = it.first.offsetPath.value,
+                    before = it.first.offsetPath.value to it.first.boundingShape.value,
                     after = it.second
                 )
             }

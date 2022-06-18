@@ -99,22 +99,41 @@ class UMLClass(
 
                             val tmmClass = projectTreeHandler.metamodelRoot.findModellingElementOrNull(umlClass)?.target as TMM.ModelTree.Ecore.TClass
                             val otherTMMClass = projectTreeHandler.metamodelRoot.findModellingElementOrNull(other.umlClass) ?.target as TMM.ModelTree.Ecore.TClass
-                            val tmmGeneralization = otherTMMClass.createGeneralization(umlClass)
+                            val relation = when (data.type) {
+                                ArrowType.GENERALIZATION -> otherTMMClass.createGeneralization(umlClass)
+                                ArrowType.ASSOCIATION_DIRECTED -> otherTMMClass.createAssociation(
+                                    end1isNavigable = false,
+                                    end1Aggregation = data.member0ArrowTypeOverride?.toKind() ?: AggregationKind.NONE_LITERAL,
+                                    end1Name = otherTMMClass.name.tfv.text,
+                                    end1Lower = 1,
+                                    end1Upper = 1,
+                                    end1Type = tmmClass.umlClass,
+                                    end2isNavigable = false,
+                                    end2Aggregation = data.member1ArrowTypeOverride?.toKind() ?: AggregationKind.NONE_LITERAL,
+                                    end2Name = tmmClass.name.tfv.text,
+                                    end2Lower = 0,
+                                    end2Upper = -1
+                                )
+                            }
+                            val fourPointArrowOffsetPath = Arrow.fourPointArrowOffsetPath(
+                                sourceAnchor = initSourceAnchor.takeUnless { arrowHigherYShape == boundingShape }
+                                    ?: initTargetAnchor,
+                                targetAnchor = initTargetAnchor.takeUnless { arrowHigherYShape == boundingShape }
+                                    ?: initSourceAnchor,
+                                sourceBoundingShape = arrowHigherYShape,
+                                targetBoundingShape = arrowLowerYShape
+                            )
                             val arrow = Arrow(
                                 initArrowType = data.type,
                                 initSourceAnchor = initSourceAnchor,
                                 initTargetAnchor = initTargetAnchor,
-                                initOffsetPath = Arrow.fourPointArrowOffsetPath(
-                                    sourceAnchor = initSourceAnchor.takeUnless { arrowHigherYShape == boundingShape } ?: initTargetAnchor,
-                                    targetAnchor = initTargetAnchor.takeUnless { arrowHigherYShape == boundingShape } ?: initSourceAnchor,
-                                    sourceBoundingShape = arrowHigherYShape,
-                                    targetBoundingShape = arrowLowerYShape
-                                ),
-                                data = tmmGeneralization.generalization,
+                                initOffsetPath = fourPointArrowOffsetPath.first,
+                                initBoundingShape = fourPointArrowOffsetPath.second,
+                                data = relation.element as Relationship,
                                 initSourceBoundingShape = other.boundingShape,
                                 initTargetBoundingShape = boundingShape,
-                                member0ArrowTypeOverride = data.member0ArrowTypeOverride,
-                                member1ArrowTypeOverride = data.member1ArrowTypeOverride
+                                member0ArrowTypeOverride = data.member1ArrowTypeOverride,
+                                member1ArrowTypeOverride = data.member0ArrowTypeOverride
                             )
                             val addToDiagram = object : AddToDiagramCommand() {
                                 override suspend fun execute(handler: JobHandler) {
@@ -189,7 +208,8 @@ class UMLClass(
     override fun getMenuContributions(): List<MenuContribution> {
         return listOf(
             DemoMenuContributions.addProperty(
-                tmmClass = FileTree.treeHandler.value?.metamodelRoot?.findModellingElementOrNull(umlClass)?.target as TMM.ModelTree.Ecore.TClass
+                tmmClass = FileTree.treeHandler.value?.metamodelRoot?.findModellingElementOrNull(umlClass)?.target as TMM.ModelTree.Ecore.TClass,
+                onDismiss = { showContextMenu.value = false }
             ),
             MenuContribution.Contentful.NestedMenuItem(
                 icon = null,
@@ -303,19 +323,12 @@ class UMLClass(
         return name.tfv.text
     }
 
-    fun org.eclipse.uml2.uml.Property.typeNameString(asBrackets: Boolean = true): String {
+    @Composable
+    fun TMM.ModelTree.Ecore.TProperty.typeNameString(asBrackets: Boolean = true): String {
         val t = this.type
-        val s = when (t) {
-            is PrimitiveTypeImpl -> {
-                t.toString().split("#").lastOrNull()?.removeSuffix(")")
-            }
-
-            is EnumerationImpl -> t.name ?: t.label
-            else -> "undefined"
-        }
         return when {
-            asBrackets -> "≪" + (s ?: "undefined") + "≫"
-            else -> ": " + (s ?: "undefined")
+            asBrackets -> "≪" + t.tfv.text + "≫"
+            else -> ": " + t.tfv.text
         }
     }
 
@@ -367,6 +380,7 @@ class UMLClass(
                 )
                 val vis = prop.visibilityChar()
                 val value: ValueSpecification? = prop.defaultValue
+                val tProperty = tmmProp?.target as TMM.ModelTree.Ecore.TProperty?
                 if (value != null) {
                     val valueStr = when (value) {
                         is LiteralInteger -> value?.value?.toString()
@@ -378,13 +392,13 @@ class UMLClass(
                         }
                     }
                     val str =
-                        prop.applicableStereotypes.toStereotypesString() + " $vis " + (tmmProp?.target as TMM.ModelTree.Ecore.TProperty?)?.labelOrName() + " " + prop.typeNameString(
+                        prop.applicableStereotypes.toStereotypesString() + " $vis " + tProperty?.labelOrName() + " " + tProperty?.typeNameString(
                             false
                         ) + " = " + valueStr
                     Text(text = str, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 } else {
                     val str =
-                        prop.applicableStereotypes.toStereotypesString() + " $vis " + (tmmProp?.target as TMM.ModelTree.Ecore.TProperty?)?.labelOrName() + " " + prop.typeNameString() + " [1]"
+                        prop.applicableStereotypes.toStereotypesString() + " $vis " + tProperty?.labelOrName() + " " + tProperty?.typeNameString() + " [1]"
                     Text(text = str, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 // TODO Multiplicity

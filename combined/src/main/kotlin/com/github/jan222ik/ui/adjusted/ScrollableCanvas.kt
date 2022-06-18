@@ -31,8 +31,6 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import com.github.jan222ik.model.TMM
-import com.github.jan222ik.model.notifications.Notification
-import com.github.jan222ik.model.notifications.Notifications
 import com.github.jan222ik.ui.adjusted.arrow.Arrow
 import com.github.jan222ik.ui.adjusted.helper.AlignmentHelper
 import com.github.jan222ik.ui.adjusted.helper.ElementDrawCalls.drawAlignmentLine
@@ -71,7 +69,8 @@ fun ScrollableCanvas(
     elements: List<ICanvasComposable>,
     arrows: List<Arrow>,
     projectTreeHandler: ProjectTreeHandler,
-    tmmDiagram: TMM.ModelTree.Diagram
+    tmmDiagram: TMM.ModelTree.Diagram,
+    helper: AlignmentHelper
 ) {
     val viewport = remember(viewportState) { viewportState }
     // Const
@@ -161,17 +160,27 @@ fun ScrollableCanvas(
                     dragOverRect = dragOverRect,
                 )
                 val scope = rememberCoroutineScope()
-                val boxes = remember(elements) { MutableStateFlow(elements.map { it.boundingShape }) }
-                val helper = remember(scope, boxes) { AlignmentHelper(scope, boxes.value) }
                 val lines = helper.alignmentLines.collectAsState()
                 val showContextMenu = remember { mutableStateOf<Offset?>(null) }
                 val windowScope = LocalWindowScope.current
                 val layoutPos = remember { mutableStateOf(Offset.Zero) }
+                val boxForArrow = remember { mutableStateOf<Arrow?>(null) }
 
                 fun handleClick(pointerEvent: PointerEvent, offset: Offset) {
+                    boxForArrow.value = null
                     if (pointerEvent.buttons.isPrimaryPressed) {
-                        SharedCommands.forceOpenProperties?.invoke()
-                        FileTree.treeHandler.value?.setTreeSelection(listOf(tmmDiagram))
+                        val clickedArrow = arrows.firstOrNull { it.boundingShape.value.containtsOffset(offset) }
+                        if (clickedArrow != null) {
+                            boxForArrow.value = clickedArrow
+                            val tmmArrow = projectTreeHandler.metamodelRoot?.findModellingElementOrNull(clickedArrow.data)?.target
+                            tmmArrow?.let {
+                                SharedCommands.forceOpenProperties?.invoke()
+                                FileTree.treeHandler.value?.setTreeSelection(listOf(tmmArrow))
+                            }
+                        } else {
+                            SharedCommands.forceOpenProperties?.invoke()
+                            FileTree.treeHandler.value?.setTreeSelection(listOf(tmmDiagram))
+                        }
                     } else {
                         if (pointerEvent.buttons.isSecondaryPressed) {
                             showContextMenu.value = pointerEvent.changes.last().position
@@ -329,11 +338,26 @@ fun ScrollableCanvas(
                                 DemoMenuContributions.arrowFrom.value?.let {
                                     val mousePosition = windowScope.window.mousePosition
                                     drawLine(
-                                        color = Color.Red, start = it.start.boundingShape.topLeft.value, end = Offset(
+                                        color = Color.Red,
+                                        start = it.start.boundingShape.topLeft.value,
+                                        end = Offset(
                                             mousePosition.x.toFloat(),
                                             mousePosition.y.toFloat()
                                         ).minus(layoutPos.value)
                                     )
+                                }
+
+                                boxForArrow.value?.let {
+                                    it.boundingShape.value.children.forEach {
+                                        it.drawWireframe(
+                                            this@drawWithContent,
+                                            fill = false,
+                                            color = EditorColors.focusActive,
+                                            showBox = true,
+                                            showText = false,
+                                            drawX = false
+                                        )
+                                    }
                                 }
 
 

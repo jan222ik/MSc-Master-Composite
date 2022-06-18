@@ -63,7 +63,7 @@ abstract class TreeDisplayableItem(
                 if (children.isEmpty()) {
                     onDoublePrimaryAction.invoke(com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext)
                 }
-                delay(150)
+                //delay(150)
                 children.onEach { it.expandAll() }
             }
         }

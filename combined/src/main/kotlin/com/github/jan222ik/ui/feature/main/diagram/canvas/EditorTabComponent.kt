@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -20,12 +21,12 @@ import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.ScrollableCanvas
 import com.github.jan222ik.ui.adjusted.arrow.Arrow
 import com.github.jan222ik.ui.adjusted.arrow.ArrowType
+import com.github.jan222ik.ui.adjusted.helper.AlignmentHelper
 import com.github.jan222ik.ui.components.dnd.DnDAction
 import com.github.jan222ik.ui.components.dnd.dndDropTarget
 import com.github.jan222ik.ui.components.menu.DemoMenuContributions
 import com.github.jan222ik.ui.feature.LocalCommandStackHandler
 import com.github.jan222ik.ui.feature.LocalDropTargetHandler
-import com.github.jan222ik.ui.feature.SharedCommands
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.feature.main.tree.FileTree
 import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
@@ -33,6 +34,7 @@ import com.github.jan222ik.ui.uml.Anchor
 import com.github.jan222ik.ui.uml.AnchorSide
 import com.github.jan222ik.ui.uml.UMLClass
 import com.github.jan222ik.ui.uml.UMLClassFactory
+import kotlinx.coroutines.launch
 import mu.KLogger
 import mu.KLogging
 import mu.NamedKLogging
@@ -59,9 +61,18 @@ fun EditorTabComponent(stateOut: EditorTabViewModel, projectTreeHandler: Project
             state, logger, commandStackHandler, projectTreeHandler
         )
 
+        val scope = rememberCoroutineScope()
         val observableDiagram = remember(state, state.id, state.observableDiagram) { state.observableDiagram }
         val arrows = observableDiagram.arrows
         val elements = observableDiagram.elements
+        val helper = remember(scope) { AlignmentHelper(scope) }
+
+        remember(state, state.id, observableDiagram.elements.count()) {
+            println("Update elements")
+            scope.launch {
+                helper.boundingBoxes.emit(observableDiagram.elements.map { it.boundingShape })
+            }
+        }
         state.id.let { id ->
             ScrollableCanvas(
                 id = id,
@@ -73,7 +84,8 @@ fun EditorTabComponent(stateOut: EditorTabViewModel, projectTreeHandler: Project
                 elements = elements,
                 arrows = arrows,
                 projectTreeHandler = projectTreeHandler,
-                tmmDiagram = state.tmmDiagram
+                tmmDiagram = state.tmmDiagram,
+                helper
             )
         }
         NavigateDiagramUPButton(
@@ -136,16 +148,18 @@ class DNDEditorActions(
             if (special != null && general != null) {
                 val initSourceAnchor = Anchor(AnchorSide.N, 0.5f)
                 val initTargetAnchor = Anchor(AnchorSide.S, 0.5f)
+                val fourPointArrowOffsetPath = Arrow.fourPointArrowOffsetPath(
+                    sourceBoundingShape = special.boundingShape,
+                    targetBoundingShape = general.boundingShape,
+                    sourceAnchor = initSourceAnchor,
+                    targetAnchor = initTargetAnchor
+                )
                 val arrow = Arrow(
                     initArrowType = ArrowType.GENERALIZATION,
                     initSourceAnchor = initSourceAnchor,
                     initTargetAnchor = initSourceAnchor,
-                    initOffsetPath = Arrow.fourPointArrowOffsetPath(
-                        sourceBoundingShape = special.boundingShape,
-                        targetBoundingShape = general.boundingShape,
-                        sourceAnchor = initSourceAnchor,
-                        targetAnchor = initTargetAnchor
-                    ),
+                    initOffsetPath = fourPointArrowOffsetPath.first,
+                    initBoundingShape = fourPointArrowOffsetPath.second,
                     data = data,
                     initSourceBoundingShape = special.boundingShape,
                     initTargetBoundingShape = general.boundingShape,

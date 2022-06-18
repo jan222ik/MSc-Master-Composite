@@ -9,40 +9,39 @@ import com.github.jan222ik.ui.adjusted.BoundingRect
 import com.github.jan222ik.ui.adjusted.IBoundingShape
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class AlignmentHelper(
-    val scope: CoroutineScope,
-    val boundingBoxes: List<IBoundingShape>,
+    val scope: CoroutineScope
 ) {
-    val verticalLines: MutableList<Pair<AlignmentLine.Vertical, IBoundingShape>> = mutableListOf()
-    val horizontalLines: MutableList<Pair<AlignmentLine.Horizontal, IBoundingShape>> = mutableListOf()
-
     val alignmentLines: MutableStateFlow<List<Pair<AlignmentLine, IBoundingShape>>> = MutableStateFlow(emptyList())
 
     val movingBox: MutableStateFlow<IBoundingShape?> = MutableStateFlow(null)
-    val moveDirection: MutableStateFlow<AlignmentMoveDirection.Combined> = MutableStateFlow(AlignmentMoveDirection.Combined.NONE)
+    private val moveDirection: MutableStateFlow<AlignmentMoveDirection.Combined> = MutableStateFlow(AlignmentMoveDirection.Combined.NONE)
 
-    init {
-        boundingBoxes.forEach { box ->
-            verticalLines += box.getVerticalAlignmentLines().map { it to box }
-            horizontalLines += box.getHorizontalAlignmentLines().map { it to box }
-        }
-    }
+    val boundingBoxes: MutableStateFlow<List<IBoundingShape>> = MutableStateFlow(emptyList())
+
 
     fun onPointerChange(
         offset: Offset,
     ) {
         val direction: AlignmentMoveDirection.Combined = moveDirection.value
         val movingBoxVal = movingBox.value ?: return
+
+        val nonMovingBoxes = boundingBoxes.value.filterNot { it == movingBoxVal }
+        val horizontalLines = nonMovingBoxes
+            .flatMap { box -> box.getHorizontalAlignmentLines().map { it to box } }
+
+        val verticalLines = nonMovingBoxes
+            .flatMap { box -> box.getVerticalAlignmentLines().map { it to box } }
+
         val horizontalDirectMatches = horizontalLines
-            .filter { it.second == movingBoxVal }
             .associateBy { it.first.absoluteDifferenceTo(movingBoxVal) }
             .filter { it.key < 5 }
 
 
         val verticalDirectMatches = verticalLines
-            .filter { it.second == movingBoxVal }
             .associateBy { it.first.absoluteDifferenceTo(movingBoxVal) }
             .filter { it.key < 5 }
 

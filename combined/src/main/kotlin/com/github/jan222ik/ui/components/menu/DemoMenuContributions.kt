@@ -22,6 +22,7 @@ import com.github.jan222ik.ui.feature.main.tree.ModelTreeItem
 import com.github.jan222ik.ui.uml.DiagramStateHolders
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicInteger
 
 object DemoMenuContributions {
     fun links(hasLink: Boolean): MenuContribution.Contentful {
@@ -51,7 +52,7 @@ object DemoMenuContributions {
 
 
     @OptIn(ExperimentalFoundationApi::class)
-    fun diagramContributionsFor(item: ModelTreeItem): MenuContribution.Contentful {
+    fun diagramContributionsFor(item: ModelTreeItem, onDismiss: () -> Unit): MenuContribution.Contentful {
         val isPackage = item is ModelTreeItem.PackageItem
         val isBlock = item is ModelTreeItem.ClassItem
         fun DiagramType.menuContribution(): MenuContribution.Contentful.MenuItem {
@@ -60,7 +61,8 @@ object DemoMenuContributions {
                 displayName = name,
                 command = CreateDiagramCommand(
                     rootTMM = item.tmmModelItem,
-                    diagramType = this
+                    diagramType = this,
+                    onDismiss = onDismiss
                 )
             )
         }
@@ -83,10 +85,11 @@ object DemoMenuContributions {
         )
     }
 
+    val counter = AtomicInteger(0)
     fun createUMLClassInTMMDiagram(tmmDiagram: TMM.ModelTree.Diagram, inDiagramOffset: Offset?, state: EditorTabViewModel?): TMM.ModelTree.Ecore.TClass {
         val commandStackHandler = CommandStackHandler.INSTANCE
         val newTmm = tmmDiagram.closestPackage().createOwnedClass(
-            name = "Block",
+            name = "Block${counter.getAndIncrement()}",
             isAbstract = false
         )
         if (inDiagramOffset != null && state != null) {
@@ -134,7 +137,7 @@ object DemoMenuContributions {
         )
     }
 
-    fun addProperty(tmmClass: TMM.ModelTree.Ecore.TClass): MenuContribution {
+    fun addProperty(tmmClass: TMM.ModelTree.Ecore.TClass, onDismiss: () -> Unit): MenuContribution {
         return MenuContribution.Contentful.MenuItem(
             icon = DrawableIcon.Property,
             displayName = "Add property",
@@ -143,6 +146,7 @@ object DemoMenuContributions {
 
                 override suspend fun execute(handler: JobHandler) {
                     val createOwnedProperty = tmmClass.createOwnedProperty()
+                    onDismiss.invoke()
                 }
 
                 override fun canUndo(): Boolean = false
@@ -151,6 +155,7 @@ object DemoMenuContributions {
 
                 }
 
+                override fun pushToStack(): Boolean = false
             }
         )
     }
