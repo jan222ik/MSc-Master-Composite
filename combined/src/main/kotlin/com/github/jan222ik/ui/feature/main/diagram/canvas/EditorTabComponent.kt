@@ -57,9 +57,9 @@ fun EditorTabComponent(stateOut: EditorTabViewModel, projectTreeHandler: Project
             .clipToBounds()
     ) {
         val dropHandler = LocalDropTargetHandler.current
-        val dndActions = DNDEditorActions(
+        val dndActions = remember(state.id) {  DNDEditorActions(
             state, logger, commandStackHandler, projectTreeHandler
-        )
+        )}
 
         val scope = rememberCoroutineScope()
         val observableDiagram = remember(state, state.id, state.observableDiagram) { state.observableDiagram }
@@ -146,8 +146,9 @@ class DNDEditorActions(
                 )
             }
             if (special != null && general != null) {
-                val initSourceAnchor = Anchor(AnchorSide.N, 0.5f)
-                val initTargetAnchor = Anchor(AnchorSide.S, 0.5f)
+                val (initSourceAnchor, initTargetAnchor) = Arrow.findIdealAnchors(special.boundingShape, general.boundingShape)
+                //val initSourceAnchor = Anchor(AnchorSide.N, 0.5f)
+                //val initTargetAnchor = Anchor(AnchorSide.S, 0.5f)
                 val fourPointArrowOffsetPath = Arrow.fourPointArrowOffsetPath(
                     sourceBoundingShape = special.boundingShape,
                     targetBoundingShape = general.boundingShape,

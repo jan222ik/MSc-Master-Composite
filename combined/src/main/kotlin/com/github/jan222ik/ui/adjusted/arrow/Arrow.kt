@@ -12,9 +12,11 @@ import androidx.compose.ui.graphics.nativeCanvas
 import com.github.jan222ik.model.TMM
 import com.github.jan222ik.ui.adjusted.BoundingRect
 import com.github.jan222ik.ui.adjusted.CompoundBoundingShape
+import com.github.jan222ik.ui.adjusted.IBoundingShape
 import com.github.jan222ik.ui.adjusted.util.translate
 import com.github.jan222ik.ui.feature.main.tree.FileTree
 import com.github.jan222ik.ui.uml.Anchor
+import com.github.jan222ik.ui.uml.AnchorSide
 import com.github.jan222ik.ui.uml.DiagramStateHolders
 import org.eclipse.uml2.uml.Association
 import org.eclipse.uml2.uml.Relationship
@@ -54,8 +56,15 @@ class Arrow(
             }
 
             val halfHeightTween = abs(max(start.y, target.y) - min(start.y, target.y)).div(2)
-            val inlineStart = Offset(x = start.x, y = start.y - halfHeightTween)
-            val inlineTarget = Offset(x = target.x, y = target.y + halfHeightTween)
+            val isVerticalDirect = halfHeightTween < 3f
+            println("sourceAnchor = [${sourceAnchor}], targetAnchor = [${targetAnchor}], sourceBoundingShape = [${sourceBoundingShape}], targetBoundingShape = [${targetBoundingShape}]")
+            println("isVerticalDirect = ${isVerticalDirect}")
+            println("halfHeightTween = ${halfHeightTween}")
+            println("start = ${start}, target = ${target}")
+            val halfHorizontal = min(start.x, target.x) + (abs(start.x - target.x)).div(2)
+            println("halfHorizontal = ${halfHorizontal}")
+            val inlineStart = Offset(x = start.x.takeUnless { isVerticalDirect } ?: halfHorizontal, y = start.y - halfHeightTween)
+            val inlineTarget = Offset(x = target.x.takeUnless { isVerticalDirect } ?: halfHorizontal, y = target.y + halfHeightTween)
 
             val horizontalTopLeftRef = when {
                 inlineStart.x < inlineTarget.x -> inlineStart
@@ -84,7 +93,79 @@ class Arrow(
                 )
             )
 
-            return listOf<Offset>(start, inlineStart, inlineTarget, target) to compoundBoundingShape
+            val path = listOf<Offset>(start, inlineStart, inlineTarget, target)
+            println("path = ${path}")
+            return path to compoundBoundingShape
+        }
+
+        fun findIdealAnchors(
+            firstBoundingShape: IBoundingShape,
+            secondBoundingShape: IBoundingShape,
+        ) : Pair<Anchor, Anchor> {
+            val s = Anchor(AnchorSide.S, 0.5f)
+            val e = Anchor(AnchorSide.E, 0.5f)
+            val w = Anchor(AnchorSide.W, 0.5f)
+            val n = Anchor(AnchorSide.N, 0.5f)
+            val shapes = listOf(firstBoundingShape, secondBoundingShape)
+            val higherShape = shapes.minByOrNull { it.topLeft.value.y }!!
+            val lowerShape = shapes.maxByOrNull { it.topLeft.value.y }!!
+
+            val leftestShape = shapes.minByOrNull { it.topLeft.value.x }!!
+            val rightestShape = shapes.maxByOrNull { it.topLeft.value.x }!!
+
+            val higherShapeBottomLeft = higherShape.topLeft.value + Offset(x = 0f, y = higherShape.height.value)
+
+            val verticalDiff = higherShapeBottomLeft.y - lowerShape.topLeft.value.y
+            val hasVerticalOverlap = verticalDiff >= 0
+
+            val lefterShapeTopRight = higherShape.topLeft.value + Offset(x = 0f, y = higherShape.height.value)
+            val horizontalDiff = lefterShapeTopRight.x -rightestShape.topLeft.value.x
+            val hasHorizontalOverlap = horizontalDiff <= 0
+
+            println("hasVerticalOverlap = ${hasVerticalOverlap}, hasHorizontalOverlap = ${hasHorizontalOverlap}")
+
+            if (!hasVerticalOverlap) {
+                if (hasHorizontalOverlap) {
+                    // the objects are over each other in the diagram
+                    return Pair(
+                        first = if (higherShape == firstBoundingShape) s else n,
+                        second = if (lowerShape == secondBoundingShape) n else s
+                    )
+                } else {
+                    return if (leftestShape == higherShape) {
+                        Pair(
+                            first = if (leftestShape == firstBoundingShape) s else w,
+                            second = if (rightestShape == secondBoundingShape) w else s
+                        )
+                    } else {
+                        // aka. rightestShape == higherShape
+                        Pair(
+                            first = if (rightestShape == firstBoundingShape) s else e,
+                            second = if (leftestShape == secondBoundingShape) e else s
+                        )
+                    }
+                }
+            } else {
+                // The lower shape is higher than the bottom of the higher shape
+                if (verticalDiff > shapes.minOf { it.height.value }.times(0.5f)) {
+                    return Pair(
+                        first = if (leftestShape == firstBoundingShape) e else w,
+                        second = if (rightestShape == secondBoundingShape) w else e
+                    )
+                }
+                return if (leftestShape == higherShape) {
+                    Pair(
+                        first = if (leftestShape == firstBoundingShape) s else w,
+                        second = if (rightestShape == secondBoundingShape) w else s
+                    )
+                } else {
+                    // aka. rightestShape == higherShape
+                    Pair(
+                        first = if (rightestShape == firstBoundingShape) s else e,
+                        second = if (leftestShape == secondBoundingShape) e else s
+                    )
+                }
+            }
         }
     }
 
@@ -102,6 +183,7 @@ class Arrow(
     fun DrawScope.drawArrow(drawDebugPoints: Boolean = true) {
         val color = Color.Black
         val windowed = offsetPath.value.windowed(size = 2)
+        val debugColors = listOf(Color.Magenta, Color.Green, Color.Yellow)
         windowed
             .forEachIndexed { index, offsets ->
                 val start = offsets.first()
@@ -111,7 +193,7 @@ class Arrow(
                     if (index == 0) {
                         drawCircle(Color.Red, radius = 2f, center = start)
                     }
-                    drawCircle(Color.Red, radius = 2f, center = end)
+                    drawCircle(debugColors[index.rem(debugColors.size)], radius = 8f.minus(index.times(2)), center = end)
                 }
                 if (index == 0) {
                     if (member0ArrowTypeOverride != null || member1ArrowTypeOverride != DiagramStateHolders.UMLRef.ArrowRef.AssocRef.Aggregation.NONE) {

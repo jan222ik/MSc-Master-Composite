@@ -78,21 +78,14 @@ class UMLClass(
                         DemoMenuContributions.arrowFrom.value?.let { data ->
                             val other = data.start as UMLClass
                             val thisY = this@UMLClass.boundingShape.topLeft.value.y
-                            val sAnchor = Anchor(
-                                side = AnchorSide.S,
-                                fromTopLeftOffsetPercentage = 0.5f
-                            )
-                            val nAnchor = Anchor(
-                                side = AnchorSide.N,
-                                fromTopLeftOffsetPercentage = 0.5f
+
+
+                            val (initSourceAnchor, initTargetAnchor) = Arrow.findIdealAnchors(
+                                other.boundingShape,
+                                this@UMLClass.boundingShape
                             )
 
-                            val initTargetAnchor = if (thisY > other.boundingShape.topLeft.value.y) {
-                                nAnchor
-                            } else sAnchor
-                            val initSourceAnchor = if (thisY <= other.boundingShape.topLeft.value.y) {
-                                nAnchor
-                            } else sAnchor
+
 
                             val arrowLowerYShape = other.boundingShape.takeUnless { it.topLeft.value.y > thisY } ?: boundingShape
                             val arrowHigherYShape =  other.boundingShape.takeUnless { it.topLeft.value.y < thisY } ?: boundingShape
@@ -116,12 +109,10 @@ class UMLClass(
                                 )
                             }
                             val fourPointArrowOffsetPath = Arrow.fourPointArrowOffsetPath(
-                                sourceAnchor = initSourceAnchor.takeUnless { arrowHigherYShape == boundingShape }
-                                    ?: initTargetAnchor,
-                                targetAnchor = initTargetAnchor.takeUnless { arrowHigherYShape == boundingShape }
-                                    ?: initSourceAnchor,
-                                sourceBoundingShape = arrowHigherYShape,
-                                targetBoundingShape = arrowLowerYShape
+                                sourceAnchor = initSourceAnchor,
+                                targetAnchor = initTargetAnchor,
+                                sourceBoundingShape = other.boundingShape,
+                                targetBoundingShape = boundingShape
                             )
                             val arrow = Arrow(
                                 initArrowType = data.type,
