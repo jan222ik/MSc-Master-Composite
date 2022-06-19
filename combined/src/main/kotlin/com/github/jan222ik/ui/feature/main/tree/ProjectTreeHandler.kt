@@ -36,9 +36,7 @@ import com.github.jan222ik.model.TMMPath
 import com.github.jan222ik.ui.components.dnd.dndDraggable
 import com.github.jan222ik.ui.components.menu.MenuContribution
 import com.github.jan222ik.ui.components.menu.MenuItemList
-import com.github.jan222ik.ui.feature.LocalDropTargetHandler
-import com.github.jan222ik.ui.feature.LocalJobHandler
-import com.github.jan222ik.ui.feature.LocalShortcutActionHandler
+import com.github.jan222ik.ui.feature.*
 import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.feature.main.keyevent.EmptyClickContext
 import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
@@ -145,11 +143,22 @@ class ProjectTreeHandler(
         val lazyListState = rememberLazyListState()
         val scrollbarAdapter = rememberScrollbarAdapter(scrollState = lazyListState)
 
+        val windowScope = LocalWindowScope.current
 
         contextMenuFor?.let {
             val (popupPosProvider, menuContributions) = it
             Popup(
-                popupPositionProvider = popupPosProvider,
+                popupPositionProvider = object : PopupPositionProvider {
+                    override fun calculatePosition(
+                        anchorBounds: IntRect,
+                        windowSize: IntSize,
+                        layoutDirection: LayoutDirection,
+                        popupContentSize: IntSize
+                    ): IntOffset {
+                        return windowScope.window.mousePosition.let { IntOffset(x = it.x, y = it.y) }
+                    }
+
+                },
                 onDismissRequest = { contextMenuFor = null },
                 onPreviewKeyEvent = { KeyHelpers.onKeyDown(it) { consumeOnKey(Key.Escape) { contextMenuFor = null } } },
                 focusable = true

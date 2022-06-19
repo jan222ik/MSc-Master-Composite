@@ -206,8 +206,7 @@ fun ScrollableCanvas(
                                 layoutDirection: LayoutDirection,
                                 popupContentSize: IntSize
                             ): IntOffset {
-                                return showContextMenu.value?.round()
-                                    ?.let { it.copy(y = it.y + popupContentSize.height) } ?: IntOffset.Zero
+                                return (showContextMenu.value?.round()?.let { it.copy(y = it.y - 10) } ?: IntOffset.Zero).plus(anchorBounds.topLeft)
                             }
 
                         }

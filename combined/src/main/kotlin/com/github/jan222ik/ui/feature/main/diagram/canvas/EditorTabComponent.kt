@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.toOffset
 import androidx.compose.ui.util.packFloats
 import com.github.jan222ik.model.command.CommandStackHandler
 import com.github.jan222ik.model.command.commands.CompoundCommand
+import com.github.jan222ik.model.notifications.Notification
+import com.github.jan222ik.model.notifications.Notifications
 import com.github.jan222ik.ui.adjusted.BoundingRectState
 import com.github.jan222ik.ui.adjusted.ScrollableCanvas
 import com.github.jan222ik.ui.adjusted.arrow.Arrow
@@ -34,6 +36,8 @@ import com.github.jan222ik.ui.uml.Anchor
 import com.github.jan222ik.ui.uml.AnchorSide
 import com.github.jan222ik.ui.uml.UMLClass
 import com.github.jan222ik.ui.uml.UMLClassFactory
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import mu.KLogger
 import mu.KLogging
@@ -180,6 +184,9 @@ class DNDEditorActions(
                 }
 
                 else -> {
+                    CoroutineScope(SupervisorJob()).launch {
+                        Notifications.addNotification(Notification("Not Implemented", "The drop action of create '$data' is not implemented yet.", 3000L))
+                    }
                     logger.warn { "Unknown drag and drop of string data $data" }
                     false
                 }

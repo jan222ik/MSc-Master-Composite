@@ -10,11 +10,15 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.jan222ik.ui.components.dnd.dndDraggable
+import com.github.jan222ik.ui.components.menu.DrawableIcon
 import com.github.jan222ik.ui.feature.LocalDropTargetHandler
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
+import com.github.jan222ik.ui.value.Space
 
 @Composable
 fun PaletteView(activeEditorTab: EditorTabViewModel) {
@@ -41,22 +45,46 @@ fun PaletteView(activeEditorTab: EditorTabViewModel) {
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             categories.forEach {
+
                 Column {
-                    Text(it.name, style = LocalTextStyle.current.copy(fontSize = LocalTextStyle.current.fontSize.value.plus(2f).sp))
-                    it.options.forEach {
-                        Row(
-                            modifier = Modifier.dndDraggable(
-                                handler = dndHandler,
-                                dataProvider = { it.name },
-                                onDragCancel = { snapBack -> snapBack.invoke() },
-                                onDragFinished = { _, snapBack -> snapBack.invoke() }
-                            )
-                        ) {
-                            val img = remember(it) { it.imageBitmapNotRemembered }
-                            img?.let {
-                                Icon(bitmap = img, contentDescription = null)
+                    Text(
+                        it.name,
+                        style = LocalTextStyle.current.copy(fontSize = LocalTextStyle.current.fontSize.value.plus(2f).sp)
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(Space.dp16)
+                    ) {
+                        it.columns.forEach { it ->
+                            Column {
+                                it.forEach {
+                                    Row(
+                                        modifier = Modifier.dndDraggable(
+                                            handler = dndHandler,
+                                            dataProvider = { it.name },
+                                            onDragCancel = { snapBack -> snapBack.invoke() },
+                                            onDragFinished = { _, snapBack -> snapBack.invoke() }
+                                        ),
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        when (it.icon) {
+                                            is DrawableIcon.viaImgVector -> Icon(
+                                                imageVector = it.icon.vector,
+                                                contentDescription = null,
+                                                tint = Color.Unspecified
+                                            )
+
+                                            is DrawableIcon.viaPainterConstruction -> Icon(
+                                                painter = it.icon.painter(),
+                                                contentDescription = null,
+                                                tint = Color.Unspecified
+                                            )
+
+                                            null -> Unit
+                                        }
+                                        Text(it.name)
+                                    }
+                                }
                             }
-                            Text(it.name)
                         }
                     }
                 }
