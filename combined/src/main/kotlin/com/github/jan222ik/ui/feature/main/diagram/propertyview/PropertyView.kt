@@ -333,7 +333,7 @@ data class MemberEnd(
                 StingBasedInput(
                     isReadOnly = true,
                     propViewElement = DescriptiveElements.name,
-                    initialValue = data.association.memberEnds[0].name,
+                    initialValue = data.association.memberEnds[idx].name,
                     focusRequester = fReqSelf,
                     focusOrderReceiver = {
                         // TODO

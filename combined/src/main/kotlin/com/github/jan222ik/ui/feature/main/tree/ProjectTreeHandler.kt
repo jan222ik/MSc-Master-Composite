@@ -1,4 +1,6 @@
-@file:OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class)
+@file:OptIn(ExperimentalComposeUiApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class,
+    ExperimentalComposeUiApi::class
+)
 
 package com.github.jan222ik.ui.feature.main.tree
 
@@ -49,7 +51,6 @@ import java.io.InvalidClassException
 import java.util.concurrent.atomic.AtomicInteger
 
 
-@OptIn(ExperimentalFoundationApi::class)
 class ProjectTreeHandler(
     private val showRoot: Boolean,
     val metamodelRoot: TMM.FS

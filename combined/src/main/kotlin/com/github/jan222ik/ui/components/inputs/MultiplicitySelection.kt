@@ -50,9 +50,11 @@ fun MultiplicitySelection(
                 }
             }
         }
-        Icon(
-            imageVector = Icons.Filled.SwitchLeft,
-            contentDescription = "Switch multiplicity selection",
-            modifier = Modifier.clickable { isSimple = !isSimple })
+        if (!hideOtherSwitch) {
+            Icon(
+                imageVector = Icons.Filled.SwitchLeft,
+                contentDescription = "Switch multiplicity selection",
+                modifier = Modifier.clickable { isSimple = !isSimple })
+        }
     }
 }
