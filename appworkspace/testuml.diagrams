@@ -86,7 +86,7 @@
     },
     "targetAnchor" : {
       "side" : "S",
-      "fromTopLeftOffsetPercentage" : 0.33
+      "fromTopLeftOffsetPercentage" : 0.5
     }
   }, {
     "type" : "UMLRef.ArrowRef.General",
@@ -99,7 +99,7 @@
     },
     "targetAnchor" : {
       "side" : "S",
-      "fromTopLeftOffsetPercentage" : 0.66
+      "fromTopLeftOffsetPercentage" : 0.5
     }
   }, {
     "type" : "UMLRef.ComposableRef.ClassRef",
@@ -142,7 +142,7 @@
     },
     "targetAnchor" : {
       "side" : "S",
-      "fromTopLeftOffsetPercentage" : 0.33
+      "fromTopLeftOffsetPercentage" : 0.5
     }
   }, {
     "type" : "UMLRef.ArrowRef.General",
@@ -155,7 +155,7 @@
     },
     "targetAnchor" : {
       "side" : "S",
-      "fromTopLeftOffsetPercentage" : 0.66
+      "fromTopLeftOffsetPercentage" : 0.5
     }
   }, {
     "type" : "UMLRef.ComposableRef.ClassRef",
@@ -198,7 +198,7 @@
     },
     "targetAnchor" : {
       "side" : "S",
-      "fromTopLeftOffsetPercentage" : 0.33
+      "fromTopLeftOffsetPercentage" : 0.5
     }
   }, {
     "type" : "UMLRef.ArrowRef.General",
@@ -211,7 +211,7 @@
     },
     "targetAnchor" : {
       "side" : "S",
-      "fromTopLeftOffsetPercentage" : 0.66
+      "fromTopLeftOffsetPercentage" : 0.5
     }
   }, {
     "type" : "UMLRef.ComposableRef.ClassRef",
@@ -254,7 +254,7 @@
     },
     "targetAnchor" : {
       "side" : "S",
-      "fromTopLeftOffsetPercentage" : 0.33
+      "fromTopLeftOffsetPercentage" : 0.5
     }
   }, {
     "type" : "UMLRef.ArrowRef.General",
@@ -267,7 +267,7 @@
     },
     "targetAnchor" : {
       "side" : "S",
-      "fromTopLeftOffsetPercentage" : 0.66
+      "fromTopLeftOffsetPercentage" : 0.5
     }
   }, {
     "type" : "UMLRef.ComposableRef.ClassRef",
@@ -310,7 +310,7 @@
     },
     "targetAnchor" : {
       "side" : "S",
-      "fromTopLeftOffsetPercentage" : 0.33
+      "fromTopLeftOffsetPercentage" : 0.5
     }
   }, {
     "type" : "UMLRef.ArrowRef.General",
@@ -323,7 +323,7 @@
     },
     "targetAnchor" : {
       "side" : "S",
-      "fromTopLeftOffsetPercentage" : 0.66
+      "fromTopLeftOffsetPercentage" : 0.5
     }
   }, {
     "type" : "UMLRef.ComposableRef.ClassRef",

@@ -164,7 +164,7 @@ object PcSystemDiagrams {
         general: String,
         specification1: String,
         specification2: String,
-        anchorOffsetsAtGeneral: Long = packFloats(0.33f, 0.66f),
+        anchorOffsetsAtGeneral: Long = packFloats(0.5f, 0.5f),
         spaceTween: Float = d64,
         width: Float = d256 - d32,
         height: Float = d128,
