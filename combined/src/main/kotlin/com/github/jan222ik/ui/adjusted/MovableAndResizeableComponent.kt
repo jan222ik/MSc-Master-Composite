@@ -152,7 +152,8 @@ abstract class MovableAndResizeableComponent(
                     .onPointerEvent(PointerEventType.Exit) { hover = false },
                 shape = RectangleShape,
                 elevation = movableBaseUI.cardElevation,
-                backgroundColor = movableBaseUI.cardBackground.takeUnless { it == Color.Unspecified } ?: MaterialTheme.colors.surface
+                backgroundColor = movableBaseUI.cardBackground.takeUnless { it == Color.Unspecified }
+                    ?: MaterialTheme.colors.surface
             ) {
                 if (showContextMenu.value) {
                     Popup(
@@ -182,24 +183,55 @@ abstract class MovableAndResizeableComponent(
                 content(projectTreeHandler, helper)
             }
             if (EditorManager.allowEdit.value) {
+                fun onDragStart() {
+                    scope.launch {
+                        helper.movingBox.emit(boundingShape)
+                    }
+                }
+
+                fun onDragEnd() {
+                    helper.clear()
+                }
                 ResizeHandle(
                     alignment = Alignment.TopCenter,
                     isHorizontal = false,
                     onDrag = { _, drag ->
                         boundingShape.addHeight(-drag); boundingShape.addY(drag)
-                    })
+                        helper.onPointerChange(boundingShape.topLeft.value)
+                    },
+                    onDragStart = ::onDragStart,
+                    onDragEnd = ::onDragEnd
+                )
                 ResizeHandle(
                     alignment = Alignment.BottomEnd,
                     isHorizontal = false,
-                    onDrag = { _, drag -> boundingShape.addHeight(drag) })
+                    onDrag = { _, drag ->
+                        boundingShape.addHeight(drag)
+                        helper.onPointerChange(boundingShape.topLeft.value)
+                    },
+                    onDragStart = ::onDragStart,
+                    onDragEnd = ::onDragEnd
+                )
                 ResizeHandle(
                     alignment = Alignment.CenterStart,
                     isHorizontal = true,
-                    onDrag = { _, drag -> boundingShape.addWidth(-drag); boundingShape.addX(drag) })
+                    onDrag = { _, drag ->
+                        boundingShape.addWidth(-drag); boundingShape.addX(drag)
+                        helper.onPointerChange(boundingShape.topLeft.value)
+                    },
+                    onDragStart = ::onDragStart,
+                    onDragEnd = ::onDragEnd
+                )
                 ResizeHandle(
                     alignment = Alignment.CenterEnd,
                     isHorizontal = true,
-                    onDrag = { _, drag -> boundingShape.addWidth(drag) })
+                    onDrag = { _, drag ->
+                        boundingShape.addWidth(drag)
+                        helper.onPointerChange(boundingShape.topLeft.value)
+                    },
+                    onDragStart = ::onDragStart,
+                    onDragEnd = ::onDragEnd
+                )
                 DiagonalResizeHandle(
                     alignment = Alignment.TopStart,
                     onDrag = { _, drag ->
@@ -207,7 +239,10 @@ abstract class MovableAndResizeableComponent(
                         boundingShape.addX(drag.x)
                         boundingShape.addHeight(-drag.y)
                         boundingShape.addY(drag.y)
-                    }
+                        helper.onPointerChange(boundingShape.topLeft.value)
+                    },
+                    onDragStart = ::onDragStart,
+                    onDragEnd = ::onDragEnd
                 )
                 DiagonalResizeHandle(
                     alignment = Alignment.TopEnd,
@@ -215,7 +250,10 @@ abstract class MovableAndResizeableComponent(
                         boundingShape.addWidth(drag.x)
                         boundingShape.addHeight(-drag.y)
                         boundingShape.addY(drag.y)
-                    }
+                        helper.onPointerChange(boundingShape.topLeft.value)
+                    },
+                    onDragStart = ::onDragStart,
+                    onDragEnd = ::onDragEnd
                 )
                 DiagonalResizeHandle(
                     alignment = Alignment.BottomStart,
@@ -223,14 +261,20 @@ abstract class MovableAndResizeableComponent(
                         boundingShape.addWidth(-drag.x)
                         boundingShape.addX(drag.x)
                         boundingShape.addHeight(drag.y)
-                    }
+                        helper.onPointerChange(boundingShape.topLeft.value)
+                    },
+                    onDragStart = ::onDragStart,
+                    onDragEnd = ::onDragEnd
                 )
                 DiagonalResizeHandle(
                     alignment = Alignment.BottomEnd,
                     onDrag = { _, drag ->
                         boundingShape.addWidth(drag.x)
                         boundingShape.addHeight(drag.y)
-                    }
+                        helper.onPointerChange(boundingShape.topLeft.value)
+                    },
+                    onDragStart = ::onDragStart,
+                    onDragEnd = ::onDragEnd
                 )
             }
         }
@@ -240,6 +284,8 @@ abstract class MovableAndResizeableComponent(
     fun BoxScope.ResizeHandle(
         alignment: Alignment,
         isHorizontal: Boolean,
+        onDragStart: () -> Unit,
+        onDragEnd: () -> Unit,
         onDrag: (change: PointerInputChange, dragAmount: Float) -> Unit
     ) {
         val sizeModifier =
@@ -256,8 +302,10 @@ abstract class MovableAndResizeableComponent(
                             onHorizontalDrag = onDrag,
                             onDragStart = {
                                 preMoveOrResize = boundingShape.toState()
+                                onDragStart.invoke()
                             },
                             onDragEnd = {
+                                onDragEnd.invoke()
                                 onNextUIConfig(
                                     this@MovableAndResizeableComponent,
                                     preMoveOrResize,
@@ -270,8 +318,10 @@ abstract class MovableAndResizeableComponent(
                             onVerticalDrag = onDrag,
                             onDragStart = {
                                 preMoveOrResize = boundingShape.toState()
+                                onDragStart.invoke()
                             },
                             onDragEnd = {
+                                onDragEnd.invoke()
                                 onNextUIConfig(
                                     this@MovableAndResizeableComponent,
                                     preMoveOrResize,
@@ -288,13 +338,15 @@ abstract class MovableAndResizeableComponent(
     @Composable
     fun BoxScope.DiagonalResizeHandle(
         alignment: Alignment,
+        onDragStart: () -> Unit,
+        onDragEnd: () -> Unit,
         onDrag: (change: PointerInputChange, dragAmount: Offset) -> Unit
     ) {
         Box(
             Modifier.align(alignment)
                 .size(resizeAreaExpandSize)
                 .pointerInput(Unit) {
-                    detectDragGestures(onDrag = onDrag)
+                    detectDragGestures(onDrag = onDrag, onDragStart = { onDragStart.invoke() }, onDragEnd = onDragEnd)
                 }
                 .cursorForDiagonalResize(alignment == Alignment.TopStart || alignment == Alignment.BottomEnd)
         )

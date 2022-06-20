@@ -22,8 +22,16 @@ import com.theapache64.cyclone.core.Intent
 import de.comahe.i18n4k.Locale
 import de.comahe.i18n4k.config.I18n4kConfigDefault
 import de.comahe.i18n4k.i18n4k
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import mu.KLogging
 import java.awt.GraphicsEnvironment
+import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
+import java.awt.event.MouseMotionListener
+import java.awt.event.MouseWheelEvent
+import java.awt.event.MouseWheelListener
 import java.io.File
 import java.util.prefs.Preferences
 
@@ -112,8 +120,16 @@ class MainActivity : Activity() {
                     compoundCollector.save()
                 }
             }
+            var counter = 3
             Window(
-                onCloseRequest = ::exitApplication,
+                onCloseRequest = {
+                    compoundCollector.save()
+                    if (counter == 0) {
+                        exitApplication()
+                    } else {
+                        counter -= 1
+                    }
+                },
                 title = "${App.appArgs.appName} (${App.appArgs.version})",
                 icon = painterResource("drawables/launcher_icons/system.png"),
                 state = windowState,
@@ -121,6 +137,52 @@ class MainActivity : Activity() {
                 resizable = true,
                 onPreviewKeyEvent = { keyEventHandler.handleKeyEvent(it, windowState) }
             ) {
+                LaunchedEffect(Unit) {
+                    launch(Dispatchers.IO) {
+                        window.addMouseWheelListener(object : MouseWheelListener {
+                            override fun mouseWheelMoved(e: MouseWheelEvent?) {
+                                e?.let { compoundCollector.mouseMovement.addEvent(e, "mouseWheelMoved") }
+                            }
+
+                        })
+                        window.addMouseMotionListener(object : MouseMotionListener {
+                            override fun mouseDragged(e: MouseEvent?) {
+                                e?.let { compoundCollector.mouseMovement.addEvent(e, "mouseDragged") }
+                            }
+
+                            var skip = 0
+                            override fun mouseMoved(e: MouseEvent?) {
+                                if (skip == 0) {
+                                    e?.let { compoundCollector.mouseMovement.addEvent(e, "mouseMoved") }
+                                } else {
+                                    skip = skip.plus(1).rem(3)
+                                }
+                            }
+
+                        })
+                        window.addMouseListener(object: MouseListener {
+                            override fun mouseClicked(e: MouseEvent?) {
+                                e?.let { compoundCollector.mouseMovement.addEvent(e, "mouseClicked") }
+                            }
+
+                            override fun mousePressed(e: MouseEvent?) {
+                                e?.let { compoundCollector.mouseMovement.addEvent(e, "mousePressed") }
+                            }
+
+                            override fun mouseReleased(e: MouseEvent?) {
+                                e?.let { compoundCollector.mouseMovement.addEvent(e, "mouseReleased") }
+                            }
+
+                            override fun mouseEntered(e: MouseEvent?) {
+
+                            }
+
+                            override fun mouseExited(e: MouseEvent?) {
+
+                            }
+                        })
+                    }
+                }
                 if (Thread.currentThread().name == "AWT-EventQueue-0") {
                     Thread.currentThread().name = "AWT-EQ-0"
                 }

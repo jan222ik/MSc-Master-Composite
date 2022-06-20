@@ -162,7 +162,7 @@ class DNDEditorActions(
                 val arrow = Arrow(
                     initArrowType = ArrowType.GENERALIZATION,
                     initSourceAnchor = initSourceAnchor,
-                    initTargetAnchor = initSourceAnchor,
+                    initTargetAnchor = initTargetAnchor,
                     initOffsetPath = fourPointArrowOffsetPath.first,
                     initBoundingShape = fourPointArrowOffsetPath.second,
                     data = data,

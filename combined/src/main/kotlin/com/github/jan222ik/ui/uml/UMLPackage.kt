@@ -175,6 +175,38 @@ class UMLPackage(
                                                     }
                                             }
                                         }
+                                    },
+                                    onDoubleClick = {
+                                        if (buttons.isPrimaryPressed) {
+                                            if (keyboardModifiers.isCtrlPressed || expand.value || onHover.value) {
+                                                tmmClassPath
+                                                    ?.target
+                                                    ?.getProjectUMLElement()
+                                                    ?.findDiagramElementByLocation(packageRef.link)
+                                                    ?.let { findPath ->
+                                                        EditorManager.moveToOrOpenDiagram(
+                                                            tmmDiagram = findPath.target,
+                                                            commandStackHandler = CommandStackHandler.INSTANCE
+                                                        )
+                                                    }
+                                            }
+                                        }
+                                    },
+                                    onLongClick = {
+                                        if (buttons.isPrimaryPressed) {
+                                            if (keyboardModifiers.isCtrlPressed || expand.value || onHover.value) {
+                                                tmmClassPath
+                                                    ?.target
+                                                    ?.getProjectUMLElement()
+                                                    ?.findDiagramElementByLocation(packageRef.link)
+                                                    ?.let { findPath ->
+                                                        EditorManager.moveToOrOpenDiagram(
+                                                            tmmDiagram = findPath.target,
+                                                            commandStackHandler = CommandStackHandler.INSTANCE
+                                                        )
+                                                    }
+                                            }
+                                        }
                                     }
                                 ),
                             color = EditorColors.backgroundGray,

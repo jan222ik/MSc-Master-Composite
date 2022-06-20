@@ -18,7 +18,8 @@ class MouseEventCollector(
         "button" to CellType.NUMERIC,
         "CTRL" to CellType.BOOLEAN,
         "SHIFT" to CellType.BOOLEAN,
-        "ALT" to CellType.BOOLEAN
+        "ALT" to CellType.BOOLEAN,
+        "type" to CellType.STRING
     )
     private val sheet = workbook.createSheet("Mouse Movements").also {
         it.createRow(idx.getAndIncrement()).apply {
@@ -28,7 +29,7 @@ class MouseEventCollector(
         }
     }
 
-    fun addEvent(evt: MouseEvent) {
+    fun addEvent(evt: MouseEvent, type: String) {
         sheet.createRow(idx.getAndIncrement()).apply {
             listOf(
                 LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
@@ -38,6 +39,7 @@ class MouseEventCollector(
                 evt.isControlDown,
                 evt.isShiftDown,
                 evt.isAltDown || evt.isAltGraphDown,
+                type
             ).forEachIndexed { index, value ->
                 createCell(index, header[index].second).setCellValue(value.toString())
             }

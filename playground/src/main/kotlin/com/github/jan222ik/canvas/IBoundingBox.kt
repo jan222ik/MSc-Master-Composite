@@ -232,6 +232,7 @@ fun main() {
             lines.value.forEach {
                 drawAlignmentLine(it.first)
             }
+
             drawRect(Color.Cyan, topLeft = toAlign.topLeft, size = toAlign.size.toSize())
         }
     }

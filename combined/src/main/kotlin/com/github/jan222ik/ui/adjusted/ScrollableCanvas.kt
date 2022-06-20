@@ -16,10 +16,12 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.isPrimaryPressed
@@ -48,9 +50,10 @@ import com.github.jan222ik.ui.feature.main.tree.ProjectTreeHandler
 import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.util.KeyHelpers
 import com.github.jan222ik.util.KeyHelpers.consumeOnKey
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import org.eclipse.uml2.uml.Element
+import org.jetbrains.skia.Font
+import org.jetbrains.skia.TextLine
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -172,7 +175,8 @@ fun ScrollableCanvas(
                         val clickedArrow = arrows.firstOrNull { it.boundingShape.value.containtsOffset(offset) }
                         if (clickedArrow != null) {
                             boxForArrow.value = clickedArrow
-                            val tmmArrow = projectTreeHandler.metamodelRoot?.findModellingElementOrNull(clickedArrow.data)?.target
+                            val tmmArrow =
+                                projectTreeHandler.metamodelRoot?.findModellingElementOrNull(clickedArrow.data)?.target
                             tmmArrow?.let {
                                 SharedCommands.forceOpenProperties?.invoke()
                                 FileTree.treeHandler.value?.setTreeSelection(listOf(tmmArrow))
@@ -206,7 +210,8 @@ fun ScrollableCanvas(
                                 layoutDirection: LayoutDirection,
                                 popupContentSize: IntSize
                             ): IntOffset {
-                                return (showContextMenu.value?.round()?.let { it.copy(y = it.y - 10) } ?: IntOffset.Zero).plus(anchorBounds.topLeft)
+                                return (showContextMenu.value?.round()?.let { it.copy(y = it.y - 10) }
+                                    ?: IntOffset.Zero).plus(anchorBounds.topLeft)
                             }
 
                         }
@@ -331,6 +336,84 @@ fun ScrollableCanvas(
                                 helper.movingBox.value?.let { box ->
                                     lines.value.forEach {
                                         drawAlignmentLine(it, box)
+                                    }
+                                    lines.value.filter { it.first is AlignmentLine.Horizontal }.let { horizontal ->
+                                        (horizontal as List<Pair<AlignmentLine.Horizontal, IBoundingShape>>)
+                                            .groupBy { it.first.y }
+                                            .let {
+                                                println("map = ${it}, box = ${box.topLeft.value.y}")
+                                                val key = box.topLeft.value.y + box.height.value
+                                                it.entries
+                                                    .firstOrNull { it.key in key.minus(3f).rangeTo(key.plus(3)) }
+                                                    ?.let {
+                                                        val a = it.value
+                                                        if (a.isNotEmpty()) {
+                                                            a
+                                                                .map { it.second }
+                                                                .plus(box)
+                                                                .sortedBy { it.topLeft.value.y }
+                                                                .windowed(size = 2) {
+                                                                    println("it = ${it}")
+                                                                    val lastX = it.last().topLeft.value.x
+                                                                    val distanceTween = abs(
+                                                                        it.first()
+                                                                            .let { it.topLeft.value.x + it.width.value } - lastX)
+                                                                    val textLine =
+                                                                        TextLine.make(
+                                                                            "${distanceTween.toInt()}",
+                                                                            Font()
+                                                                        )
+                                                                    this.drawContext.canvas.nativeCanvas.drawTextLine(
+                                                                        textLine,
+                                                                        lastX.minus(distanceTween.div(2)),
+                                                                        it.first().topLeft.value.y + it.first().height.value - 5f,
+                                                                        Paint().asFrameworkPaint()
+                                                                            .setARGB(0xFF, 0xF6, 0x81, 0x67)
+                                                                    )
+
+                                                                }
+                                                        }
+                                                    }
+                                            }
+                                    }
+                                    lines.value.filter { it.first is AlignmentLine.Vertical }.let { vertical ->
+                                        (vertical as List<Pair<AlignmentLine.Vertical, IBoundingShape>>)
+                                            .groupBy { it.first.x }
+                                            .let {
+                                                println("map = ${it}, box = ${box.topLeft.value.y}")
+                                                val key = box.topLeft.value.x + box.width.value
+                                                it.entries
+                                                    .firstOrNull { it.key in key.minus(3f).rangeTo(key.plus(3)) }
+                                                    ?.let {
+                                                        val a = it.value
+                                                        if (a.isNotEmpty()) {
+                                                            a
+                                                                .map { it.second }
+                                                                .plus(box)
+                                                                .sortedBy { it.topLeft.value.x }
+                                                                .windowed(size = 2) {
+                                                                    println("it = ${it}")
+                                                                    val lastY = it.last().topLeft.value.y
+                                                                    val distanceTween = abs(
+                                                                        it.first()
+                                                                            .let { it.topLeft.value.y + it.height.value } - lastY)
+                                                                    val textLine =
+                                                                        TextLine.make(
+                                                                            "${distanceTween.toInt()}",
+                                                                            Font()
+                                                                        )
+                                                                    this.drawContext.canvas.nativeCanvas.drawTextLine(
+                                                                        textLine,
+                                                                        it.first().topLeft.value.x + it.first().width.value + 10f,
+                                                                        lastY.minus(distanceTween.div(2)),
+                                                                        Paint().asFrameworkPaint()
+                                                                            .setARGB(0xFF, 0xF6, 0x81, 0x67)
+                                                                    )
+
+                                                                }
+                                                        }
+                                                    }
+                                            }
                                     }
                                 }
 
