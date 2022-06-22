@@ -56,15 +56,27 @@ class Arrow(
             }
 
             val halfHeightTween = abs(max(start.y, target.y) - min(start.y, target.y)).div(2)
+            val halfWidthTween = abs(max(start.x, target.x) - min(start.x, target.x)).div(2)
             val isVerticalDirect = halfHeightTween < 3f
+            val isHorizontalDirect = halfWidthTween < 3f || (sourceAnchor.side == AnchorSide.S && targetAnchor.side == AnchorSide.N)
             println("sourceAnchor = [${sourceAnchor}], targetAnchor = [${targetAnchor}], sourceBoundingShape = [${sourceBoundingShape}], targetBoundingShape = [${targetBoundingShape}]")
             println("isVerticalDirect = ${isVerticalDirect}")
+            println("isHorizontalDirect = ${isHorizontalDirect}")
             println("halfHeightTween = ${halfHeightTween}")
+            println("halfWidthTween = ${halfWidthTween}")
             println("start = ${start}, target = ${target}")
             val halfHorizontal = min(start.x, target.x) + (abs(start.x - target.x)).div(2)
+            val halfVertical = max(start.y, target.y) - (abs(start.y - target.y)).div(2)
             println("halfHorizontal = ${halfHorizontal}")
-            val inlineStart = Offset(x = start.x.takeUnless { isVerticalDirect } ?: halfHorizontal, y = start.y - halfHeightTween)
-            val inlineTarget = Offset(x = target.x.takeUnless { isVerticalDirect } ?: halfHorizontal, y = target.y + halfHeightTween)
+            println("halfVertical = ${halfVertical}")
+            val inlineStart = Offset(
+                x = start.x.takeUnless { isVerticalDirect } ?: halfHorizontal,
+                y = (start.y - halfHeightTween).takeUnless { isHorizontalDirect } ?: halfVertical
+            )
+            val inlineTarget = Offset(
+                x = target.x.takeUnless { isVerticalDirect } ?: halfHorizontal,
+                y = (target.y + halfHeightTween).takeUnless { isHorizontalDirect } ?: halfVertical
+            )
 
             val horizontalTopLeftRef = when {
                 inlineStart.x < inlineTarget.x -> inlineStart
@@ -189,6 +201,7 @@ class Arrow(
                 val start = offsets.first()
                 val end = offsets.last()
                 drawLine(color, start = start, end = end)
+                val isBuggedArrow = sourceAnchor.value.side == AnchorSide.S && targetAnchor.value.side == AnchorSide.N
                 if (drawDebugPoints) {
                     if (index == 0) {
                         drawCircle(Color.Red, radius = 2f, center = start)
@@ -215,7 +228,7 @@ class Arrow(
                                 radians = -angle.toFloat(),
                                 pivot = Offset.Zero
                             ) {
-                                rotate(90f + 180f, pivot = Offset.Zero) {
+                                rotate(90f + (180f.takeUnless { isBuggedArrow } ?: 0f), pivot = Offset.Zero) {
                                     @Exhaustive
                                     when (arrowType.value) {
                                         ArrowType.GENERALIZATION -> Unit
@@ -230,8 +243,8 @@ class Arrow(
                                 textLine?.let {
                                     this.drawContext.canvas.nativeCanvas.drawTextLine(
                                         it,
-                                        10f,
-                                        -5f,
+                                        10f.takeIf { targetAnchor.value.side == AnchorSide.W } ?: -25f,
+                                        -5f + + (0f.takeUnless { isBuggedArrow } ?: 10f.plus(textLine.height)),
                                         Paint().asFrameworkPaint()
                                     )
                                 }
@@ -258,7 +271,8 @@ class Arrow(
                             radians = -angle.toFloat(),
                             pivot = Offset.Zero
                         ) {
-                            rotate(90f, pivot = Offset.Zero) {
+                            rotate(90f + (0f.takeUnless { isBuggedArrow } ?: 180f), pivot = Offset.Zero) {
+
                                 @Exhaustive
                                 when (arrowType.value) {
                                     ArrowType.GENERALIZATION -> ArrowsHeads.apply { GeneralizationHead() }
@@ -273,8 +287,8 @@ class Arrow(
                             textLine?.let {
                                 this.drawContext.canvas.nativeCanvas.drawTextLine(
                                     it,
-                                    10f,
-                                    5f + it.height,
+                                    10f.takeIf { sourceAnchor.value.side == AnchorSide.W } ?: -25f,
+                                    (10f + it.height) + (0f.takeUnless { isBuggedArrow } ?: (-10f).minus(textLine.height.times(2))),
                                     Paint().asFrameworkPaint()
                                 )
                             }

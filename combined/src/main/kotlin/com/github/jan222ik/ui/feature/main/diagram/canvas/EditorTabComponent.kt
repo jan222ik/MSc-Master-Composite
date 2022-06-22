@@ -13,6 +13,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.toOffset
 import androidx.compose.ui.util.packFloats
 import com.github.jan222ik.model.command.CommandStackHandler
@@ -89,7 +90,10 @@ fun EditorTabComponent(stateOut: EditorTabViewModel, projectTreeHandler: Project
                 arrows = arrows,
                 projectTreeHandler = projectTreeHandler,
                 tmmDiagram = state.tmmDiagram,
-                helper
+                helper = helper,
+                createBlockFromDrop = {
+                    dndActions.drop(pos = it.round(), data = "Block")
+                }
             )
         }
         NavigateDiagramUPButton(
@@ -206,7 +210,7 @@ object DNDCreation : KLogging() {
         return UMLClassFactory.createInstance(
             umlClass = data,
             initBoundingRect = BoundingRectState(
-                topLeftPacked = packFloats(dataPoint.x, dataPoint.y), width = 255f, height = 300f
+                topLeftPacked = packFloats(dataPoint.x, dataPoint.y), width = 255f, height = 200f
             ),
             onMoveOrResize = { moveResizeCommand ->
                 logger.debug { "Update Arrows after UMLClass movement" }

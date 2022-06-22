@@ -86,26 +86,31 @@ class UMLClass(
                             )
 
 
+                            val arrowLowerYShape =
+                                other.boundingShape.takeUnless { it.topLeft.value.y > thisY } ?: boundingShape
+                            val arrowHigherYShape =
+                                other.boundingShape.takeUnless { it.topLeft.value.y < thisY } ?: boundingShape
 
-                            val arrowLowerYShape = other.boundingShape.takeUnless { it.topLeft.value.y > thisY } ?: boundingShape
-                            val arrowHigherYShape =  other.boundingShape.takeUnless { it.topLeft.value.y < thisY } ?: boundingShape
-
-                            val tmmClass = projectTreeHandler.metamodelRoot.findModellingElementOrNull(umlClass)?.target as TMM.ModelTree.Ecore.TClass
-                            val otherTMMClass = projectTreeHandler.metamodelRoot.findModellingElementOrNull(other.umlClass) ?.target as TMM.ModelTree.Ecore.TClass
+                            val tmmClass =
+                                projectTreeHandler.metamodelRoot.findModellingElementOrNull(umlClass)?.target as TMM.ModelTree.Ecore.TClass
+                            val otherTMMClass =
+                                projectTreeHandler.metamodelRoot.findModellingElementOrNull(other.umlClass)?.target as TMM.ModelTree.Ecore.TClass
                             val relation = when (data.type) {
                                 ArrowType.GENERALIZATION -> otherTMMClass.createGeneralization(umlClass)
                                 ArrowType.ASSOCIATION_DIRECTED -> otherTMMClass.createAssociation(
                                     end1isNavigable = false,
-                                    end1Aggregation = data.member0ArrowTypeOverride?.toKind() ?: AggregationKind.NONE_LITERAL,
+                                    end1Aggregation = data.member0ArrowTypeOverride?.toKind()
+                                        ?: AggregationKind.NONE_LITERAL,
                                     end1Name = otherTMMClass.name.tfv.text,
-                                    end1Lower = 1,
-                                    end1Upper = 1,
+                                    end1Lower = 0,
+                                    end1Upper = -1,
                                     end1Type = tmmClass.umlClass,
                                     end2isNavigable = false,
-                                    end2Aggregation = data.member1ArrowTypeOverride?.toKind() ?: AggregationKind.NONE_LITERAL,
+                                    end2Aggregation = data.member1ArrowTypeOverride?.toKind()
+                                        ?: AggregationKind.NONE_LITERAL,
                                     end2Name = tmmClass.name.tfv.text,
-                                    end2Lower = 0,
-                                    end2Upper = -1
+                                    end2Lower = 1,
+                                    end2Upper = 1
                                 )
                             }
                             val fourPointArrowOffsetPath = Arrow.fourPointArrowOffsetPath(
@@ -138,7 +143,32 @@ class UMLClass(
                             }
                             CommandStackHandler.INSTANCE.add(addToDiagram)
                             DemoMenuContributions.arrowFrom.value = null
+                            DemoMenuContributions.paletteSelection.value = null
+                            SharedCommands.forceOpenProperties?.invoke()
                             return@mouseCombinedClickable
+                        }
+                        if (DemoMenuContributions.paletteSelection.value != null) {
+                            val arrowData = when (DemoMenuContributions.paletteSelection.value) {
+                                "Generalization" -> DemoMenuContributions.ArrowData(
+                                    start = this@UMLClass,
+                                    type = ArrowType.GENERALIZATION,
+                                    member0ArrowTypeOverride = null,
+                                    member1ArrowTypeOverride = null
+                                )
+                                "Composite Association (Directed)" -> DemoMenuContributions.ArrowData(
+                                    start = this@UMLClass,
+                                    type = ArrowType.ASSOCIATION_DIRECTED,
+                                    member0ArrowTypeOverride = DiagramStateHolders.UMLRef.ArrowRef.AssocRef.Aggregation.COMPOSITE,
+                                    member1ArrowTypeOverride = DiagramStateHolders.UMLRef.ArrowRef.AssocRef.Aggregation.NONE
+                                )
+                                else -> {
+                                    logger.warn { "Missing Type of palette click on UMLClass" }
+                                    null
+                                }
+                            }
+                            arrowData?.let {
+                                DemoMenuContributions.arrowFrom.value = arrowData
+                            }
                         }
                         tmmClassPath?.target?.let {
                             projectTreeHandler.setTreeSelection(listOf(it))

@@ -161,6 +161,7 @@ object DemoMenuContributions {
     }
 
     val arrowFrom = mutableStateOf<ArrowData?>(null)
+    val paletteSelection = mutableStateOf<String?>(null)
 
     data class ArrowData(
         val start: MovableAndResizeableComponent,

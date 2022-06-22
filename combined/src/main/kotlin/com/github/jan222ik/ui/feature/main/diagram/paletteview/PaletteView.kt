@@ -1,5 +1,7 @@
 package com.github.jan222ik.ui.feature.main.diagram.paletteview
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,10 +16,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.jan222ik.ui.adjusted.addIf
 import com.github.jan222ik.ui.components.dnd.dndDraggable
+import com.github.jan222ik.ui.components.menu.DemoMenuContributions
 import com.github.jan222ik.ui.components.menu.DrawableIcon
 import com.github.jan222ik.ui.feature.LocalDropTargetHandler
 import com.github.jan222ik.ui.feature.main.diagram.canvas.EditorTabViewModel
+import com.github.jan222ik.ui.value.EditorColors
 import com.github.jan222ik.ui.value.Space
 
 @Composable
@@ -58,12 +63,20 @@ fun PaletteView(activeEditorTab: EditorTabViewModel) {
                             Column {
                                 it.forEach {
                                     Row(
-                                        modifier = Modifier.dndDraggable(
-                                            handler = dndHandler,
-                                            dataProvider = { it.name },
-                                            onDragCancel = { snapBack -> snapBack.invoke() },
-                                            onDragFinished = { _, snapBack -> snapBack.invoke() }
-                                        ),
+                                        modifier = Modifier
+                                            .clickable {
+                                                DemoMenuContributions.paletteSelection.value = it.name
+                                            }
+                                            .dndDraggable(
+                                                handler = dndHandler,
+                                                dataProvider = { it.name },
+                                                onDragCancel = { snapBack -> snapBack.invoke() },
+                                                onDragFinished = { _, snapBack -> snapBack.invoke() }
+                                            )
+                                            .addIf(
+                                                condition = DemoMenuContributions.paletteSelection.value == it.name,
+                                                other = Modifier.border(width =  1.dp, color = EditorColors.focusActive)
+                                            ),
                                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
                                         when (it.icon) {

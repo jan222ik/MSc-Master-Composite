@@ -73,7 +73,8 @@ fun ScrollableCanvas(
     arrows: List<Arrow>,
     projectTreeHandler: ProjectTreeHandler,
     tmmDiagram: TMM.ModelTree.Diagram,
-    helper: AlignmentHelper
+    helper: AlignmentHelper,
+    createBlockFromDrop: (Offset) -> Unit
 ) {
     val viewport = remember(viewportState) { viewportState }
     // Const
@@ -172,6 +173,11 @@ fun ScrollableCanvas(
                 fun handleClick(pointerEvent: PointerEvent, offset: Offset) {
                     boxForArrow.value = null
                     if (pointerEvent.buttons.isPrimaryPressed) {
+                        if (DemoMenuContributions.paletteSelection.value != null) {
+                            if (DemoMenuContributions.paletteSelection.value == "Block") {
+                                createBlockFromDrop(pointerEvent.changes.last().position)
+                            }
+                        }
                         val clickedArrow = arrows.firstOrNull { it.boundingShape.value.containtsOffset(offset) }
                         if (clickedArrow != null) {
                             boxForArrow.value = clickedArrow
