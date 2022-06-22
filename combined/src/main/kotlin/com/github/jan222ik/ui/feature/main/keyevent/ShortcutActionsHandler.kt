@@ -1,6 +1,7 @@
 package com.github.jan222ik.ui.feature.main.keyevent
 
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.nativeKeyCode
 
 interface ShortcutActionsHandler {
     fun register(action: ShortcutAction) : ShortcutAction
@@ -8,6 +9,7 @@ interface ShortcutActionsHandler {
 
     fun registerOnRelease(action: ShortcutAction) : ShortcutAction
     fun deregisterOnRelease(action: ShortcutAction)
+    fun execute(action: ShortcutAction?)
 }
 
 data class ShortcutAction(
@@ -37,6 +39,26 @@ data class ShortcutAction(
         const val ALT = 4
         const val META = 8
         const val ANY_MODIFIERS = -1
+
+        fun toText(int: Int) : String {
+            return when (int) {
+                ANY_MODIFIERS -> "Any +"
+                NO_MODIFIERS -> ""
+                SHIFT -> "Shift +"
+                CTRL -> "CTRL +"
+                SHIFT + CTRL -> "CTRL + Shift +"
+                ALT -> "ALT +"
+                SHIFT + ALT -> "ALT + Shift +"
+                CTRL + ALT -> "CTRL + Shift +"
+                SHIFT + CTRL + ALT -> "CTRL + ALT + Shift +"
+                else -> "$int +"
+            }
+        }
     }
+
+    override fun toString(): String {
+        return "ShortcutAction(keyCombo=${KeyModifier.toText(modifiers)} ${java.awt.event.KeyEvent.getKeyText(key.nativeKeyCode)})"
+    }
+
 
 }

@@ -13,6 +13,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Properties
+import java.util.prefs.Preferences
 
 class Project private constructor(
     val root: File,
@@ -23,7 +24,7 @@ class Project private constructor(
         get() = properties.value.getProperty(PROJECT_NAME_KEY)
 
     companion object : KLogging() {
-        private const val PROJECT_FILE_NAME = ".asid"
+        private const val PROJECT_FILE_NAME = ".modellingsolution"
         private const val PROJECT_NAME_KEY = "project.name"
         fun create(root: File, name: String): Project {
             logger.debug { "Create new project with name \"$name\" at $root" }
@@ -44,6 +45,8 @@ class Project private constructor(
             return if (projectFile.exists()) {
                 Project(root = root, projectFile = projectFile).apply {
                     loadProperties()
+                }.also {
+                    Preferences.userRoot().node("com.github.jan222ik.msc.modeller").put("lastProjects", root.absolutePath)
                 }
             } else null
         }

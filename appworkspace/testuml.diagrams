@@ -1,0 +1,857 @@
+[ {
+  "name" : "PC_ConfigurationModel",
+  "upwardsDiagramLink" : null,
+  "diagramType" : "PACKAGE",
+  "location" : "PC_System::Configuration",
+  "content" : [ {
+    "type" : "UMLRef.ComposableRef.PackageRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Product Architecture",
+    "shape" : {
+      "topLeftPacked" : 4827858801665245184,
+      "width" : 256.0,
+      "height" : 128.0
+    },
+    "link" : "PC_System::Configuration::Product Architecture::ProductArchitecture"
+  }, {
+    "type" : "UMLRef.ComposableRef.PackageRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries",
+    "shape" : {
+      "topLeftPacked" : 4890909196448432128,
+      "width" : 256.0,
+      "height" : 128.0
+    },
+    "link" : "PC_System::Configuration::Model Libraries::ModelLibraries"
+  }, {
+    "type" : "UMLRef.ComposableRef.PackageRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Interconnections",
+    "shape" : {
+      "topLeftPacked" : 4827858801675730944,
+      "width" : 256.0,
+      "height" : 128.0
+    },
+    "link" : "PC_System::Configuration::Interconnections::Interconnections"
+  }, {
+    "type" : "UMLRef.ComposableRef.PackageRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Inputs",
+    "shape" : {
+      "topLeftPacked" : 4890909196458917888,
+      "width" : 256.0,
+      "height" : 128.0
+    },
+    "link" : "PC_System::Configuration::Inputs::Inputs"
+  } ]
+}, {
+  "name" : "ModelLibraries",
+  "upwardsDiagramLink" : "PC_System::Configuration::PC_ConfigurationModel",
+  "diagramType" : "BLOCK_DEFINITION",
+  "location" : "PC_System::Configuration::Model Libraries",
+  "content" : [ {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::HDisk",
+    "shape" : {
+      "topLeftPacked" : 4850376799793709056,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::MedStoreDisk",
+    "shape" : {
+      "topLeftPacked" : 4791830004654669824,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::MaxStoreDisk",
+    "shape" : {
+      "topLeftPacked" : 4877398397574709248,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ArrowRef.General",
+    "memberEndName0" : "PC_System::Configuration::Model Libraries::MedStoreDisk",
+    "memberEndName1" : "PC_System::Configuration::Model Libraries::HDisk",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    }
+  }, {
+    "type" : "UMLRef.ArrowRef.General",
+    "memberEndName0" : "PC_System::Configuration::Model Libraries::MaxStoreDisk",
+    "memberEndName1" : "PC_System::Configuration::Model Libraries::HDisk",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    }
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::HDController",
+    "shape" : {
+      "topLeftPacked" : 4919056694111109120,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::MaxStoreC",
+    "shape" : {
+      "topLeftPacked" : 4908923594966302720,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::MedStoreC",
+    "shape" : {
+      "topLeftPacked" : 4929189793289469952,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ArrowRef.General",
+    "memberEndName0" : "PC_System::Configuration::Model Libraries::MaxStoreC",
+    "memberEndName1" : "PC_System::Configuration::Model Libraries::HDController",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    }
+  }, {
+    "type" : "UMLRef.ArrowRef.General",
+    "memberEndName0" : "PC_System::Configuration::Model Libraries::MedStoreC",
+    "memberEndName1" : "PC_System::Configuration::Model Libraries::HDController",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    }
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::CPU",
+    "shape" : {
+      "topLeftPacked" : 4850376799816777728,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::CPUS",
+    "shape" : {
+      "topLeftPacked" : 4791830004665155584,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::CPUD",
+    "shape" : {
+      "topLeftPacked" : 4877398397585195008,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ArrowRef.General",
+    "memberEndName0" : "PC_System::Configuration::Model Libraries::CPUS",
+    "memberEndName1" : "PC_System::Configuration::Model Libraries::CPU",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    }
+  }, {
+    "type" : "UMLRef.ArrowRef.General",
+    "memberEndName0" : "PC_System::Configuration::Model Libraries::CPUD",
+    "memberEndName1" : "PC_System::Configuration::Model Libraries::CPU",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    }
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::OS",
+    "shape" : {
+      "topLeftPacked" : 4919056694134177792,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::OSAlpha",
+    "shape" : {
+      "topLeftPacked" : 4908923594976788480,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::OSBeta",
+    "shape" : {
+      "topLeftPacked" : 4929189793299955712,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ArrowRef.General",
+    "memberEndName0" : "PC_System::Configuration::Model Libraries::OSAlpha",
+    "memberEndName1" : "PC_System::Configuration::Model Libraries::OS",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    }
+  }, {
+    "type" : "UMLRef.ArrowRef.General",
+    "memberEndName0" : "PC_System::Configuration::Model Libraries::OSBeta",
+    "memberEndName1" : "PC_System::Configuration::Model Libraries::OS",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    }
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::MB",
+    "shape" : {
+      "topLeftPacked" : 4850376799825166336,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::MBSilver",
+    "shape" : {
+      "topLeftPacked" : 4791830004671971328,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::MBDiamond",
+    "shape" : {
+      "topLeftPacked" : 4877398397592010752,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ArrowRef.General",
+    "memberEndName0" : "PC_System::Configuration::Model Libraries::MBSilver",
+    "memberEndName1" : "PC_System::Configuration::Model Libraries::MB",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    }
+  }, {
+    "type" : "UMLRef.ArrowRef.General",
+    "memberEndName0" : "PC_System::Configuration::Model Libraries::MBDiamond",
+    "memberEndName1" : "PC_System::Configuration::Model Libraries::MB",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    }
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::Screen",
+    "shape" : {
+      "topLeftPacked" : 4925812093583622144,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::ScreenA",
+    "shape" : {
+      "topLeftPacked" : 4908923594983604224,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::ScreenC",
+    "shape" : {
+      "topLeftPacked" : 4939322892468355072,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ArrowRef.General",
+    "memberEndName0" : "PC_System::Configuration::Model Libraries::ScreenA",
+    "memberEndName1" : "PC_System::Configuration::Model Libraries::Screen",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.25
+    }
+  }, {
+    "type" : "UMLRef.ArrowRef.General",
+    "memberEndName0" : "PC_System::Configuration::Model Libraries::ScreenC",
+    "memberEndName1" : "PC_System::Configuration::Model Libraries::Screen",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.75
+    }
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::ScreenB",
+    "shape" : {
+      "topLeftPacked" : 4925812093586243584,
+      "width" : 224.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ ]
+  }, {
+    "type" : "UMLRef.ArrowRef.General",
+    "memberEndName0" : "PC_System::Configuration::Model Libraries::ScreenB",
+    "memberEndName1" : "PC_System::Configuration::Model Libraries::Screen",
+    "index" : 1,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    }
+  } ]
+}, {
+  "name" : "ProductArchitecture",
+  "upwardsDiagramLink" : "PC_System::Configuration::PC_ConfigurationModel",
+  "diagramType" : "BLOCK_DEFINITION",
+  "location" : "PC_System::Configuration::Product Architecture",
+  "content" : [ {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Product Architecture::ConfigurationModel",
+    "shape" : {
+      "topLeftPacked" : 4863887598675820544,
+      "width" : 256.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ "maxPrice", "usage", "efficiency" ]
+    } ]
+  }, {
+    "type" : "UMLRef.ArrowRef.Assoc",
+    "memberEndName0" : "configurationmodel",
+    "memberEndName1" : "pc",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "memberEnd0Aggregation" : "COMPOSITE",
+    "memberEnd1Aggregation" : "NONE"
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Product Architecture::PC",
+    "shape" : {
+      "topLeftPacked" : 4863887598692597760,
+      "width" : 256.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ "price" ]
+    } ]
+  }, {
+    "type" : "UMLRef.ArrowRef.Assoc",
+    "memberEndName0" : "pc",
+    "memberEndName1" : "internetconn",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "memberEnd0Aggregation" : "COMPOSITE",
+    "memberEnd1Aggregation" : "NONE"
+  }, {
+    "type" : "UMLRef.ArrowRef.Assoc",
+    "memberEndName0" : "pc",
+    "memberEndName1" : "hdunit",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "memberEnd0Aggregation" : "COMPOSITE",
+    "memberEnd1Aggregation" : "NONE"
+  }, {
+    "type" : "UMLRef.ArrowRef.Assoc",
+    "memberEndName0" : "pc",
+    "memberEndName1" : "mb",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "memberEnd0Aggregation" : "COMPOSITE",
+    "memberEnd1Aggregation" : "NONE"
+  }, {
+    "type" : "UMLRef.ArrowRef.Assoc",
+    "memberEndName0" : "pc",
+    "memberEndName1" : "screen",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "memberEnd0Aggregation" : "COMPOSITE",
+    "memberEnd1Aggregation" : "NONE"
+  }, {
+    "type" : "UMLRef.ArrowRef.Assoc",
+    "memberEndName0" : "pc",
+    "memberEndName1" : "os",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "memberEnd0Aggregation" : "COMPOSITE",
+    "memberEnd1Aggregation" : "NONE"
+  }, {
+    "type" : "UMLRef.ArrowRef.Assoc",
+    "memberEndName0" : "pc",
+    "memberEndName1" : "application",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "memberEnd0Aggregation" : "COMPOSITE",
+    "memberEnd1Aggregation" : "NONE"
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Product Architecture::InternetConn",
+    "shape" : {
+      "topLeftPacked" : 1138753536,
+      "width" : 192.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ "price", "auxiliary" ]
+    } ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Product Architecture::HDUnit",
+    "shape" : {
+      "topLeftPacked" : 4863887598698889216,
+      "width" : 192.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ "price" ]
+    } ]
+  }, {
+    "type" : "UMLRef.ArrowRef.Assoc",
+    "memberEndName0" : "hdunit",
+    "memberEndName1" : "hdisk",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "memberEnd0Aggregation" : "COMPOSITE",
+    "memberEnd1Aggregation" : "NONE"
+  }, {
+    "type" : "UMLRef.ArrowRef.Assoc",
+    "memberEndName0" : "hdunit",
+    "memberEndName1" : "hdcontroller",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "memberEnd0Aggregation" : "COMPOSITE",
+    "memberEnd1Aggregation" : "NONE"
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Product Architecture::Application",
+    "shape" : {
+      "topLeftPacked" : 4899916395717853184,
+      "width" : 192.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ "hdcapacity", "price" ]
+    } ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::MB",
+    "shape" : {
+      "topLeftPacked" : 4917930794227335168,
+      "width" : 192.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ ]
+    } ]
+  }, {
+    "type" : "UMLRef.ArrowRef.Assoc",
+    "memberEndName0" : "mb",
+    "memberEndName1" : "cpu",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "memberEnd0Aggregation" : "COMPOSITE",
+    "memberEnd1Aggregation" : "NONE"
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::Screen",
+    "shape" : {
+      "topLeftPacked" : 4935945192736817152,
+      "width" : 192.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ ]
+    } ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::OS",
+    "shape" : {
+      "topLeftPacked" : 4944952391991558144,
+      "width" : 192.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ ]
+    } ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::HDisk",
+    "shape" : {
+      "topLeftPacked" : 4827858801684119552,
+      "width" : 192.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ ]
+    } ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::HDController",
+    "shape" : {
+      "topLeftPacked" : 4881901997212565504,
+      "width" : 192.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ ]
+    } ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Model Libraries::CPU",
+    "shape" : {
+      "topLeftPacked" : 4917930794231529472,
+      "width" : 192.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ ]
+    } ]
+  } ]
+}, {
+  "name" : "Interconnections Overview",
+  "upwardsDiagramLink" : "PC_System::Configuration::PC_ConfigurationModel",
+  "diagramType" : "PACKAGE",
+  "location" : "PC_System::Configuration::Interconnections",
+  "content" : [ ]
+}, {
+  "name" : "Interconnections",
+  "upwardsDiagramLink" : "PC_System::Configuration::PC_ConfigurationModel",
+  "diagramType" : "BLOCK_DEFINITION",
+  "location" : "PC_System::Configuration::Interconnections",
+  "content" : [ ]
+}, {
+  "name" : "Inputs",
+  "upwardsDiagramLink" : "PC_System::Configuration::PC_ConfigurationModel",
+  "diagramType" : "BLOCK_DEFINITION",
+  "location" : "PC_System::Configuration::Inputs",
+  "content" : [ {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Product Architecture::ConfigurationModel",
+    "shape" : {
+      "topLeftPacked" : 4863887598675820544,
+      "width" : 256.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ ]
+    } ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Inputs::Input",
+    "shape" : {
+      "topLeftPacked" : 4791830004656766976,
+      "width" : 256.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ "efficiency", "maxPrice", "usage" ]
+    } ]
+  }, {
+    "type" : "UMLRef.ComposableRef.ClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Inputs::Output",
+    "shape" : {
+      "topLeftPacked" : 4890909196458917888,
+      "width" : 256.0,
+      "height" : 128.0
+    },
+    "link" : null,
+    "filters" : [ {
+      "type" : "UMLClassRefFilter.Compartment",
+      "name" : "ATTRIBUTES",
+      "elementsNames" : [ "Price" ]
+    } ]
+  }, {
+    "type" : "UMLRef.ArrowRef.Assoc",
+    "memberEndName0" : "configurationmodel",
+    "memberEndName1" : "input",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.33
+    },
+    "memberEnd0Aggregation" : "SHARED",
+    "memberEnd1Aggregation" : "NONE"
+  }, {
+    "type" : "UMLRef.ArrowRef.Assoc",
+    "memberEndName0" : "configurationmodel",
+    "memberEndName1" : "output",
+    "index" : 0,
+    "sourceAnchor" : {
+      "side" : "N",
+      "fromTopLeftOffsetPercentage" : 0.5
+    },
+    "targetAnchor" : {
+      "side" : "S",
+      "fromTopLeftOffsetPercentage" : 0.66
+    },
+    "memberEnd0Aggregation" : "SHARED",
+    "memberEnd1Aggregation" : "NONE"
+  } ]
+}, {
+  "name" : "PCtotalPrice",
+  "upwardsDiagramLink" : null,
+  "diagramType" : "PARAMETRIC",
+  "location" : "PC_System::Configuration::Product Architecture::PC",
+  "content" : [ {
+    "type" : "UMLRef.ComposableRef.ParametricNestedClassRef",
+    "referencedQualifiedName" : "PC_System::Configuration::Product Architecture::PC",
+    "shape" : {
+      "topLeftPacked" : 4755801207610540032,
+      "width" : 2560.0,
+      "height" : 768.0
+    },
+    "link" : null,
+    "nestedContent" : [ {
+      "type" : "UMLRef.ComposableRef.ParametricNestedPropertyRef",
+      "referencedQualifiedName" : "PC_System::Configuration::Product Architecture::PC::price",
+      "shape" : {
+        "topLeftPacked" : 0,
+        "width" : 256.0,
+        "height" : 64.0
+      },
+      "link" : null,
+      "nestedContent" : [ ],
+      "isPortSized" : false
+    }, {
+      "type" : "UMLRef.ComposableRef.ParametricNestedPropertyRef",
+      "referencedQualifiedName" : "PC_System::Configuration::Product Architecture::PC::internetCon",
+      "shape" : {
+        "topLeftPacked" : 1119879168,
+        "width" : 256.0,
+        "height" : 64.0
+      },
+      "link" : null,
+      "nestedContent" : [ {
+        "type" : "UMLRef.ComposableRef.ParametricNestedPropertyRef",
+        "referencedQualifiedName" : "PC_System::Configuration::Product Architecture::PC::internetCon::price",
+        "shape" : {
+          "topLeftPacked" : 0,
+          "width" : 256.0,
+          "height" : 64.0
+        },
+        "link" : null,
+        "nestedContent" : [ ],
+        "isPortSized" : true
+      } ],
+      "isPortSized" : false
+    } ]
+  } ]
+} ]

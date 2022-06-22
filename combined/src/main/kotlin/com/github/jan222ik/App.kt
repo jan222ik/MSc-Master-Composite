@@ -35,7 +35,7 @@ class App(
 fun main() {
 
     val appArgs = AppArgs(
-        appName = "ASID", // To show on title bar
+        appName = "Modelling Solution", // To show on title bar
         version = "v0.0.0", // To show on title inside brackets
         versionCode = 100 // To compare with latest version code (in case if you want to prompt update)
     )

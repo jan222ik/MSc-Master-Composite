@@ -1,29 +1,26 @@
 package com.github.jan222ik.ui.feature.main.tree
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import org.eclipse.emf.ecore.resource.ResourceSet
-import org.eclipse.emf.ecore.util.EcoreUtil
+import com.github.jan222ik.model.convertToTreeItem
 import org.eclipse.uml2.uml.Element
-import org.eclipse.uml2.uml.Model
+import org.eclipse.uml2.uml.NamedElement
 import java.io.File
 
 @OptIn(ExperimentalFoundationApi::class)
 object FileTree {
-    var root by mutableStateOf<FileTreeItem?>(null)
+    val treeHandler = mutableStateOf<ProjectTreeHandler?>(null)
 
     fun setRoot(path: String) {
         val file = File(path)
-        root = FileTreeItem(
-            level = 0,
-            displayName = file.name,
-            canExpand = file.isDirectory && file.listFiles()?.isNotEmpty() == true,
-            file = file
+        val tmm = file.convertToTreeItem()
+        treeHandler.value = ProjectTreeHandler(
+            showRoot = false,
+            metamodelRoot = tmm
         )
     }
 
+    /*
     fun fileToFileTreeItem(file: File, parent: FileTreeItem) {
         if (file.exists()) {
             val item = FileTreeItem(
@@ -36,33 +33,46 @@ object FileTree {
         }
     }
 
-    fun modelFilesToModelTreeRoot(resourceSet: ResourceSet, parent: FileTreeItem) {
-        val contents = EcoreUtil.getAllContents<Any>(resourceSet, true)
-        contents.forEachRemaining {
-            if (!(it is Element && it.mustBeOwned())) {
-                if (it is Model) {
-                    val packageItem = ModelTreeItem.PackageItem(
-                        level = parent.level,
-                        displayName = it.name,
-                        canExpand = it.eContents().isNotEmpty(),
-                        umlPackage = it as org.eclipse.uml2.uml.Package
-                    )
-                    parent.addChild(packageItem)
-                }
-            }
-        }
-
+    fun modelFilesToModelTreeRoot(projectData: ProjectData, parent: FileTreeItem) {
+        val model = projectData.ecore.model
+        val packageItem = ModelTreeItem.PackageItem(
+            level = parent.level.inc(),
+            displayName = model.name,
+            canExpand = model.eContents().isNotEmpty() || projectData.diagrams.any { it.location == model.name },
+            umlPackage = model as org.eclipse.uml2.uml.Package,
+            allDiagrams = projectData.diagrams
+        )
+        parent.addChild(packageItem)
     }
 
+
     fun eContentsToModelTreeItem(element: Element, parent: ModelTreeItem) {
+        val level = parent.level.inc()
+        if (element is NamedElement) {
+            parent.allDiagrams
+                .filter { it.location == element.qualifiedName }
+                .forEach {
+                    val diagram = ModelTreeItem.Diagram(
+                        level = level,
+                        diagram = it
+                    )
+                    parent.addChild(diagram)
+                }
+        }
         element.eContents().forEach {
-            val mapped = ModelTreeItem.parseItem(parent.level, it)
+            val mapped = ModelTreeItem.parseItem(
+                level = level,
+                element = it,
+                allDiagrams = parent.allDiagrams
+            )
             if (mapped != null) {
                 parent.addChild(mapped)
             }
         }
     }
 
-    val loadedResourceSets = mutableMapOf<String, ResourceSet>()
+     */
+
+    val loadedClients = mutableStateOf<Map<String, ProjectData>>(emptyMap())
 
 }

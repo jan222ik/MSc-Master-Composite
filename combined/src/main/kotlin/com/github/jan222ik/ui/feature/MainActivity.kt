@@ -1,22 +1,20 @@
 package com.github.jan222ik.ui.feature
 
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowPlacement
-import androidx.compose.ui.window.WindowPosition
-import androidx.compose.ui.window.rememberWindowState
+import androidx.compose.ui.window.*
 import com.arkivanov.decompose.extensions.compose.jetbrains.rememberRootComponent
 import com.github.jan222ik.App
+import com.github.jan222ik.inspector.CompoundCollector
+import com.github.jan222ik.model.command.CommandStackHandler
+import com.github.jan222ik.ui.components.dnd.DnDHandler
+import com.github.jan222ik.ui.feature.debug.ApplicationBaseDebugWindow
 import com.github.jan222ik.ui.feature.main.keyevent.KeyEventHandler
+import com.github.jan222ik.ui.feature.wizard.Project
 import com.github.jan222ik.ui.navigation.NavHostComponent
 import com.github.jan222ik.ui.value.AppTheme
 import com.theapache64.cyclone.core.Activity
@@ -24,10 +22,18 @@ import com.theapache64.cyclone.core.Intent
 import de.comahe.i18n4k.Locale
 import de.comahe.i18n4k.config.I18n4kConfigDefault
 import de.comahe.i18n4k.i18n4k
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import mu.KLogging
 import java.awt.GraphicsEnvironment
-import androidx.compose.ui.window.application
-import com.github.jan222ik.ui.feature.wizard.Project
+import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
+import java.awt.event.MouseMotionListener
+import java.awt.event.MouseWheelEvent
+import java.awt.event.MouseWheelListener
+import java.io.File
+import java.util.prefs.Preferences
 
 /**
  * The activity who will be hosting all screens in this app
@@ -53,6 +59,10 @@ class MainActivity : Activity() {
         }
         val taskbarHeight = displaySize.height - maxWinSize.height
         val applicableSize = displaySize.copy(height = displaySize.height.minus(taskbarHeight))
+        val dnDHandler = DnDHandler()
+        val compoundCollector = CompoundCollector(
+            File("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite\\build\\spy\\").apply { delete(); mkdirs(); }
+        )
         application {
             val windowState = rememberWindowState(
                 size = applicableSize,
@@ -74,7 +84,8 @@ class MainActivity : Activity() {
                     if (windowState.placement != it) {
                         windowState.placement = it
                     }
-                }
+                },
+                compoundCollector = compoundCollector
             )
             var locale by remember { mutableStateOf(i18n4k.locale) }
             fun switchLocale(nextLocale: Locale) {
@@ -82,18 +93,43 @@ class MainActivity : Activity() {
                 locale = nextLocale
                 (i18n4k as I18n4kConfigDefault).locale = locale
             }
-            var isDarkMode by remember { mutableStateOf(true) }
+
+            var isDarkMode by remember { mutableStateOf(false) }
             fun switchTheme(toDarkMode: Boolean) {
                 logger.debug { "Switched Theme form $isDarkMode to $toDarkMode (true=dark)" }
                 isDarkMode = toDarkMode
             }
-            var project by remember { mutableStateOf<Project?>(null) }
-            fun switchProject(newProject: Project?) {
+
+            var project by remember {
+                val project = (loadRecent()
+                    ?: loadOrCreateDefault("C:\\Users\\jan\\IdeaProjects\\MSc-Master-Composite\\appworkspace"))
+                mutableStateOf<Project>(
+                    project
+                )
+            }
+
+            fun switchProject(newProject: Project) {
                 logger.debug { "Switched Project form $project to $newProject" }
                 project = newProject
             }
+
+            val scope = rememberCoroutineScope()
+            val commandStackHandler = remember { CommandStackHandler.INSTANCE }
+            DisposableEffect(compoundCollector) {
+                onDispose {
+                    compoundCollector.save()
+                }
+            }
+            var counter = 3
             Window(
-                onCloseRequest = ::exitApplication,
+                onCloseRequest = {
+                    compoundCollector.save()
+                    if (counter == 0) {
+                        exitApplication()
+                    } else {
+                        counter -= 1
+                    }
+                },
                 title = "${App.appArgs.appName} (${App.appArgs.version})",
                 icon = painterResource("drawables/launcher_icons/system.png"),
                 state = windowState,
@@ -101,6 +137,52 @@ class MainActivity : Activity() {
                 resizable = true,
                 onPreviewKeyEvent = { keyEventHandler.handleKeyEvent(it, windowState) }
             ) {
+                LaunchedEffect(Unit) {
+                    launch(Dispatchers.IO) {
+                        window.addMouseWheelListener(object : MouseWheelListener {
+                            override fun mouseWheelMoved(e: MouseWheelEvent?) {
+                                e?.let { compoundCollector.mouseMovement.addEvent(e, "mouseWheelMoved") }
+                            }
+
+                        })
+                        window.addMouseMotionListener(object : MouseMotionListener {
+                            override fun mouseDragged(e: MouseEvent?) {
+                                e?.let { compoundCollector.mouseMovement.addEvent(e, "mouseDragged") }
+                            }
+
+                            var skip = 0
+                            override fun mouseMoved(e: MouseEvent?) {
+                                if (skip == 0) {
+                                    e?.let { compoundCollector.mouseMovement.addEvent(e, "mouseMoved") }
+                                } else {
+                                    skip = skip.plus(1).rem(3)
+                                }
+                            }
+
+                        })
+                        window.addMouseListener(object: MouseListener {
+                            override fun mouseClicked(e: MouseEvent?) {
+                                e?.let { compoundCollector.mouseMovement.addEvent(e, "mouseClicked") }
+                            }
+
+                            override fun mousePressed(e: MouseEvent?) {
+                                e?.let { compoundCollector.mouseMovement.addEvent(e, "mousePressed") }
+                            }
+
+                            override fun mouseReleased(e: MouseEvent?) {
+                                e?.let { compoundCollector.mouseMovement.addEvent(e, "mouseReleased") }
+                            }
+
+                            override fun mouseEntered(e: MouseEvent?) {
+
+                            }
+
+                            override fun mouseExited(e: MouseEvent?) {
+
+                            }
+                        })
+                    }
+                }
                 if (Thread.currentThread().name == "AWT-EventQueue-0") {
                     Thread.currentThread().name = "AWT-EQ-0"
                 }
@@ -121,7 +203,9 @@ class MainActivity : Activity() {
                     LocalShortcutActionHandler provides keyEventHandler,
                     LocalI18N provides (locale to ::switchLocale),
                     LocalThemeSwitcher provides (isDarkMode to ::switchTheme),
-                    LocalProjectSwitcher provides (project to ::switchProject)
+                    LocalProjectSwitcher provides (project to ::switchProject),
+                    LocalDropTargetHandler provides dnDHandler,
+                    LocalCommandStackHandler provides commandStackHandler
                 ) {
                     AppTheme(
                         isDark = isDarkMode
@@ -130,10 +214,30 @@ class MainActivity : Activity() {
                         rememberRootComponent(factory = ::NavHostComponent)
                             .render()
                     }
+                    var open by remember { mutableStateOf(true) }
+                    ApplicationBaseDebugWindow.render(
+                        open,
+                        onClose = { open = false },
+                        keyEventHandler,
+                        commandStackHandler
+                    )
                 }
             }
 
         }
+
+    }
+
+    private fun loadRecent(): Project? {
+        val lastProject = Preferences.userRoot().node("com.github.jan222ik.msc.modeller").get("lastProjects", "")
+        return if (lastProject.isNotEmpty()) {
+            Project.load(File(lastProject))
+        } else null
+    }
+
+    private fun loadOrCreateDefault(defaultPath: String): Project {
+        val root = File(defaultPath)
+        return Project.load(root) ?: Project.create(root, root.name)
 
     }
 }

@@ -7,13 +7,15 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
+import com.github.jan222ik.inspector.CompoundCollector
 import mu.KLogging
 
 class KeyEventHandler(
     val applicableSize: DpSize,
     val setWindowPosition: (Alignment) -> Unit,
     val setWindowSize: (DpSize) -> Unit,
-    val setPlacement: (WindowPlacement) -> Unit
+    val setPlacement: (WindowPlacement) -> Unit,
+    val compoundCollector: CompoundCollector
 ) : ShortcutActionsHandler {
 
     companion object : KLogging() {
@@ -49,6 +51,7 @@ class KeyEventHandler(
             )
             down.remove(nativeKeyCode)
         }
+        compoundCollector.keyPressCollector.recordEvent(event, consume)
         return consume
     }
 
@@ -196,7 +199,15 @@ class KeyEventHandler(
         val eventActions =
             keyEventActions.filter { it.modifiers == modifiers || it.modifiers == ShortcutAction.KeyModifier.ANY_MODIFIERS }
         eventActions.forEach {
-            if (it.action.invoke()) return true
+            if (it.action.invoke()) {
+                compoundCollector.keyShortCutCollector.recordAction(
+                    key = it.key,
+                    isCtrlPressed = event.isCtrlPressed,
+                    isShiftPressed = event.isShiftPressed,
+                    isAltPressed = event.isAltPressed
+                )
+                return true
+            }
         }
         return false
     }
@@ -210,26 +221,38 @@ class KeyEventHandler(
         return modifier
     }
 
-    private val keyDownActions = hashMapOf<Int, MutableList<ShortcutAction>>()
+    internal val keyDownActions = hashMapOf<Int, MutableList<ShortcutAction>>()
 
     override fun register(action: ShortcutAction): ShortcutAction {
+        logger.debug { "Register: $action" }
         keyDownActions.getOrPut(action.key.nativeKeyCode, ::ArrayList).add(action)
         return action
     }
 
     override fun deregister(action: ShortcutAction) {
+        logger.debug { "Deregister: $action" }
         keyDownActions[action.key.nativeKeyCode]?.remove(action)
     }
 
-    private val keyReleaseActions = hashMapOf<Int, MutableList<ShortcutAction>>()
+    internal val keyReleaseActions = hashMapOf<Int, MutableList<ShortcutAction>>()
 
     override fun registerOnRelease(action: ShortcutAction): ShortcutAction {
+        logger.debug { "Register OnRelease: $action" }
         keyReleaseActions.getOrPut(action.key.nativeKeyCode, ::ArrayList).add(action)
         return action
     }
 
     override fun deregisterOnRelease(action: ShortcutAction) {
+        logger.debug { "Deregister OnRelease: $action" }
         keyReleaseActions[action.key.nativeKeyCode]?.remove(action)
     }
 
+    override fun execute(action: ShortcutAction?) {
+        val shortcutAction = keyDownActions.values.flatten().find { it == action }
+        if (shortcutAction != null) {
+            shortcutAction.action.invoke()
+        } else {
+
+        }
+    }
 }

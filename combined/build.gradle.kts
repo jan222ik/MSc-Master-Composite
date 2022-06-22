@@ -26,11 +26,14 @@ dependencies {
     implementation(compose.uiTooling)
     implementation(compose.foundation)
     implementation("org.jetbrains.compose.ui:ui-util:1.1.0-alpha05")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.6.2")
 
     // Module dependencies
+    implementation(project(":canvas"))
     implementation(project(":data"))
     implementation(project(":ecore"))
     implementation(project(":forked-libs"))
+    api(project(":recorder"))
 
 
     // Dagger
@@ -56,6 +59,11 @@ dependencies {
     // i18n
     implementation("de.comahe.i18n4k:i18n4k-core:0.3.0")
     implementation("de.comahe.i18n4k:i18n4k-core-jvm:0.3.0")
+
+    // jackson
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.module/jackson-module-kotlin
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.2")
+
 
 
     /**
@@ -95,7 +103,7 @@ compose.desktop {
         mainClass = "com.github.jan222ik.AppKt"
         nativeDistributions {
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb)
-            packageName = "asid-standalone"
+            packageName = "modelling-standalone"
             packageVersion = "1.0.0"
 
             val iconsRoot = project.file("src/main/resources/drawables")

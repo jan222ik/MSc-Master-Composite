@@ -1,45 +1,43 @@
+@file:OptIn(ExperimentalComposeUiApi::class)
+
 package com.github.jan222ik.ui.feature.main.menu_tool_bar
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.mouseClickable
 import androidx.compose.foundation.window.WindowDraggableArea
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Maximize
 import androidx.compose.material.icons.filled.Minimize
+import androidx.compose.material.icons.outlined.CheckBoxOutlineBlank
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.pointer.isPrimaryPressed
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
-import com.github.jan222ik.model.mock.MockBackgroundJobs
-import com.github.jan222ik.ui.feature.LocalProjectSwitcher
-import com.github.jan222ik.ui.feature.LocalWindowActions
-import com.github.jan222ik.ui.feature.LocalWindowScope
+import androidx.compose.ui.window.WindowPlacement
+import com.github.jan222ik.model.command.ICommand
+import com.github.jan222ik.ui.adjusted.DebugCanvas
+import com.github.jan222ik.ui.components.menu.ActionButton
+import com.github.jan222ik.ui.components.menu.MenuButton
+import com.github.jan222ik.ui.components.menu.MenuContribution
+import com.github.jan222ik.ui.components.menu.MenuItemList
+import com.github.jan222ik.ui.feature.*
+import com.github.jan222ik.ui.feature.main.diagram.EditorManager
 import com.github.jan222ik.ui.feature.main.footer.progress.JobHandler
+import com.github.jan222ik.ui.feature.main.keyevent.ShortcutAction
 import com.github.jan222ik.ui.feature.wizard.CreateProjectWizard
 import com.github.jan222ik.ui.feature.wizard.Project
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import com.github.jan222ik.ui.value.EditorColors
+import com.github.jan222ik.ui.value.Space
+import com.github.jan222ik.util.HorizontalDivider
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.swing.JFileChooser
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -52,54 +50,82 @@ fun MenuToolBarComponent(
         WindowDraggableArea(
             modifier = modifier
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize().background(Color.Gray),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    modifier = Modifier.align(Alignment.CenterStart),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically
+            Column {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .background(color = EditorColors.backgroundGray),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painter = painterResource("drawables/launcher_icons/system.png"),
-                        contentDescription = "Logo"
-                    )
-                    var showWizard by remember { mutableStateOf(false) }
-                    val (project, switchProject) = LocalProjectSwitcher.current
-                    val createProjectWizard = remember {
-                        CreateProjectWizard(
-                            onCreationFinished = switchProject,
-                            onDismissRequest = {
-                                showWizard = false
-                            }
+                    Row(
+                        modifier = Modifier.align(Alignment.CenterStart),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        var showDebugPopup by remember { mutableStateOf(false) }
+                        Icon(
+                            modifier = Modifier.clickable { showDebugPopup = true },
+                            painter = painterResource("drawables/launcher_icons/system.png"),
+                            contentDescription = "Logo"
                         )
-                    }
-                    createProjectWizard.render(showWizard)
-                    val fileMenu = remember {
-                        listOf(
-                            SubmenuItem(
-                                icon = null,
-                                displayName = "New",
-                                items = listOf(
-                                    MenuItem(
-                                        icon = null,
-                                        displayName = "Create new project",
-                                        command = object : ICommand {
-                                            override fun isActive() = true
-                                            override suspend fun execute(handler: JobHandler) {
-                                                showWizard = true
+                        Box(Modifier.size(0.dp)) {
+                            if (showDebugPopup) {
+                                Popup(
+                                    onDismissRequest = { showDebugPopup = false },
+                                    focusable = true
+                                ) {
+                                    Surface(color = EditorColors.dividerGray) {
+                                        Column {
+                                            @Composable
+                                            fun switch(title: String, state: MutableState<Boolean>) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text(text = title)
+                                                    Switch(
+                                                        checked = state.value,
+                                                        onCheckedChange = state.component2()
+                                                    )
+                                                }
                                             }
-                                            override fun canUndo() = false
-                                            override suspend fun undo() = error("Can't be undone.")
+                                            DebugCanvas.apply {
+                                                switch(title = "Block switch in edit mode", state = blockUXTestEdit)
+                                                switch(title = "Show/Hide debug canvas", state = debugCanvasVisible)
+                                                switch(title = "Clip Viewport", state = this.conditionalClipValue)
+                                                switch(title = "Show/Hide Arrow Offsets", state = this.showPathOffsetPoints)
+                                                switch(title = "Show/Hide Wireframes", state = this.showWireframes)
+                                                switch(title = "Hide Class Elements", state = this.hideElements)
+                                                switch(title = "Wireframe Names", state = this.showWireframeName)
+                                            }
                                         }
-                                    )
-                                )
-                            ),
-                            MenuItem(
-                                icon = null,
-                                displayName = "Open existing project",
-                                command = object : ICommand {
+                                    }
+                                }
+                            }
+                        }
+                        var showWizard by remember { mutableStateOf(false) }
+                        val (project, switchProject) = LocalProjectSwitcher.current
+                        val createProjectWizard = remember {
+                            CreateProjectWizard(
+                                onCreationFinished = switchProject,
+                                onDismissRequest = {
+                                    showWizard = false
+                                }
+                            )
+                        }
+                        createProjectWizard.render(showWizard)
+                        val fileMenu = remember {
+                            MenuBarContents.fileMenu(
+                                newCommand = object : ICommand {
+                                    override fun isActive() = true
+                                    override suspend fun execute(handler: JobHandler) {
+                                        showWizard = true
+                                    }
+
+                                    override fun canUndo() = false
+                                    override suspend fun undo() = error("Can't be undone.")
+                                },
+                                openExistingProjectCommand = object : ICommand {
                                     override fun isActive(): Boolean = true
                                     override suspend fun execute(handler: JobHandler) {
                                         val f = JFileChooser()
@@ -107,198 +133,191 @@ fun MenuToolBarComponent(
                                         f.showSaveDialog(null)
                                         val root = f.selectedFile?.absoluteFile
                                         if (root != null) {
-                                            switchProject(Project.load(root))
+                                            Project.load(root)?.let { switchProject(it) }
                                         }
                                     }
+
                                     override fun canUndo() = false
                                     override suspend fun undo() = error("Can't be undone.")
                                 }
-                            ),
-                            MenuItem(
-                                icon = null,
-                                displayName = "Create mock background jobs",
-                                command = MockBackgroundJobs()
                             )
+                        }
+                        val commandStackHandler = LocalCommandStackHandler.current
+                        val shortcutActionsHandler = LocalShortcutActionHandler.current
+                        val editMenu = remember(commandStackHandler) { MenuBarContents.editMenu(commandStackHandler) }
+                        val viewMenu = remember() { MenuBarContents.viewMenu(shortcutActionsHandler) }
+                        DisposableShortcutsFor(menus = fileMenu)
+                        DisposableShortcutsFor(menus = editMenu)
+                        DisposableShortcutsFor(menus = viewMenu)
+                        MenuButton(
+                            key = Key.F,
+                            displayText = "File",
+                            popupContent = { MenuItemList(fileMenu, jobHandler, 400.dp) })
+                        MenuButton(
+                            key = Key.E,
+                            displayText = "Edit",
+                            popupContent = { MenuItemList(editMenu, jobHandler, 300.dp) }
                         )
+                        MenuButton(
+                            key = Key.W,
+                            displayText = "Window",
+                            popupContent = { MenuItemList(viewMenu, jobHandler, 350.dp) }
+                        )
+                        Spacer(Modifier.width(16.dp))
+                        val currfileAdditon = EditorManager.activeEditorTab.value?.let {
+                            " - ${it.name}"
+                        } ?: ""
+
+                        Text(text = "${project.name}$currfileAdditon", style = MaterialTheme.typography.overline)
                     }
-                    MenuButton(
-                        key = Key.F,
-                        displayText = "File",
-                        popupContent = { MenuItemList(fileMenu, jobHandler, 400.dp) })
-                    MenuButton(
-                        key = Key.E,
-                        displayText = "Edit",
-                        popupContent = { Text("Edit Popup") }
-                    )
-                    Spacer(Modifier.width(16.dp))
-                    Text(text = project?.name ?: "No project open", style = MaterialTheme.typography.overline)
+                    Row(
+                        Modifier.align(Alignment.CenterEnd)
+                    ) {
+                        val windowActions = LocalWindowActions.current
+                        ActionButton(
+                            onClick = windowActions::minimize
+                        ) {
+                            Icon(
+                                modifier = Modifier.size(Space.dp16),
+                                imageVector = Icons.Filled.Minimize,
+                                contentDescription = "Minimize Application"
+                            )
+                        }
+                        ActionButton(
+                            onClick = windowActions::maximize
+                        ) { isHover ->
+                            val windowState = LocalWindowState.current
+                            if (windowState.placement != WindowPlacement.Floating) {
+                                Box(Modifier.size(Space.dp16).clipToBounds()) {
+                                    Icon(
+                                        modifier = Modifier
+                                            .size(14.dp)
+                                            .offset(2.dp, (-2).dp),
+                                        imageVector = Icons.FloatingWindowIcon,
+                                        contentDescription = "Maximize Application"
+                                    )
+                                    Icon(
+                                        modifier = Modifier
+                                            .size(14.dp)
+                                            .offset((-2).dp, 2.dp)
+                                            .background(EditorColors.backgroundGray.takeUnless { isHover }
+                                                ?: EditorColors.dividerGray),
+                                        imageVector = Icons.FloatingWindowIcon,
+                                        contentDescription = "Maximize Application"
+                                    )
+                                }
+                            } else {
+                                Icon(
+                                    modifier = Modifier.size(Space.dp16),
+                                    imageVector = Icons.Outlined.CheckBoxOutlineBlank,
+                                    contentDescription = "Change to floating application window"
+                                )
+                            }
+                        }
+                        ActionButton(
+                            onClick = windowActions::exitApplication,
+                            isCloseBtn = true
+                        ) { isHover ->
+                            Icon(
+                                modifier = Modifier.size(Space.dp16),
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Close Application",
+                                tint = when {
+                                    isHover -> Color.White
+                                    else -> Color.Black
+                                }
+                            )
+                        }
+                    }
                 }
-                Row(
-                    Modifier.align(Alignment.CenterEnd)
-                ) {
-                    val windowActions = LocalWindowActions.current
-                    Button(
-                        onClick = windowActions::minimize
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Minimize,
-                            contentDescription = "Minimize Application"
-                        )
-                    }
-                    Button(
-                        onClick = windowActions::maximize
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Maximize,
-                            contentDescription = "Maximize Application"
-                        )
-                    }
-                    Button(
-                        onClick = windowActions::exitApplication
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = "Close Application"
-                        )
-                    }
-                }
+                HorizontalDivider(modifier = Modifier.fillMaxWidth(), color = EditorColors.dividerGray)
             }
 
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun MenuButton(
-    key: Key,
-    displayText: String,
-    popupContent: @Composable ColumnScope.() -> Unit
-) {
-    var showPopup by remember { mutableStateOf(false) }
-    var isClosing by remember { mutableStateOf(false) }
-    LaunchedEffect(showPopup) {
-        if (!showPopup) {
-            withContext(Dispatchers.IO) {
-                delay(100)
-                isClosing = false
-            }
-        }
-    }
-    val animDurationMillis = 100
-    Box(contentAlignment = Alignment.Center) {
-
-        val text = buildAnnotatedString {
-            append(displayText)
-            addStyle(SpanStyle(textDecoration = TextDecoration.Underline), 0, 1)
-        }
-
-        Text(
-            modifier = Modifier
-                .mouseClickable(
-                    role = Role.Button,
-                    onClickLabel = "Open $displayText menu",
-                    onClick = {
-                        if (buttons.isPrimaryPressed) {
-                            if (!isClosing) {
-                                showPopup = true
-                            }
-                        }
-                    }),
-            text = text
+fun extractMenuItems(menus: List<MenuContribution>): List<MenuContribution.Contentful.MenuItem> {
+    if (menus.isEmpty()) return emptyList()
+    val (menuItems, nested) = menus
+        .filterIsInstance<MenuContribution.Contentful>()
+        .partition { it is MenuContribution.Contentful.MenuItem }
+        .mapPair(
+            mapFirst = { it.filterIsInstance<MenuContribution.Contentful.MenuItem>() },
+            mapSecond = { it.filterIsInstance<MenuContribution.Contentful.NestedMenuItem>() }
         )
+        .mapPair(
+            mapFirst = { it },
+            mapSecond = { nested -> nested.map { it.nestedItems }.flatten() }
+        )
+    return menuItems + extractMenuItems(nested)
+}
 
-        AnimatedVisibility(
-            modifier = Modifier.align(Alignment.BottomStart),
-            visible = showPopup,
-            enter = fadeIn(
-                animationSpec = tween(animDurationMillis)
-            ) + expandIn(
-                animationSpec = tween(animDurationMillis),
-                expandFrom = Alignment.TopCenter
-            ),
-            exit = shrinkOut(
-                animationSpec = tween(animDurationMillis),
-                shrinkTowards = Alignment.TopCenter
-            ) + fadeOut(animationSpec = tween(animDurationMillis))
-        ) {
-            Popup(
-                alignment = Alignment.TopStart,
-                focusable = true,
-                onDismissRequest = {
-                    showPopup = false
-                    isClosing = true
-                }
-            ) {
-                Card {
-                    Column(
-                        modifier = Modifier.padding(8.dp),
-                        content = popupContent
-                    )
-                }
-            }
-        }
-    }
-
+fun <E, ER, F, FR> Pair<E, F>.mapPair(
+    mapFirst: (E) -> ER,
+    mapSecond: (F) -> FR
+): Pair<ER, FR> {
+    return Pair(
+        first = mapFirst(first),
+        second = mapSecond(second),
+    )
 }
 
 @Composable
-fun MenuItemList(items: List<IMenuItem>, jobHandler: JobHandler, width: Dp) {
-
-    Column(
-        modifier = Modifier
-            .width(width)
-            .padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        items.forEach { item ->
-            val enabled = item.isActive()
-            val scope = rememberCoroutineScope()
-            var showSubFor by remember { mutableStateOf(emptyList<IMenuItem>()) }
-            if (showSubFor.isNotEmpty()) {
-                Popup(
-                    alignment = Alignment.TopEnd,
-                    focusable = true,
-                    offset = IntOffset(width.value.toInt(), 0),
-                    onDismissRequest = {
-                        showSubFor = emptyList()
-                    }
-                ) {
-                    MenuItemList(items = showSubFor, jobHandler = jobHandler, width)
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        onClick = {
-                            when (item) {
-                                is SubmenuItem -> {
-                                    showSubFor = item.items
-                                }
-                                else -> item.command?.let {
-                                    scope.launch { it.execute(jobHandler) }
+fun DisposableShortcutsFor(menus: List<MenuContribution>) {
+    val shortcutActionsHandler = LocalShortcutActionHandler.current
+    val jobHandler = LocalJobHandler.current
+    val scope = rememberCoroutineScope()
+    DisposableEffect(menus) {
+        val menuItems = extractMenuItems(menus)
+        val shortcutActions = menuItems
+            .filter { it.keyShortcut.isNotEmpty() && it.command != null && !it.keyShortcutAlreadyExists }
+            .mapNotNull {
+                var kModSum = ShortcutAction.KeyModifier.NO_MODIFIERS
+                val nonModifierKeys = it.keyShortcut
+                    .filterNot { key ->
+                        if (listOf(Key.CtrlLeft, Key.CtrlRight).contains(key)) {
+                            kModSum += ShortcutAction.KeyModifier.CTRL
+                            true
+                        } else {
+                            if (listOf(Key.AltLeft, Key.AltRight).contains(key)) {
+                                kModSum += ShortcutAction.KeyModifier.ALT
+                                true
+                            } else {
+                                if (listOf(Key.ShiftLeft, Key.ShiftRight).contains(key)) {
+                                    kModSum += ShortcutAction.KeyModifier.SHIFT
+                                    true
+                                } else {
+                                    if (listOf(Key.MetaLeft, Key.MetaRight).contains(key)) {
+                                        kModSum += ShortcutAction.KeyModifier.META
+                                        true
+                                    } else false
                                 }
                             }
                         }
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Box(
-                    modifier = Modifier.size(16.dp)
-                ) {
-                    item.icon?.let {
-                        Icon(
-                            imageVector = it,
-                            contentDescription = "Execute: ${item.displayName}"
-                        )
                     }
-                }
-                Text(
-                    text = item.displayName
-                )
+                if (nonModifierKeys.isNotEmpty()) {
+                    ShortcutAction.of(
+                        key = nonModifierKeys.first(),
+                        modifierSum = kModSum,
+                        action = { // Command is forced not null
+                            it.command!!.let {
+                                if (it.isActive()) {
+                                    scope.launch { it.execute(jobHandler) }
+                                    true
+                                } else false
+                            }
+                        }
+                    )
+                } else null
             }
+        shortcutActions.forEach(shortcutActionsHandler::register)
+
+        onDispose {
+            shortcutActions.forEach(shortcutActionsHandler::deregister)
         }
     }
 }
+
+
+

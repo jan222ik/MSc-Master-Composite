@@ -1,51 +1,74 @@
 package com.github.jan222ik.ui.feature.main.tree
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.MouseClickScope
-import com.github.jan222ik.ecore.DiagramLoader
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FileCopy
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Modifier
+import com.github.jan222ik.model.TMM
 import mu.KLogging
-import org.eclipse.emf.ecore.resource.ResourceSet
-import java.io.File
 
 @ExperimentalFoundationApi
 data class FileTreeItem(
     override val level: Int,
-    override val displayName: String,
-    override val canExpand: Boolean,
-    val file: File
+    val tmmElement: TMM.FS
 ) : TreeDisplayableItem(level = level) {
 
     companion object : KLogging()
+
+    override val children: SnapshotStateList<TreeDisplayableItem> = mutableStateListOf()
+    override fun getTMM(): TMM = tmmElement
+
+    override val icon: @Composable ((modifier: Modifier) -> Unit)
+        get() = @Composable { modifier ->
+            Image(
+                modifier = modifier,
+                imageVector = when {
+                    canExpand -> Icons.Default.Folder
+                    else -> Icons.Default.FileCopy
+                },
+                contentDescription = null,
+            )
+        }
 
     override val onPrimaryAction: (MouseClickScope.(idx: Int) -> Unit)?
         get() = null
 
     override val onDoublePrimaryAction: MouseClickScope.() -> Unit
         get() = {
+            logger.error { "Double Click $canExpand" }
             if (canExpand) {
                 if (children.isNotEmpty()) {
-                    children = emptyList()
+                    children.clear()
                 } else {
-                    if (file.listFiles() != null) {
-                        file.listFiles()!!.forEach { file ->
-                            if (file.name.contains(".uml")) {
-                                val res: ResourceSet = FileTree.loadedResourceSets.computeIfAbsent(
-                                    file.absolutePath
-                                ) {
-                                    DiagramLoader.open(file)
-                                }
-                                FileTree.modelFilesToModelTreeRoot(res, this@FileTreeItem)
-                            } else {
-                                FileTree.fileToFileTreeItem(file, this@FileTreeItem)
-                            }
-                        }
+                    if (tmmElement is TMM.IHasChildren<*>) {
+                        children.addAll(tmmElement.children.mapNotNull { it.toViewTreeElement(level = level.inc()) })
                     }
                 }
             }
         }
 
-    override val onSecondaryAction: MouseClickScope.() -> Unit
-        get() = {
+    override val onSecondaryAction: MouseClickScope.(LazyListState, Int, ITreeContextFor) -> Unit
+        get() = { state, idx, treeContextProvider ->
             logger.debug { "TODO: Secondary Action" }
         }
+
+    override val displayName: @Composable () -> String
+        get() = @Composable { tmmElement.file.name }
+
+    override val canExpand: Boolean
+        get() = tmmElement !is TMM.FS.TreeFile
+
+
+    override fun toString(): String {
+        return "FileTreeItem(level=$level, tmmElement=$tmmElement, children=$children)"
+    }
+
+
 }
